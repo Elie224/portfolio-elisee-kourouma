@@ -1,0 +1,43 @@
+{
+  "root": ".",
+  "clean_urls": false,
+  "routes": {
+    "**": "index.html"
+  },
+  "headers": {
+    "/assets/css/**": {
+      "Content-Type": "text/css; charset=utf-8",
+      "Cache-Control": "public, max-age=31536000, immutable"
+    },
+    "/assets/js/**": {
+      "Content-Type": "application/javascript; charset=utf-8",
+      "Cache-Control": "public, max-age=31536000, immutable"
+    },
+    "/assets/**/*.jpeg": {
+      "Content-Type": "image/jpeg",
+      "Cache-Control": "public, max-age=31536000, immutable"
+    },
+    "/assets/**/*.jpg": {
+      "Content-Type": "image/jpeg",
+      "Cache-Control": "public, max-age=31536000, immutable"
+    },
+    "/assets/**/*.png": {
+      "Content-Type": "image/png",
+      "Cache-Control": "public, max-age=31536000, immutable"
+    },
+    "/assets/**/*.pdf": {
+      "Content-Type": "application/pdf",
+      "Cache-Control": "public, max-age=31536000, immutable"
+    },
+    "/**/*.html": {
+      "Content-Type": "text/html; charset=utf-8",
+      "Cache-Control": "public, max-age=0, must-revalidate"
+    },
+    "/**": {
+      "X-Content-Type-Options": "nosniff",
+      "X-Frame-Options": "DENY",
+      "X-XSS-Protection": "1; mode=block",
+      "Referrer-Policy": "strict-origin-when-cross-origin"
+    }
+  }
+}
