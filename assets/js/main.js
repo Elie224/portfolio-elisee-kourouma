@@ -2661,10 +2661,25 @@ document.addEventListener('DOMContentLoaded', () => {
         // Try alternative selector for about page
         profilePhotos = document.querySelectorAll('img[alt*="Photo de"]');
       }
+      if (profilePhotos.length === 0) {
+        // Try any img in hero section
+        profilePhotos = document.querySelectorAll('.hero img');
+      }
+      
+      console.log('📸 Recherche de photos de profil:', {
+        photoData: data.personal.photo,
+        foundPhotos: profilePhotos.length,
+        selectors: ['.avatar', 'img[alt*="Photo de"]', '.hero img']
+      });
       
       if (data.personal.photo && profilePhotos.length > 0) {
         const photoSrc = data.personal.photo.trim();
-        if (!photoSrc) return;
+        if (!photoSrc) {
+          console.log('⚠️ Photo source vide');
+          return;
+        }
+        
+        console.log('✅ Mise à jour de la photo:', photoSrc);
         
         profilePhotos.forEach((img) => {
           // Update all profile photos
@@ -2673,13 +2688,36 @@ document.addEventListener('DOMContentLoaded', () => {
           // Remove lazy loading first
           img.removeAttribute('loading');
           
-          // Set image source directly
-          img.src = photoSrc;
+          // Handle base64 images
+          if (photoSrc.startsWith('data:image')) {
+            img.src = photoSrc;
+          } else {
+            // For file paths, ensure they're relative
+            const cleanPath = photoSrc.startsWith('/') ? photoSrc.substring(1) : photoSrc;
+            img.src = cleanPath;
+          }
           
           // Ensure image is visible
           img.style.display = '';
           img.style.visibility = 'visible';
           img.style.opacity = '1';
+          
+          // Add error handler
+          img.onerror = function() {
+            console.error('❌ Erreur de chargement de l\'image:', photoSrc);
+            // Fallback to default photo
+            this.src = 'assets/photo.jpeg';
+          };
+          
+          // Add load handler
+          img.onload = function() {
+            console.log('✅ Photo chargée avec succès:', photoSrc);
+          };
+        });
+      } else {
+        console.log('⚠️ Aucune photo trouvée ou pas de photo dans les données:', {
+          hasPhotoData: !!data.personal.photo,
+          photosFound: profilePhotos.length
         });
       }
 
@@ -3032,24 +3070,46 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // Load skills specifically for about page
       const aboutSkills = document.getElementById('about-skills');
-      if (aboutSkills && data.skills && data.skills.length > 0) {
-        aboutSkills.innerHTML = '';
-        data.skills.forEach(skill => {
-          const skillCard = document.createElement('div');
-          skillCard.className = 'card skill-card';
-          skillCard.innerHTML = `
-            <div class="skill-icon">${skill.icon || '💻'}</div>
-            <h3>${skill.name || ''}</h3>
-            <div class="skill-tags">
-              ${(skill.items || []).map(item => `<span class="skill-tag">${item}</span>`).join('')}
-            </div>
-          `;
-          aboutSkills.appendChild(skillCard);
-        });
-      } else if (aboutSkills && (!data.skills || data.skills.length === 0)) {
-        // Hide skills section if no skills
-        const skillsSection = document.getElementById('about-skills-section');
-        if (skillsSection) skillsSection.style.display = 'none';
+      if (aboutSkills) {
+        console.log('🎯 Conteneur skills trouvé:', aboutSkills);
+        console.log('📊 Données skills:', data.skills);
+        
+        if (data.skills && Array.isArray(data.skills) && data.skills.length > 0) {
+          console.log('✅ Chargement des compétences depuis localStorage:', data.skills.length, 'catégorie(s)');
+          aboutSkills.innerHTML = '';
+          
+          data.skills.forEach((skill, index) => {
+            const skillCard = document.createElement('div');
+            skillCard.className = 'card skill-card';
+            skillCard.style.opacity = '0';
+            skillCard.style.transform = 'translateY(20px)';
+            skillCard.style.transition = `opacity 0.5s ease, transform 0.5s ease`;
+            
+            // Support both 'skills' and 'items' for backward compatibility
+            const skillItems = skill.skills || skill.items || [];
+            
+            skillCard.innerHTML = `
+              <div class="skill-icon" style="font-size: 48px; margin-bottom: 16px;">${skill.icon || '💻'}</div>
+              <h3 style="margin-bottom: 16px;">${skill.name || ''}</h3>
+              <div class="skill-tags" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;">
+                ${skillItems.map(item => `<span class="skill-tag" style="padding: 6px 12px; background: rgba(91, 124, 250, 0.1); color: var(--accent); border: 1px solid rgba(91, 124, 250, 0.3); border-radius: 20px; font-size: 13px;">${item}</span>`).join('')}
+              </div>
+            `;
+            aboutSkills.appendChild(skillCard);
+            
+            // Trigger animation
+            setTimeout(() => {
+              skillCard.style.opacity = '1';
+              skillCard.style.transform = 'translateY(0)';
+            }, 100 + index * 100);
+          });
+        } else {
+          console.log('⚠️ Aucune donnée skills trouvée dans localStorage');
+          // Don't hide, show default message or empty state
+          aboutSkills.innerHTML = '<p class="muted" style="text-align: center; padding: 40px;">Aucune compétence ajoutée pour le moment.</p>';
+        }
+      } else {
+        console.error('❌ Conteneur skills non trouvé: #about-skills');
       }
     } catch (error) {
       console.error('Erreur lors du chargement du contenu de la page À propos:', error);
