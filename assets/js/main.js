@@ -1674,6 +1674,17 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const portfolioData = localStorage.getItem('portfolioData');
       if (!portfolioData) {
+        console.log('⚠️ Aucune donnée portfolio trouvée dans localStorage');
+        // Hide loading state
+        if (projectsLoadingEl) {
+          projectsLoadingEl.style.display = 'none';
+        }
+        // Show empty state
+        const emptyState = document.getElementById('empty-state');
+        if (emptyState) {
+          emptyState.style.display = 'block';
+          emptyState.style.opacity = '1';
+        }
         // Keep original HTML projects if no data
         return;
       }
