@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Détails du projet - Portfolio</title>
+    <link rel="stylesheet" href="assets/css/styles.css" />
+  </head>
+  <body id="top" class="dark">
+    <header class="container">
+      <nav class="nav">
+        <a class="brand" href="/">Mon Portfolio</a>
+        <button id="mobile-menu-toggle" class="mobile-menu-toggle" aria-label="Menu" aria-expanded="false">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <div class="mobile-menu-overlay" id="mobile-menu-overlay"></div>
+        <div class="links" id="nav-links">
+          <a href="/">Accueil</a>
+          <a href="about.html">À propos</a>
+          <a href="projects.html">Projets</a>
+          <a href="contact.html">Contact</a>
+          <a href="assets/CV.pdf" target="_blank" rel="noopener" data-cv-link="true">CV</a>
+          <a href="admin.html" class="admin-nav-link">
+            <span>🔐</span> Admin
+          </a>
+          <a href="admin.html" id="admin-nav-link-logged" style="display: none;" class="admin-nav-link">
+            <span>🔐</span> Admin (Connecté)
+          </a>
+        </div>
+      </nav>
+    </header>
+    <main class="container">
+      <div style="margin-bottom: 24px;">
+        <a href="projects.html" class="btn secondary">← Retour aux projets</a>
+      </div>
+      
+      <div id="project-details-container">
+        <div style="text-align: center; padding: 40px 20px;">
+          <p class="muted">Chargement des détails du projet...</p>
+        </div>
+      </div>
+    </main>
+    <button id="scroll-top" class="scroll-top" aria-label="Retour en haut" title="Retour en haut">
+      ↑
+    </button>
+    <footer class="container footer">© Mon Portfolio · <span data-year></span></footer>
+    <script src="assets/js/main.js"></script>
+    <script>
+      // Load project details
+      document.addEventListener('DOMContentLoaded', () => {
+        const container = document.getElementById('project-details-container');
+        if (!container) return;
+
+        // Get project title from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const projectTitle = urlParams.get('project');
+
+        if (!projectTitle) {
+          container.innerHTML = `
+            <div class="card" style="text-align: center; padding: 40px 20px;">
+              <h2>Projet non trouvé</h2>
+              <p class="muted">Aucun projet spécifié dans l'URL.</p>
+              <a href="projects.html" class="btn" style="margin-top: 16px;">Retour aux projets</a>
+            </div>
+          `;
+          return;
+        }
+
+        // Load project from localStorage
+        try {
+          const portfolioData = localStorage.getItem('portfolioData');
+          if (!portfolioData) {
+            container.innerHTML = `
+              <div class="card" style="text-align: center; padding: 40px 20px;">
+                <h2>Données non disponibles</h2>
+                <p class="muted">Les données du portfolio ne sont pas disponibles.</p>
+                <a href="projects.html" class="btn" style="margin-top: 16px;">Retour aux projets</a>
+              </div>
+            `;
+            return;
+          }
+
+          const data = JSON.parse(portfolioData);
+          const projects = data.projects || [];
+          const project = projects.find(p => p.title === projectTitle);
+
+          if (!project) {
+            container.innerHTML = `
+              <div class="card" style="text-align: center; padding: 40px 20px;">
+                <h2>Projet non trouvé</h2>
+                <p class="muted">Le projet "${projectTitle}" n'a pas été trouvé.</p>
+                <a href="projects.html" class="btn" style="margin-top: 16px;">Retour aux projets</a>
+              </div>
+            `;
+            return;
+          }
+
+          // Check if project is private and user is not admin
+          const isAdminLoggedIn = (() => {
+            const session = localStorage.getItem('adminSession');
+            if (session) {
+              try {
+                const sessionData = JSON.parse(session);
+                const now = new Date().getTime();
+                return sessionData.expires && now < sessionData.expires && sessionData.email === 'kouroumaelisee@gmail.com';
+              } catch (e) {
+                return false;
+              }
+            }
+            return false;
+          })();
+
+          if (project.public === false && !isAdminLoggedIn) {
+            container.innerHTML = `
+              <div class="card" style="text-align: center; padding: 40px 20px;">
+                <h2>Projet privé</h2>
+                <p class="muted">Ce projet est privé et n'est accessible qu'aux administrateurs.</p>
+                <a href="projects.html" class="btn" style="margin-top: 16px;">Retour aux projets</a>
+              </div>
+            `;
+            return;
+          }
+
+          // Render project details
+          let tagsHTML = '';
+          if (project.tags && project.tags.length > 0) {
+            tagsHTML = `<div class="tags" style="margin: 16px 0;">${project.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}</div>`;
+          }
+
+          let badgeHTML = '';
+          if (project.type) {
+            badgeHTML = `<div style="display: inline-block; background: var(--accent); color: #fff; padding: 6px 14px; border-radius: 999px; font-size: 12px; font-weight: 600; margin-bottom: 16px;">${project.type}${project.featured ? ' ⭐' : ''}</div>`;
+          }
+
+          let descriptionHTML = '';
+          if (project.description) {
+            const descLines = project.description.split('\n').filter(line => line.trim());
+            descriptionHTML = `<div style="margin: 24px 0;">${descLines.map(line => `<p style="margin-bottom: 12px; line-height: 1.7;">${line}</p>`).join('')}</div>`;
+          }
+
+          let featuresHTML = '';
+          if (project.features && project.features.length > 0) {
+            featuresHTML = `
+              <div style="margin: 32px 0;">
+                <h3 style="margin-bottom: 16px;">Fonctionnalités</h3>
+                <ul style="list-style: none; padding: 0; margin: 0;">
+                  ${project.features.map(feature => `
+                    <li style="padding: 10px 0; border-bottom: 1px solid var(--line); display: flex; align-items: start; gap: 12px;">
+                      <span style="color: var(--accent); font-size: 18px; line-height: 1.2;">✓</span>
+                      <span style="flex: 1; line-height: 1.6;">${feature}</span>
+                    </li>
+                  `).join('')}
+                </ul>
+              </div>
+            `;
+          }
+
+          let linksHTML = '';
+          const liveUrl = project.liveUrl || project.link || '';
+          const demoLink = project.demoLink || project.githubUrl || '';
+          const emailSubject = project.emailSubject || '';
+          
+          if (liveUrl || demoLink || emailSubject) {
+            linksHTML = '<div style="margin: 32px 0; padding-top: 24px; border-top: 1px solid var(--line);"><h3 style="margin-bottom: 16px;">Liens</h3><div style="display: flex; gap: 12px; flex-wrap: wrap;">';
+            if (liveUrl) {
+              linksHTML += `<a class="btn" href="${liveUrl}" target="_blank" rel="noopener">🌐 Voir l'application</a>`;
+            }
+            if (demoLink) {
+              linksHTML += `<a class="btn secondary" href="${demoLink}" target="_blank" rel="noopener">💻 Code source</a>`;
+            }
+            if (emailSubject) {
+              linksHTML += `<a class="btn secondary" href="mailto:kouroumaelisee@gmail.com?subject=${encodeURIComponent(emailSubject)}" target="_blank" rel="noopener">📧 Plus d'infos</a>`;
+            }
+            linksHTML += '</div></div>';
+          }
+
+          container.innerHTML = `
+            <article class="card" style="max-width: 900px; margin: 0 auto;">
+              ${badgeHTML}
+              <h1 style="margin: 0 0 16px 0; font-size: 32px; line-height: 1.2;">${project.title || 'Projet sans titre'}</h1>
+              ${project.shortDesc ? `<p class="muted" style="font-size: 18px; margin-bottom: 16px;">${project.shortDesc}</p>` : ''}
+              ${tagsHTML}
+              ${descriptionHTML}
+              ${featuresHTML}
+              ${linksHTML}
+            </article>
+          `;
+
+          // Update page title
+          document.title = `${project.title} - Détails du projet - Portfolio`;
+        } catch (e) {
+          console.error('Erreur lors du chargement des détails du projet:', e);
+          container.innerHTML = `
+            <div class="card" style="text-align: center; padding: 40px 20px;">
+              <h2>Erreur</h2>
+              <p class="muted">Une erreur est survenue lors du chargement des détails du projet.</p>
+              <a href="projects.html" class="btn" style="margin-top: 16px;">Retour aux projets</a>
+            </div>
+          `;
+        }
+      });
+    </script>
+  </body>
+</html>

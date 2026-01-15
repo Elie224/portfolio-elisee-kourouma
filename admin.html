@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Administration - Portfolio</title>
+    <link rel="stylesheet" href="assets/css/styles.css" />
+    <style>
+      .admin-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 16px;
+      }
+      .login-container {
+        max-width: 400px;
+        margin: 100px auto;
+        padding: 40px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--bg);
+      }
+      .admin-dashboard {
+        display: none;
+      }
+      .admin-dashboard.active {
+        display: block;
+      }
+      .admin-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--line);
+      }
+      .admin-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 32px;
+      }
+      .stat-card-admin {
+        padding: 20px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--bg);
+      }
+      .stat-card-admin h3 {
+        margin: 0 0 8px;
+        font-size: 14px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .stat-card-admin .value {
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--accent);
+        margin: 8px 0;
+      }
+      .admin-section {
+        margin: 32px 0;
+        padding: 24px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--bg);
+      }
+      .admin-section h2 {
+        margin-top: 0;
+        margin-bottom: 20px;
+        color: var(--text);
+      }
+      .admin-info {
+        background: rgba(91, 124, 250, 0.1);
+        border: 1px solid rgba(91, 124, 250, 0.3);
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 24px;
+      }
+      .admin-info p {
+        margin: 8px 0;
+      }
+      .btn-danger {
+        background: #ef4444;
+        color: white;
+      }
+      .btn-danger:hover {
+        background: #dc2626;
+      }
+      .logout-btn {
+        background: transparent;
+        color: var(--muted);
+        border: 1px solid var(--line);
+      }
+      .logout-btn:hover {
+        background: var(--line);
+        color: var(--text);
+      }
+      .admin-nav-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 8px;
+        color: var(--muted);
+        text-decoration: none;
+        transition: all 0.2s ease;
+      }
+      .admin-nav-link:hover {
+        background: var(--line);
+        color: var(--text);
+      }
+      .error-message {
+        color: #ef4444;
+        padding: 12px;
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        border-radius: 8px;
+        margin-bottom: 16px;
+        display: none;
+      }
+      .error-message.active {
+        display: block;
+      }
+      .admin-tabs {
+        display: flex;
+        gap: 8px;
+        border-bottom: 2px solid var(--line);
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+      }
+      .admin-tab {
+        padding: 12px 20px;
+        background: transparent;
+        border: none;
+        border-bottom: 2px solid transparent;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        margin-bottom: -2px;
+      }
+      .admin-tab:hover {
+        color: var(--text);
+        background: rgba(91, 124, 250, 0.05);
+      }
+      .admin-tab.active {
+        color: var(--accent);
+        border-bottom-color: var(--accent);
+      }
+      .admin-tab-content {
+        display: none;
+      }
+      .admin-tab-content.active {
+        display: block;
+      }
+      .item-list {
+        display: grid;
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      .item-card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 16px;
+        background: var(--bg);
+        position: relative;
+      }
+      .item-card h4 {
+        margin: 0 0 8px;
+        color: var(--text);
+      }
+      .item-card .item-meta {
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 8px;
+      }
+      .item-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      @media (max-width: 768px) {
+        .form-row {
+          grid-template-columns: 1fr;
+        }
+      }
+      .tag-input {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .tag-item {
+        background: var(--line);
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .tag-item .remove-tag {
+        cursor: pointer;
+        color: var(--muted);
+        font-weight: bold;
+      }
+      .tag-item .remove-tag:hover {
+        color: #ef4444;
+      }
+      .success-message {
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        color: #065f46;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 16px;
+        display: none;
+      }
+      .success-message.active {
+        display: block;
+      }
+      textarea {
+        min-height: 100px;
+        resize: vertical;
+      }
+      .featured-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .featured-checkbox input[type="checkbox"] {
+        width: auto;
+      }
+      .selection-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        padding: 12px;
+        background: rgba(91, 124, 250, 0.05);
+        border-radius: 8px;
+      }
+      .selection-controls input[type="checkbox"] {
+        width: auto;
+        margin-right: 8px;
+      }
+      .bulk-actions {
+        display: none;
+        gap: 8px;
+      }
+      .bulk-actions.active {
+        display: flex;
+      }
+      .item-card {
+        position: relative;
+      }
+      .item-card .select-checkbox {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+      }
+      .skill-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: var(--line);
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        margin: 4px;
+      }
+      .skill-item .remove-skill {
+        cursor: pointer;
+        color: var(--muted);
+        font-weight: bold;
+        margin-left: 4px;
+      }
+      .skill-item .remove-skill:hover {
+        color: #ef4444;
+      }
+      .photo-preview-container {
+        display: flex;
+        gap: 20px;
+        align-items: flex-start;
+        margin-top: 12px;
+        padding: 16px;
+        background: rgba(91, 124, 250, 0.05);
+        border-radius: 8px;
+        border: 1px solid var(--line);
+      }
+      .photo-preview {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--line);
+        background: var(--bg);
+        flex-shrink: 0;
+      }
+      .photo-preview-placeholder {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        border: 3px dashed var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted);
+        font-size: 14px;
+        text-align: center;
+        background: var(--bg);
+        flex-shrink: 0;
+      }
+      .photo-controls {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .photo-upload-area {
+        position: relative;
+        display: inline-block;
+        width: 100%;
+      }
+      .photo-upload-area input[type="file"] {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+        overflow: hidden;
+      }
+      .photo-upload-area label {
+        margin: 0;
+      }
+      .photo-info {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+      @media (max-width: 768px) {
+        .photo-preview-container {
+          flex-direction: column;
+          align-items: center;
+        }
+      }
+    </style>
+  </head>
+  <body id="top" class="dark">
+    <header class="container">
+      <nav class="nav">
+        <a class="brand" href="/">Mon Portfolio</a>
+        <button id="mobile-menu-toggle" class="mobile-menu-toggle" aria-label="Menu" aria-expanded="false">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <div class="mobile-menu-overlay" id="mobile-menu-overlay"></div>
+        <div class="links" id="nav-links">
+          <a href="/">Accueil</a>
+          <a href="about.html">À propos</a>
+          <a href="projects.html">Projets</a>
+          <a href="contact.html">Contact</a>
+          <a href="assets/CV.pdf" target="_blank" rel="noopener" data-cv-link="true">CV</a>
+          <a href="admin.html" class="admin-nav-link">
+            <span>🔐</span> Admin
+          </a>
+        </div>
+      </nav>
+    </header>
+
+    <div class="admin-container">
+      <!-- Login Form -->
+      <div id="login-container" class="login-container">
+        <h1 style="margin-top: 0; margin-bottom: 8px;">Connexion Admin</h1>
+        <p class="muted" style="margin-bottom: 24px;">Accès réservé à l'administrateur</p>
+        
+        <div id="login-error" class="error-message"></div>
+        
+        <form id="login-form">
+          <div class="form-group">
+            <label for="admin-email">Email administrateur</label>
+            <input 
+              type="email" 
+              id="admin-email" 
+              name="email" 
+              placeholder="votre@email.com" 
+              required 
+              autocomplete="email"
+            />
+          </div>
+          <div class="form-group">
+            <label for="admin-password">Mot de passe</label>
+            <input 
+              type="password" 
+              id="admin-password" 
+              name="password" 
+              placeholder="••••••••" 
+              required 
+              autocomplete="current-password"
+            />
+          </div>
+          <button type="submit" class="btn" style="width: 100%; margin-top: 8px;">
+            Se connecter
+          </button>
+        </form>
+        <p style="margin-top: 16px; font-size: 12px; color: var(--muted); text-align: center;">
+          <a href="/" style="color: var(--accent);">← Retour au portfolio</a>
+        </p>
+      </div>
+
+      <!-- Admin Dashboard -->
+      <div id="admin-dashboard" class="admin-dashboard">
+        <div class="admin-header">
+          <div>
+            <h1 style="margin: 0 0 8px;">Tableau de bord Admin</h1>
+            <p class="muted" style="margin: 0;">Bienvenue, <strong id="admin-email-display"></strong></p>
+          </div>
+          <button id="logout-btn" class="btn logout-btn">Se déconnecter</button>
+        </div>
+
+        <div id="success-message" class="success-message"></div>
+        
+        <div class="admin-tabs">
+          <button class="admin-tab active" data-tab="dashboard">📊 Tableau de bord</button>
+          <button class="admin-tab" data-tab="personal">👤 Informations personnelles</button>
+          <button class="admin-tab" data-tab="projects">🚀 Projets</button>
+          <button class="admin-tab" data-tab="skills">💼 Compétences</button>
+          <button class="admin-tab" data-tab="links">🔗 Liens & CV</button>
+          <button class="admin-tab" data-tab="about">📝 Descriptions</button>
+          <button class="admin-tab" data-tab="testimonials">💬 Témoignages</button>
+          <button class="admin-tab" data-tab="timeline">📅 Timeline</button>
+          <button class="admin-tab" data-tab="services">🛠️ Services</button>
+          <button class="admin-tab" data-tab="certifications">🏆 Certifications</button>
+          <button class="admin-tab" data-tab="faq">❓ FAQ</button>
+          <button class="admin-tab" data-tab="messages">📧 Messages</button>
+          <button class="admin-tab" data-tab="settings">⚙️ Paramètres</button>
+          <button class="admin-tab" data-tab="stats">📈 Statistiques</button>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div id="tab-dashboard" class="admin-tab-content active">
+          <div class="admin-info">
+            <p><strong>📊 Vue d'ensemble du portfolio</strong></p>
+            <p style="margin: 4px 0; font-size: 14px;">Gérez votre portfolio depuis cette interface. Les modifications sont sauvegardées dans votre navigateur et peuvent être exportées.</p>
+          </div>
+
+          <div class="admin-stats">
+            <div class="stat-card-admin">
+              <h3>Pages</h3>
+              <div class="value" id="stat-pages">5</div>
+              <p style="margin: 0; font-size: 12px; color: var(--muted);">Pages actives</p>
+            </div>
+            <div class="stat-card-admin">
+              <h3>Projets</h3>
+              <div class="value" id="stat-projects">7</div>
+              <p style="margin: 0; font-size: 12px; color: var(--muted);">Projets affichés</p>
+            </div>
+            <div class="stat-card-admin">
+              <h3>Visiteurs</h3>
+              <div class="value" id="stat-visitors">-</div>
+              <p style="margin: 0; font-size: 12px; color: var(--muted);">Suivi activé</p>
+            </div>
+            <div class="stat-card-admin">
+              <h3>Dernière MAJ</h3>
+              <div class="value" style="font-size: 18px;" id="stat-last-update">Aujourd'hui</div>
+              <p style="margin: 0; font-size: 12px; color: var(--muted);">Portfolio</p>
+            </div>
+          </div>
+
+          <div class="admin-section">
+            <h2>🔗 Liens rapides</h2>
+            <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+              <a href="/" class="btn secondary" target="_blank">Voir le portfolio</a>
+              <a href="projects.html" class="btn secondary" target="_blank">Voir les projets</a>
+              <a href="contact.html" class="btn secondary" target="_blank">Voir les contacts</a>
+            </div>
+          </div>
+
+          <div class="admin-section">
+            <h2>⚙️ Actions</h2>
+            <div style="display: grid; gap: 12px;">
+              <button class="btn secondary" onclick="exportAllData()">💾 Exporter toutes les données</button>
+              <button class="btn secondary" onclick="importAllData()">📥 Importer des données</button>
+              <button class="btn secondary" onclick="applyChangesToPortfolio()">🔄 Appliquer les modifications</button>
+              <button class="btn btn-danger" onclick="clearAllData()">🗑️ Réinitialiser toutes les données</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Personal Information Tab -->
+        <div id="tab-personal" class="admin-tab-content">
+          <div class="admin-section">
+            <h2>👤 Informations personnelles</h2>
+            
+            <h3 style="margin-bottom: 16px;">Informations de base</h3>
+            <form id="personal-info-form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="full-name">Nom complet *</label>
+                  <input type="text" id="full-name" name="fullName" required />
+                </div>
+                <div class="form-group">
+                  <label for="email">Email *</label>
+                  <input type="email" id="email" name="email" required />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="phone">Téléphone</label>
+                  <input type="tel" id="phone" name="phone" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="photo">Photo de profil</label>
+                <input type="hidden" id="photo" name="photo" />
+                <div class="photo-preview-container">
+                  <div id="photo-preview-wrapper">
+                    <img id="photo-preview" class="photo-preview" src="" alt="Aperçu photo" style="display: none;" />
+                    <div id="photo-preview-placeholder" class="photo-preview-placeholder">
+                      Aucune photo<br/>sélectionnée
+                    </div>
+                  </div>
+                  <div class="photo-controls">
+                    <div class="photo-upload-area">
+                      <input type="file" id="photo-file-input" accept="image/*" />
+                      <label for="photo-file-input" class="btn secondary" style="cursor: pointer; display: inline-block; width: 100%; text-align: center;">
+                        📷 Choisir une image depuis l'ordinateur
+                      </label>
+                    </div>
+                    <button type="button" class="btn secondary" onclick="clearPhotoPreview(); showSuccess('Photo supprimée. N\'oubliez pas d\'enregistrer les informations.');" style="margin-top: 8px;">
+                      🗑️ Supprimer la photo
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="current-education">Formation actuelle *</label>
+                <input type="text" id="current-education" name="currentEducation" required />
+              </div>
+              <div class="form-group">
+                <label for="previous-education">Formation précédente</label>
+                <input type="text" id="previous-education" name="previousEducation" />
+              </div>
+              <button type="submit" class="btn">Enregistrer les informations de base</button>
+            </form>
+
+            <h3 style="margin-top: 32px; margin-bottom: 16px;">Informations additionnelles</h3>
+            <p class="muted" style="margin-bottom: 16px; font-size: 14px;">
+              Ajoutez des informations personnalisées comme d'autres formations, certifications, langues, etc.
+            </p>
+
+            <div class="selection-controls">
+              <label style="display: flex; align-items: center; cursor: pointer;">
+                <input type="checkbox" id="select-all-personal-info" onchange="toggleSelectAllPersonalInfo()" />
+                <span>Sélectionner tout</span>
+              </label>
+              <div id="bulk-actions-personal-info" class="bulk-actions">
+                <button class="btn btn-danger" onclick="deleteSelectedPersonalInfo()">🗑️ Supprimer les informations sélectionnées</button>
+                <span id="selected-count-personal-info" style="color: var(--muted); font-size: 14px;"></span>
+              </div>
+            </div>
+
+            <button class="btn" onclick="showPersonalInfoForm()" style="margin-bottom: 20px;">+ Ajouter une information</button>
+            
+            <div id="personal-info-list" class="item-list"></div>
+
+            <!-- Personal Info Form Modal -->
+            <div id="personal-info-form-modal" style="display: none;">
+              <div class="admin-section" style="margin-top: 20px; border: 2px solid var(--accent);">
+                <h3 id="personal-info-form-title">Ajouter une information</h3>
+                <form id="personal-info-item-form">
+                  <input type="hidden" id="personal-info-id" />
+                  
+                  <div class="form-group">
+                    <label for="info-label">Libellé / Titre *</label>
+                    <input type="text" id="info-label" placeholder="Ex: Certification, Langue, Autre formation" required />
+                  </div>
+                  
+                  <div class="form-group">
+                    <label for="info-value">Valeur / Description *</label>
+                    <textarea id="info-value" placeholder="Ex: TOEIC 950, Anglais C1, Licence en Mathématiques..." required></textarea>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="info-type">Type d'information</label>
+                    <select id="info-type">
+                      <option value="formation">Formation</option>
+                      <option value="certification">Certification</option>
+                      <option value="langue">Langue</option>
+                      <option value="experience">Expérience</option>
+                      <option value="autre">Autre</option>
+                    </select>
+                  </div>
+
+                  <div style="display: flex; gap: 12px; margin-top: 20px;">
+                    <button type="submit" class="btn">Enregistrer</button>
+                    <button type="button" class="btn secondary" onclick="hidePersonalInfoForm()">Annuler</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Projects Tab -->
+        <div id="tab-projects" class="admin-tab-content">
+          <div class="admin-section">
+            <h2>🚀 Gestion des projets</h2>
+            
+            <div class="selection-controls">
+              <label style="display: flex; align-items: center; cursor: pointer;">
+                <input type="checkbox" id="select-all-projects" onchange="toggleSelectAllProjects()" />
+                <span>Sélectionner tout</span>
+              </label>
+              <div id="bulk-actions-projects" class="bulk-actions">
+                <button class="btn btn-danger" onclick="deleteSelectedProjects()">🗑️ Supprimer les projets sélectionnés</button>
+                <span id="selected-count-projects" style="color: var(--muted); font-size: 14px;"></span>
+              </div>
+            </div>
+
+            <button class="btn" onclick="showProjectForm()" style="margin-bottom: 20px;">+ Ajouter un projet</button>
+            
+            <div id="projects-list" class="item-list"></div>
+
+            <!-- Project Form Modal -->
+            <div id="project-form-modal" style="display: none;">
+              <div class="admin-section" style="margin-top: 20px; border: 2px solid var(--accent);">
+                <h3 id="project-form-title">Ajouter un projet</h3>
+                <form id="project-form">
+                  <input type="hidden" id="project-id" />
+                  
+                  <div class="form-group">
+                    <label for="project-title">Titre du projet *</label>
+                    <input type="text" id="project-title" required />
+                  </div>
+                  
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="project-type">Type de projet</label>
+                      <select id="project-type">
+                        <option value="Projet Personnel">Projet Personnel</option>
+                        <option value="Projet Majeur">Projet Majeur</option>
+                        <option value="PFE Licence">PFE Licence</option>
+                        <option value="PFE Master 1">PFE Master 1</option>
+                        <option value="Projet Majeur · PFE Master 1">Projet Majeur · PFE Master 1</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label for="project-category">Catégorie</label>
+                      <input type="text" id="project-category" placeholder="Ex: Application web" />
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="project-short-desc">Description courte *</label>
+                    <input type="text" id="project-short-desc" required />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="project-description">Description complète *</label>
+                    <textarea id="project-description" required></textarea>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="project-features">Fonctionnalités (une par ligne)</label>
+                    <textarea id="project-features" placeholder="Fonctionnalité 1&#10;Fonctionnalité 2"></textarea>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="project-tags">Technologies (séparées par des virgules) *</label>
+                    <input type="text" id="project-tags" placeholder="React, Node.js, MongoDB" required />
+                    <div id="project-tags-display" class="tag-input"></div>
+                  </div>
+
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="project-link">Lien du projet</label>
+                      <input type="url" id="project-link" placeholder="https://..." />
+                    </div>
+                    <div class="form-group">
+                      <label for="project-demo-link">Lien de démo</label>
+                      <input type="url" id="project-demo-link" placeholder="https://..." />
+                    </div>
+                  </div>
+
+                  <div class="featured-checkbox">
+                    <input type="checkbox" id="project-featured" />
+                    <label for="project-featured">Projet mis en avant (featured)</label>
+                  </div>
+
+                  <div class="featured-checkbox">
+                    <input type="checkbox" id="project-public" checked />
+                    <label for="project-public">Projet public (visible par tous)</label>
+                    <div class="photo-info" style="margin-top: 4px;">
+                      Si décoché, le projet sera privé et visible uniquement par l'administrateur
+                    </div>
+                  </div>
+
+                  <div style="display: flex; gap: 12px; margin-top: 20px;">
+                    <button type="submit" class="btn">Enregistrer</button>
+                    <button type="button" class="btn secondary" onclick="hideProjectForm()">Annuler</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Skills Tab -->
+        <div id="tab-skills" class="admin-tab-content">
+          <div class="admin-section">
+            <h2>💼 Gestion des compétences</h2>
+            
+            <h3 style="margin-bottom: 16px;">Ajouter une nouvelle catégorie</h3>
+            <form id="skill-category-form">
+              <div class="form-group">
+                <label for="skill-category-name">Nom de la catégorie *</label>
+                <input type="text" id="skill-category-name" placeholder="Ex: Développement Web" required />
+              </div>
+              <div class="form-group">
+                <label for="skill-category-icon">Icône (emoji) *</label>
+                <input type="text" id="skill-category-icon" placeholder="🌐" maxlength="2" required />
+              </div>
+              <div class="form-group">
+                <label for="skill-category-skills">Compétences (séparées par des virgules) *</label>
+                <input type="text" id="skill-category-skills" placeholder="HTML5, CSS3, JavaScript" required />
+              </div>
+              <button type="submit" class="btn">Ajouter la catégorie</button>
+            </form>
+
+            <h3 style="margin-top: 32px; margin-bottom: 16px;">Catégories existantes</h3>
+            
+            <div class="selection-controls">
+              <label style="display: flex; align-items: center; cursor: pointer;">
+                <input type="checkbox" id="select-all-skills" onchange="toggleSelectAllSkills()" />
+                <span>Sélectionner tout</span>
+              </label>
+              <div id="bulk-actions-skills" class="bulk-actions">
+                <button class="btn btn-danger" onclick="deleteSelectedSkills()">🗑️ Supprimer les catégories sélectionnées</button>
+                <span id="selected-count-skills" style="color: var(--muted); font-size: 14px;"></span>
+              </div>
+            </div>
+
+            <div id="skills-list" class="item-list"></div>
+          </div>
+        </div>
+
+        <!-- Links Tab -->
+        <div id="tab-links" class="admin-tab-content">
+          <div class="admin-section">
+            <h2>🔗 Gestion des liens & CV</h2>
+            
+            <h3 style="margin-top: 24px;">CV</h3>
+            <div class="admin-info" style="margin-bottom: 20px;">
+              <p><strong>📄 Gestion du CV</strong></p>
+              <p style="margin: 4px 0; font-size: 14px;">Vous pouvez importer un nouveau CV (fichier PDF) ou spécifier un chemin/URL vers votre CV.</p>
+            </div>
+            
+            <div class="form-group">
+              <label>Méthode d'import</label>
+              <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                <button type="button" id="cv-upload-tab" class="btn secondary active" onclick="switchCVMethod('upload')">📤 Importer un fichier PDF</button>
+                <button type="button" id="cv-path-tab" class="btn secondary" onclick="switchCVMethod('path')">🔗 Chemin/URL du CV</button>
+              </div>
+            </div>
+
+            <!-- Upload CV Section -->
+            <div id="cv-upload-section" style="margin-bottom: 24px;">
+              <form id="cv-upload-form">
+                <div class="form-group">
+                  <label for="cv-file-input">Sélectionner un fichier PDF *</label>
+                  <input type="file" id="cv-file-input" accept="application/pdf" required />
+                  <div class="photo-info" style="margin-top: 8px;">
+                    Taille maximale recommandée : 5 MB. Le fichier sera stocké dans votre navigateur.
+                  </div>
+                </div>
+                
+                <div id="cv-preview-section" style="display: none; margin-top: 16px; padding: 16px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg);">
+                  <p style="margin: 0 0 8px; font-weight: 600;">📄 CV actuel :</p>
+                  <p id="cv-file-name" style="margin: 0 0 8px; color: var(--muted);"></p>
+                  <p id="cv-file-size" style="margin: 0 0 12px; font-size: 12px; color: var(--muted);"></p>
+                  <div style="display: flex; gap: 8px;">
+                    <a id="cv-preview-link" href="#" target="_blank" class="btn secondary" style="font-size: 14px;">👁️ Prévisualiser le CV</a>
+                    <button type="button" onclick="clearCVUpload()" class="btn btn-danger" style="font-size: 14px;">🗑️ Supprimer le CV</button>
+                  </div>
+                </div>
+                
+                <button type="submit" class="btn" style="margin-top: 12px;">📤 Importer et enregistrer le CV</button>
+              </form>
+            </div>
+
+            <!-- Path/URL CV Section -->
+            <div id="cv-path-section" style="display: none; margin-bottom: 24px;">
+              <form id="cv-form">
+                <div class="form-group">
+                  <label for="cv-path">Chemin du CV ou URL *</label>
+                  <input type="text" id="cv-path" placeholder="assets/CV.pdf ou https://..." />
+                  <div class="photo-info" style="margin-top: 8px;">
+                    Entrez un chemin relatif (ex: assets/CV.pdf) ou une URL complète (ex: https://example.com/cv.pdf)
+                  </div>
+                </div>
+                <button type="submit" class="btn">Enregistrer le CV</button>
+              </form>
+            </div>
+
+            <h3 style="margin-top: 32px;">Liens sociaux</h3>
+            <form id="social-link-form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="social-name">Nom du lien *</label>
+                  <input type="text" id="social-name" placeholder="Ex: LinkedIn, GitHub" required />
+                </div>
+                <div class="form-group">
+                  <label for="social-url">URL *</label>
+                  <input type="url" id="social-url" placeholder="https://..." required />
+                </div>
+              </div>
+              <button type="submit" class="btn">Ajouter le lien</button>
+            </form>
+
+            <div id="social-links-list" class="item-list" style="margin-top: 24px;"></div>
+          </div>
+        </div>
+
+        <!-- About Tab -->
+        <div id="tab-about" class="admin-tab-content">
+          <div class="admin-section">
+            <h2>📝 Gestion des descriptions</h2>
+            
+            <div class="form-group">
+              <label for="hero-description">Description principale (Hero) *</label>
+              <textarea id="hero-description" required></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="about-description">Description "À propos" *</label>
+              <textarea id="about-description" required></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="stats-projects">Nombre de projets réalisés</label>
+              <input type="number" id="stats-projects" min="0" />
+            </div>
+
+            <div class="form-group">
+              <label for="stats-experience">Années d'expérience</label>
+              <input type="number" id="stats-experience" min="0" step="0.5" />
+            </div>
+
+            <div class="form-group">
+              <label for="stats-technologies">Nombre de technologies maîtrisées</label>
+              <input type="number" id="stats-technologies" min="0" />
+            </div>
+
+            <button type="button" class="btn" onclick="saveAboutInfo()">Enregistrer les descriptions</button>
+          </div>
+        </div>
+
+        <!-- Testimonials Tab -->
+        <div id="tab-testimonials" class="admin-tab-content">
+          <div class="admin-section">
+            <h2>💬 Gestion des témoignages</h2>
+            <button class="btn" onclick="showTestimonialForm()" style="margin-bottom: 20px;">+ Ajouter un témoignage</button>
+            <div id="testimonials-list" class="item-list"></div>
+            
+            <div id="testimonial-form-modal" style="display: none;">
+              <div class="admin-section" style="margin-top: 20px; border: 2px solid var(--accent);">
+                <h3 id="testimonial-form-title">Ajouter un témoignage</h3>
+                <form id="testimonial-form">
+                  <input type="hidden" id="testimonial-id" />
+                  <div class="form-group">
+                    <label for="testimonial-text">Texte du témoignage *</label>
+                    <textarea id="testimonial-text" required></textarea>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="testimonial-author">Auteur *</label>
+                      <input type="text" id="testimonial-author" required />
+                    </div>
+                    <div class="form-group">
+                      <label for="testimonial-role">Rôle / Fonction</label>
+                      <input type="text" id="testimonial-role" />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="testimonial-rating">Note (1-5 étoiles)</label>
+                    <input type="number" id="testimonial-rating" min="1" max="5" value="5" />
+                  </div>
+                  <div style="display: flex; gap: 12px; margin-top: 20px;">
+                    <button type="submit" class="btn">Enregistrer</button>
+                    <button type="button" class="btn secondary" onclick="hideTestimonialForm()">Annuler</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timeline Tab -->
+        <div id="tab-timeline" class="admin-tab-content">
+          <div class="admin-section">
+            <h2>📅 Gestion de la timeline</h2>
+            <button class="btn" onclick="showTimelineForm()" style="margin-bottom: 20px;">+ Ajouter un événement</button>
+            <div id="timeline-list" class="item-list"></div>
+            
+            <div id="timeline-form-modal" style="display: none;">
+              <div class="admin-section" style="margin-top: 20px; border: 2px solid var(--accent);">
+                <h3 id="timeline-form-title">Ajouter un événement</h3>
+                <form id="timeline-form">
+                  <input type="hidden" id="timeline-id" />
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="timeline-date">Date *</label>
+                      <input type="text" id="timeline-date" placeholder="Ex: 2024 - Présent" required />
+                    </div>
+                    <div class="form-group">
+                      <label for="timeline-title">Titre *</label>
+                      <input type="text" id="timeline-title" required />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="timeline-subtitle">Sous-titre</label>
+                    <input type="text" id="timeline-subtitle" />
+                  </div>
+                  <div class="form-group">
+                    <label for="timeline-description">Description *</label>
+                    <textarea id="timeline-description" required></textarea>
+                  </div>
+                  <div style="display: flex; gap: 12px; margin-top: 20px;">
+                    <button type="submit" class="btn">Enregistrer</button>
+                    <button type="button" class="btn secondary" onclick="hideTimelineForm()">Annuler</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Services Tab -->
+        <div id="tab-services" class="admin-tab-content">
+          <div class="admin-section">
+            <h2>🛠️ Gestion des services</h2>
+            <button class="btn" onclick="showServiceForm()" style="margin-bottom: 20px;">+ Ajouter un service</button>
+            <div id="services-list" class="item-list"></div>
+            
+            <div id="service-form-modal" style="display: none;">
+              <div class="admin-section" style="margin-top: 20px; border: 2px solid var(--accent);">
+                <h3 id="service-form-title">Ajouter un service</h3>
+                <form id="service-form">
+                  <input type="hidden" id="service-id" />
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="service-icon">Icône (emoji) *</label>
+                      <input type="text" id="service-icon" placeholder="💻" maxlength="2" required />
+                    </div>
+                    <div class="form-group">
+                      <label for="service-title">Titre *</label>
+                      <input type="text" id="service-title" required />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="service-description">Description *</label>
+                    <textarea id="service-description" required></textarea>
+                  </div>
+                  <div class="form-group">
+                    <label for="service-features">Fonctionnalités (une par ligne)</label>
+                    <textarea id="service-features" placeholder="Fonctionnalité 1&#10;Fonctionnalité 2"></textarea>
+                  </div>
+                  <div style="display: flex; gap: 12px; margin-top: 20px;">
+                    <button type="submit" class="btn">Enregistrer</button>
+                    <button type="button" class="btn secondary" onclick="hideServiceForm()">Annuler</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Certifications Tab -->
+        <div id="tab-certifications" class="admin-tab-content">
+          <div class="admin-section">
+            <h2>🏆 Gestion des certifications</h2>
+            <button class="btn" onclick="showCertificationForm()" style="margin-bottom: 20px;">+ Ajouter une certification</button>
+            <div id="certifications-list" class="item-list"></div>
+            
+            <div id="certification-form-modal" style="display: none;">
+              <div class="admin-section" style="margin-top: 20px; border: 2px solid var(--accent);">
+                <h3 id="certification-form-title">Ajouter une certification</h3>
+                <form id="certification-form">
+                  <input type="hidden" id="certification-id" />
+                  <div class="form-group">
+                    <label for="cert-name">Nom de la certification *</label>
+                    <input type="text" id="cert-name" required />
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="cert-issuer">Organisme émetteur *</label>
+                      <input type="text" id="cert-issuer" required />
+                    </div>
+                    <div class="form-group">
+                      <label for="cert-date">Date d'obtention</label>
+                      <input type="date" id="cert-date" />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="cert-url">URL de la certification (optionnel)</label>
+                    <input type="url" id="cert-url" placeholder="https://..." />
+                  </div>
+                  <div class="form-group">
+                    <label for="cert-image">Image/Badge (URL)</label>
+                    <input type="text" id="cert-image" placeholder="assets/cert.jpg" />
+                  </div>
+                  <div style="display: flex; gap: 12px; margin-top: 20px;">
+                    <button type="submit" class="btn">Enregistrer</button>
+                    <button type="button" class="btn secondary" onclick="hideCertificationForm()">Annuler</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FAQ Tab -->
+        <div id="tab-faq" class="admin-tab-content">
+          <div class="admin-section">
+            <h2>❓ Gestion de la FAQ</h2>
+            <button class="btn" onclick="showFAQForm()" style="margin-bottom: 20px;">+ Ajouter une question</button>
+            <div id="faq-list" class="item-list"></div>
+            
+            <div id="faq-form-modal" style="display: none;">
+              <div class="admin-section" style="margin-top: 20px; border: 2px solid var(--accent);">
+                <h3 id="faq-form-title">Ajouter une question FAQ</h3>
+                <form id="faq-form">
+                  <input type="hidden" id="faq-id" />
+                  <div class="form-group">
+                    <label for="faq-question">Question *</label>
+                    <input type="text" id="faq-question" required />
+                  </div>
+                  <div class="form-group">
+                    <label for="faq-answer">Réponse *</label>
+                    <textarea id="faq-answer" required></textarea>
+                  </div>
+                  <div style="display: flex; gap: 12px; margin-top: 20px;">
+                    <button type="submit" class="btn">Enregistrer</button>
+                    <button type="button" class="btn secondary" onclick="hideFAQForm()">Annuler</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Messages Tab -->
+        <div id="tab-messages" class="admin-tab-content">
+          <div class="admin-section">
+            <h2>📧 Messages de contact</h2>
+            <div id="messages-list" class="item-list"></div>
+            <p class="muted" style="margin-top: 24px; font-size: 14px;">
+              Les messages envoyés via le formulaire de contact apparaîtront ici. (Fonctionnalité nécessite un backend pour recevoir les messages)
+            </p>
+          </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="tab-settings" class="admin-tab-content">
+          <div class="admin-section">
+            <h2>⚙️ Paramètres du portfolio</h2>
+            
+            <h3 style="margin-top: 24px;">Mode maintenance</h3>
+            <div class="featured-checkbox">
+              <input type="checkbox" id="maintenance-mode" onchange="toggleMaintenanceModeDisplay()" />
+              <label for="maintenance-mode">Activer le mode maintenance</label>
+            </div>
+            <div id="maintenance-message-group" style="margin-top: 12px; display: none;">
+              <label for="maintenance-message">Message de maintenance</label>
+              <textarea id="maintenance-message" placeholder="Le site est actuellement en maintenance. Nous serons bientôt de retour !"></textarea>
+            </div>
+
+            <h3 style="margin-top: 32px;">SEO & Métadonnées</h3>
+            <div class="form-group">
+              <label for="meta-title">Titre SEO (meta title)</label>
+              <input type="text" id="meta-title" placeholder="Nema Elisée Kourouma - Portfolio" />
+            </div>
+            <div class="form-group">
+              <label for="meta-description">Description SEO (meta description)</label>
+              <textarea id="meta-description" placeholder="Développeur Full-Stack spécialisé en IA..."></textarea>
+            </div>
+            <div class="form-group">
+              <label for="meta-keywords">Mots-clés (séparés par des virgules)</label>
+              <input type="text" id="meta-keywords" placeholder="développeur, IA, web, portfolio" />
+            </div>
+
+            <h3 style="margin-top: 32px;">Analytics</h3>
+            <div class="form-group">
+              <label for="google-analytics">ID Google Analytics (optionnel)</label>
+              <input type="text" id="google-analytics" placeholder="G-XXXXXXXXXX" />
+            </div>
+
+            <button type="button" class="btn" onclick="saveSettings()" style="margin-top: 24px;">Enregistrer les paramètres</button>
+          </div>
+        </div>
+
+        <!-- Stats Tab -->
+        <div id="tab-stats" class="admin-tab-content">
+          <div class="admin-section">
+            <h2>📈 Statistiques du portfolio</h2>
+            
+            <h3 style="margin-top: 24px; margin-bottom: 16px;">📊 Modifier les statistiques affichées</h3>
+            <p class="muted" style="margin-bottom: 24px;">Ces statistiques sont affichées sur la page d'accueil dans la section "En quelques chiffres".</p>
+            
+            <div class="form-group">
+              <label for="stats-projects-display">Nombre de projets réalisés *</label>
+              <input type="number" id="stats-projects-display" min="0" placeholder="Ex: 4" />
+              <small class="muted" style="display: block; margin-top: 4px; font-size: 12px;">Nombre affiché sur la page d'accueil dans "Projets réalisés"</small>
+            </div>
+
+            <div class="form-group">
+              <label for="stats-experience-display">Années d'expérience *</label>
+              <input type="number" id="stats-experience-display" min="0" step="0.5" placeholder="Ex: 2" />
+              <small class="muted" style="display: block; margin-top: 4px; font-size: 12px;">Nombre d'années d'expérience professionnelle</small>
+            </div>
+
+            <div class="form-group">
+              <label for="stats-technologies-display">Nombre de technologies maîtrisées *</label>
+              <input type="number" id="stats-technologies-display" min="0" placeholder="Ex: 15" />
+              <small class="muted" style="display: block; margin-top: 4px; font-size: 12px;">Nombre total de technologies maîtrisées</small>
+            </div>
+
+            <button type="button" class="btn" onclick="saveStatsInfo()" style="margin-top: 16px;">💾 Enregistrer les statistiques</button>
+            
+            <hr style="margin: 32px 0; border: none; border-top: 1px solid var(--line);" />
+            
+            <h3 style="margin-top: 24px; margin-bottom: 16px;">📊 Vue d'ensemble</h3>
+            <div class="admin-stats">
+              <div class="stat-card-admin">
+                <h3>Projets</h3>
+                <div class="value" id="dashboard-stat-projects">0</div>
+              </div>
+              <div class="stat-card-admin">
+                <h3>Compétences</h3>
+                <div class="value" id="dashboard-stat-skills">0</div>
+              </div>
+              <div class="stat-card-admin">
+                <h3>Liens</h3>
+                <div class="value" id="dashboard-stat-links">0</div>
+              </div>
+            </div>
+
+            <div style="margin-top: 32px;">
+              <h3>Export/Import</h3>
+              <div style="display: grid; gap: 12px; margin-top: 16px;">
+                <button class="btn" onclick="exportAllData()">💾 Exporter toutes les données (JSON)</button>
+                <input type="file" id="import-file" accept=".json" style="display: none;" onchange="handleFileImport(event)" />
+                <button class="btn secondary" onclick="document.getElementById('import-file').click()">📥 Importer des données (JSON)</button>
+              </div>
+            </div>
+
+            <div style="margin-top: 32px;">
+              <h3>Réinitialisation</h3>
+              <button class="btn btn-danger" onclick="clearAllData()" style="margin-top: 16px;">🗑️ Réinitialiser toutes les données</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button id="scroll-top" class="scroll-top" aria-label="Retour en haut" title="Retour en haut">
+      ↑
+    </button>
+    <footer class="container footer">© Mon Portfolio · <span data-year></span></footer>
+    
+    <script src="assets/js/main.js"></script>
+    <script src="assets/js/admin.js"></script>
+  </body>
+</html>

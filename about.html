@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>À propos - Portfolio</title>
+    <link rel="stylesheet" href="assets/css/styles.css" />
+  </head>
+  <body id="top" class="dark">
+    <header class="container">
+      <nav class="nav">
+        <a class="brand" href="/">Mon Portfolio</a>
+        <button id="mobile-menu-toggle" class="mobile-menu-toggle" aria-label="Menu" aria-expanded="false">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <div class="mobile-menu-overlay" id="mobile-menu-overlay"></div>
+        <div class="links" id="nav-links">
+          <a href="/">Accueil</a>
+          <a href="about.html">À propos</a>
+          <a href="projects.html">Projets</a>
+          <a href="contact.html">Contact</a>
+          <a href="assets/CV.pdf" target="_blank" rel="noopener" data-cv-link="true">CV</a>
+          <a href="admin.html" class="admin-nav-link">
+            <span>🔐</span> Admin
+          </a>
+          <a href="admin.html" id="admin-nav-link-logged" style="display: none;" class="admin-nav-link">
+            <span>🔐</span> Admin (Connecté)
+          </a>
+        </div>
+      </nav>
+    </header>
+    <main class="container">
+      <!-- Hero Section -->
+      <section class="hero" data-animate style="padding: 60px 0; text-align: center;">
+        <div class="gradient" style="font-size: 48px; font-weight: 700; margin-bottom: 16px;" data-shimmer>À propos de moi</div>
+        <p style="font-size: 18px; color: var(--muted); max-width: 700px; margin: 0 auto 32px;" id="about-hero-description">
+          Master 1 en Intelligence Artificielle à l'École Supérieure d'Informatique de Paris. Titulaire d'une licence en mathématiques et informatique (USMBA Fès).
+        </p>
+        <div style="display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap;margin-top:32px;">
+          <img src="assets/photo.jpeg" alt="Photo de Nema Elisée Kourouma" class="avatar" loading="lazy" style="width:180px;height:180px;object-fit:cover;border-radius:50%;border:3px solid var(--accent);box-shadow: 0 10px 30px rgba(91, 124, 250, 0.3);" data-scroll-reveal="bottom" />
+          <div style="text-align: left;" data-scroll-reveal="left">
+            <h2 style="margin-bottom: 8px;" id="about-name">Nema Elisée Kourouma</h2>
+            <p class="muted" style="margin-bottom: 16px;" id="about-title">Développeur Full-Stack & IA</p>
+            <a href="assets/CV.pdf" target="_blank" rel="noopener" class="btn" data-cv-link="true" style="display: inline-flex; align-items: center; gap: 8px;">
+              <span>📄</span> Télécharger mon CV
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Stats Section -->
+      <section data-animate style="margin: 48px 0;">
+        <h2 style="text-align: center; margin-bottom: 32px;" data-shimmer>En quelques chiffres</h2>
+        <div class="grid cols-3 stats-grid">
+          <div class="card stat-card" data-scroll-reveal="bottom">
+            <div class="stat-number" data-count="4">0</div>
+            <div class="stat-label">Projets réalisés</div>
+          </div>
+          <div class="card stat-card" data-scroll-reveal="bottom" style="transition-delay: 0.1s;">
+            <div class="stat-number" data-count="2">0</div>
+            <div class="stat-label">Années d'expérience</div>
+          </div>
+          <div class="card stat-card" data-scroll-reveal="bottom" style="transition-delay: 0.2s;">
+            <div class="stat-number" data-count="15">0</div>
+            <div class="stat-label">Technologies maîtrisées</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- About Description -->
+      <section data-animate style="margin: 48px 0;">
+        <div class="card" style="padding: 32px;" data-scroll-reveal="left">
+          <h2 style="margin-bottom: 20px; color: var(--accent);">Qui suis-je ?</h2>
+          <div id="about-description-content" style="line-height: 1.8; font-size: 16px;">
+            <p>
+              Master 1 en Intelligence Artificielle à l'École Supérieure d'Informatique de Paris. 
+              Titulaire d'une licence en mathématiques et informatique (USMBA Fès).
+            </p>
+            <p>
+              Passionné par le développement web et l'intelligence artificielle, je crée des applications 
+              modernes et performantes qui résolvent des problèmes réels. Mon expertise couvre le développement 
+              full-stack, l'IA, et le DevOps.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Timeline Section -->
+      <section data-animate style="margin: 48px 0;">
+        <h2 style="text-align: center; margin-bottom: 32px;" data-shimmer>Mon parcours</h2>
+        <div class="timeline-container" id="about-timeline" data-stagger style="max-width: 800px; margin: 0 auto;">
+          <!-- Timeline items will be loaded dynamically -->
+        </div>
+      </section>
+
+      <!-- Skills Section -->
+      <section data-animate style="margin: 48px 0;" id="about-skills-section">
+        <h2 style="text-align: center; margin-bottom: 32px;" data-shimmer>Mes compétences</h2>
+        <div class="grid cols-3" id="about-skills">
+          <!-- Skills will be loaded dynamically -->
+        </div>
+      </section>
+
+      <!-- Values Section -->
+      <section data-animate style="margin: 48px 0;">
+        <h2 style="text-align: center; margin-bottom: 32px;" data-shimmer>Mes valeurs</h2>
+        <div class="grid cols-2" style="max-width: 900px; margin: 0 auto; gap: 24px;">
+          <div class="card" data-scroll-reveal="left" style="text-align: center; padding: 32px; transition: all 0.3s ease;">
+            <div style="font-size: 48px; margin-bottom: 16px;">💡</div>
+            <h3>Innovation</h3>
+            <p class="muted" style="line-height: 1.6;">Recherche constante de solutions innovantes et efficaces pour répondre aux défis techniques.</p>
+          </div>
+          <div class="card" data-scroll-reveal="right" style="text-align: center; padding: 32px; transition: all 0.3s ease;">
+            <div style="font-size: 48px; margin-bottom: 16px;">🎯</div>
+            <h3>Excellence</h3>
+            <p class="muted" style="line-height: 1.6;">Engagement à produire un code de qualité, maintenable et suivant les meilleures pratiques.</p>
+          </div>
+          <div class="card" data-scroll-reveal="left" style="text-align: center; padding: 32px; transition: all 0.3s ease;">
+            <div style="font-size: 48px; margin-bottom: 16px;">📚</div>
+            <h3>Apprentissage continu</h3>
+            <p class="muted" style="line-height: 1.6;">Développement permanent de mes compétences et veille technologique pour rester à jour avec les dernières innovations.</p>
+          </div>
+          <div class="card" data-scroll-reveal="right" style="text-align: center; padding: 32px; transition: all 0.3s ease;">
+            <div style="font-size: 48px; margin-bottom: 16px;">✨</div>
+            <h3>Rigueur & Qualité</h3>
+            <p class="muted" style="line-height: 1.6;">Respect des standards de développement, tests rigoureux et livraison de produits de haute qualité.</p>
+          </div>
+          <div class="card" data-scroll-reveal="left" style="text-align: center; padding: 32px; transition: all 0.3s ease;">
+            <div style="font-size: 48px; margin-bottom: 16px;">👥</div>
+            <h3>Esprit d'équipe</h3>
+            <p class="muted" style="line-height: 1.6;">Collaboration efficace, communication claire et contribution positive à l'atteinte des objectifs communs.</p>
+          </div>
+          <div class="card" data-scroll-reveal="right" style="text-align: center; padding: 32px; transition: all 0.3s ease;">
+            <div style="font-size: 48px; margin-bottom: 16px;">🚀</div>
+            <h3>Autonomie & Initiative</h3>
+            <p class="muted" style="line-height: 1.6;">Capacité à prendre des décisions, proposer des solutions et agir de manière proactive pour résoudre les problèmes.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Contact CTA -->
+      <section data-animate style="margin: 48px 0;">
+        <div class="card" style="text-align: center; padding: 48px; background: linear-gradient(135deg, rgba(91, 124, 250, 0.1), rgba(124, 147, 255, 0.05));" data-glass>
+          <h2 style="margin-bottom: 16px;">Travaillons ensemble</h2>
+          <p class="muted" style="margin-bottom: 24px; max-width: 600px; margin-left: auto; margin-right: auto;">
+            Vous avez un projet en tête ? N'hésitez pas à me contacter pour discuter de vos besoins.
+          </p>
+          <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+            <a href="contact.html" class="btn">Me contacter</a>
+            <a href="projects.html" class="btn secondary">Voir mes projets</a>
+          </div>
+        </div>
+      </section>
+    </main>
+    <button id="scroll-top" class="scroll-top" aria-label="Retour en haut" title="Retour en haut">
+      ↑
+    </button>
+    <footer class="container footer">© Mon Portfolio · <span data-year></span></footer>
+    <script src="assets/js/main.js"></script>
+  </body>
+  </html>
+

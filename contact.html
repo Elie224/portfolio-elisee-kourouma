@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Contact - Portfolio</title>
+    <link rel="stylesheet" href="assets/css/styles.css" />
+  </head>
+  <body id="top" class="dark">
+    <header class="container">
+      <nav class="nav">
+        <a class="brand" href="/">Mon Portfolio</a>
+        <button id="mobile-menu-toggle" class="mobile-menu-toggle" aria-label="Menu" aria-expanded="false">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <div class="mobile-menu-overlay" id="mobile-menu-overlay"></div>
+        <div class="links" id="nav-links">
+          <a href="/">Accueil</a>
+          <a href="about.html">À propos</a>
+          <a href="projects.html">Projets</a>
+          <a href="contact.html">Contact</a>
+          <a href="assets/CV.pdf" target="_blank" rel="noopener" data-cv-link="true">CV</a>
+          <a href="admin.html" class="admin-nav-link">
+            <span>🔐</span> Admin
+          </a>
+          <a href="admin.html" id="admin-nav-link-logged" style="display: none;" class="admin-nav-link">
+            <span>🔐</span> Admin (Connecté)
+          </a>
+        </div>
+      </nav>
+    </header>
+    <main class="container" data-animate>
+      <section style="text-align: center; margin-bottom: 48px;">
+        <h1 style="margin-bottom: 16px;">Contactez-moi</h1>
+        <p style="font-size: 18px; color: var(--muted); max-width: 600px; margin: 0 auto;">
+          Je suis ouvert aux opportunités, collaborations et discussions intéressantes. N'hésitez pas à me contacter !
+        </p>
+      </section>
+
+      <!-- Contact Cards -->
+      <div class="grid cols-2" style="margin-bottom: 48px; gap: 24px;">
+        <div class="card" style="text-align: center; padding: 32px 24px;">
+          <div style="margin-bottom: 16px; display: flex; justify-content: center; align-items: center;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M20 4H4C2.9 4 2.01 4.9 2.01 6L2 18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4ZM20 8L12 13L4 8V6L12 11L20 6V8Z" fill="#5b7cfa"/>
+            </svg>
+          </div>
+          <h3 style="margin-bottom: 8px;">Email</h3>
+          <p class="muted" style="margin-bottom: 20px;">Envoyez-moi un email</p>
+          <a href="mailto:kouroumaelisee@gmail.com" class="btn">kouroumaelisee@gmail.com</a>
+        </div>
+
+        <div class="card" style="text-align: center; padding: 32px 24px;">
+          <div style="margin-bottom: 16px; display: flex; justify-content: center; align-items: center;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" fill="#25D366"/>
+            </svg>
+          </div>
+          <h3 style="margin-bottom: 8px;">WhatsApp</h3>
+          <p class="muted" style="margin-bottom: 20px;">Discutons en direct</p>
+          <a href="https://wa.me/33689306432" target="_blank" rel="noopener" class="btn secondary">Ouvrir WhatsApp</a>
+        </div>
+
+        <div class="card" style="text-align: center; padding: 32px 24px;">
+          <div style="margin-bottom: 16px; display: flex; justify-content: center; align-items: center;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="#1877F2"/>
+            </svg>
+          </div>
+          <h3 style="margin-bottom: 8px;">Facebook</h3>
+          <p class="muted" style="margin-bottom: 20px;">Suivez-moi sur Facebook</p>
+          <a href="https://www.facebook.com/share/17xGVe29cL/" target="_blank" rel="noopener" class="btn secondary">Visiter mon profil</a>
+        </div>
+
+        <div class="card" style="text-align: center; padding: 32px 24px;">
+          <div style="margin-bottom: 16px; display: flex; justify-content: center; align-items: center;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.89 22 5.99 22H18C19.1 22 20 21.1 20 20V8L14 2ZM16 18H8V16H16V18ZM16 14H8V12H16V14ZM13 9V3.5L18.5 9H13Z" fill="#5b7cfa"/>
+            </svg>
+          </div>
+          <h3 style="margin-bottom: 8px;">CV</h3>
+          <p class="muted" style="margin-bottom: 20px;">Téléchargez mon CV</p>
+          <a href="assets/CV.pdf" target="_blank" rel="noopener" class="btn secondary" data-cv-link="true">Voir mon CV</a>
+        </div>
+      </div>
+
+      <!-- Contact Form -->
+      <section>
+        <div class="card" style="max-width: 700px; margin: 0 auto;">
+          <h2 style="margin-bottom: 8px; text-align: center;">Formulaire de contact</h2>
+          <p style="text-align: center; color: var(--muted); margin-bottom: 32px;">
+            Remplissez le formulaire ci-dessous et je vous répondrai dans les plus brefs délais.
+          </p>
+          <form id="contact-form">
+            <div class="form-group">
+              <label for="name">Nom complet *</label>
+              <input id="name" name="name" placeholder="Votre nom" required />
+              <span class="form-error" id="name-error"></span>
+            </div>
+            <div class="form-group">
+              <label for="email">Email *</label>
+              <input id="email" type="email" name="email" placeholder="votre.email@exemple.com" required />
+              <span class="form-error" id="email-error"></span>
+            </div>
+            <div class="form-group">
+              <label for="subject">Sujet</label>
+              <input id="subject" name="subject" placeholder="Objet de votre message (optionnel)" />
+            </div>
+            <div class="form-group">
+              <label for="message">Message *</label>
+              <textarea id="message" name="message" rows="6" placeholder="Votre message..." required></textarea>
+              <span class="form-error" id="message-error"></span>
+            </div>
+            <div class="form-actions" style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
+              <button type="submit" class="btn" id="submit-btn" style="min-width: 160px;">
+                <span class="btn-text">📤 Envoyer le message</span>
+                <span class="btn-loader" style="display:none;">Envoi en cours...</span>
+              </button>
+              <button type="reset" class="btn secondary" style="min-width: 160px;">Effacer</button>
+            </div>
+            <div id="form-message" class="form-message" style="display:none; margin-top: 20px;"></div>
+          </form>
+        </div>
+      </section>
+
+      <!-- Additional Info -->
+      <section style="margin-top: 48px; text-align: center;">
+        <p style="color: var(--muted); font-size: 14px;">
+          💡 <strong>Astuce :</strong> Pour une réponse plus rapide, n'hésitez pas à utiliser WhatsApp ou à m'envoyer directement un email.
+        </p>
+      </section>
+    </main>
+    <button id="scroll-top" class="scroll-top" aria-label="Retour en haut" title="Retour en haut">
+      ↑
+    </button>
+    <footer class="container footer">© Mon Portfolio · <span data-year></span></footer>
+    <script src="assets/js/main.js"></script>
+  </body>
+  </html>
+
