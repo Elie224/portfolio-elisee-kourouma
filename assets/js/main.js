@@ -1763,10 +1763,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      // Only replace if there are projects from admin
-      if (projects.length === 0) {
-        // Keep existing projects if no admin projects
-        return;
+      // Hide loading state
+      if (projectsLoadingEl) {
+        projectsLoadingEl.style.display = 'none';
       }
 
       // Mark that we're loading dynamically
@@ -1774,6 +1773,27 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // Clear existing projects
       projectsGrid.innerHTML = '';
+
+      // Only replace if there are projects from admin
+      if (projects.length === 0) {
+        console.log('⚠️ Aucun projet trouvé - affichage de l\'état vide');
+        // Show empty state
+        const emptyState = document.getElementById('empty-state');
+        if (emptyState) {
+          emptyState.style.display = 'block';
+          emptyState.style.opacity = '1';
+          setTimeout(() => {
+            emptyState.style.transform = 'translateY(0)';
+          }, 100);
+        }
+        return;
+      }
+
+      // Hide empty state if projects exist
+      const emptyState = document.getElementById('empty-state');
+      if (emptyState) {
+        emptyState.style.display = 'none';
+      }
 
       // Render projects from localStorage
       projects.forEach((project, index) => {
