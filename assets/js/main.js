@@ -1655,12 +1655,26 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('✅ Message sauvegardé dans localStorage. Total messages:', data.contactMessages.length);
         
         // Vérification immédiate
-        const verifyData = localStorage.getItem('portfolioData');
-        const verifyParsed = JSON.parse(verifyData);
-        console.log('🔍 Vérification après sauvegarde:', {
-          totalMessages: verifyParsed.contactMessages ? verifyParsed.contactMessages.length : 0,
-          lastMessage: verifyParsed.contactMessages && verifyParsed.contactMessages.length > 0 ? verifyParsed.contactMessages[0] : null
-        });
+        try {
+          const verifyData = localStorage.getItem('portfolioData');
+          if (verifyData) {
+            const verifyParsed = JSON.parse(verifyData);
+            console.log('🔍 Vérification après sauvegarde:', {
+              totalMessages: verifyParsed.contactMessages ? verifyParsed.contactMessages.length : 0,
+              lastMessage: verifyParsed.contactMessages && verifyParsed.contactMessages.length > 0 ? {
+                name: verifyParsed.contactMessages[0].name,
+                email: verifyParsed.contactMessages[0].email,
+                subject: verifyParsed.contactMessages[0].subject,
+                date: verifyParsed.contactMessages[0].date
+              } : null,
+              allMessages: verifyParsed.contactMessages
+            });
+          } else {
+            console.error('❌ Aucune donnée trouvée dans localStorage après sauvegarde !');
+          }
+        } catch (e) {
+          console.error('❌ Erreur lors de la vérification:', e);
+        }
         
         // Dispatch custom event to notify admin page of new message
         try {
