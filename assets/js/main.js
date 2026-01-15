@@ -1639,6 +1639,14 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('portfolioData', JSON.stringify(data));
         console.log('✅ Message sauvegardé dans localStorage. Total messages:', data.contactMessages.length);
         
+        // Vérification immédiate
+        const verifyData = localStorage.getItem('portfolioData');
+        const verifyParsed = JSON.parse(verifyData);
+        console.log('🔍 Vérification après sauvegarde:', {
+          totalMessages: verifyParsed.contactMessages ? verifyParsed.contactMessages.length : 0,
+          lastMessage: verifyParsed.contactMessages && verifyParsed.contactMessages.length > 0 ? verifyParsed.contactMessages[0] : null
+        });
+        
         // Dispatch custom event to notify admin page of new message
         try {
           window.dispatchEvent(new CustomEvent('newContactMessage', {

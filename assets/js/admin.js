@@ -321,7 +321,21 @@ document.addEventListener('DOMContentLoaded', () => {
   // Get portfolio data
   function getPortfolioData() {
     const data = localStorage.getItem('portfolioData');
-    return data ? JSON.parse(data) : DEFAULT_DATA;
+    if (!data) {
+      console.log('⚠️ Aucune donnée dans localStorage, utilisation des données par défaut');
+      return DEFAULT_DATA;
+    }
+    try {
+      const parsed = JSON.parse(data);
+      console.log('📦 Données récupérées de localStorage:', {
+        hasContactMessages: !!parsed.contactMessages,
+        messagesCount: parsed.contactMessages ? parsed.contactMessages.length : 0
+      });
+      return parsed;
+    } catch (e) {
+      console.error('❌ Erreur lors du parsing des données:', e);
+      return DEFAULT_DATA;
+    }
   }
 
   // Save portfolio data
@@ -2261,20 +2275,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Contact Messages Management
   function renderMessages() {
+    console.log('🔄 renderMessages() appelée');
     const container = document.getElementById('messages-list');
     if (!container) {
-      console.log('⚠️ Container messages-list non trouvé');
+      console.error('❌ Container messages-list non trouvé dans le DOM');
+      console.log('🔍 Recherche de tous les éléments avec id contenant "message":', 
+        Array.from(document.querySelectorAll('[id*="message"]')).map(el => el.id));
       return;
     }
+    console.log('✅ Container messages-list trouvé');
 
     const data = getPortfolioData();
+    console.log('📊 Données complètes:', data);
     let messages = data.contactMessages || [];
-
-    console.log(`📬 Chargement de ${messages.length} message(s) dans l'admin`);
+    console.log(`📬 Messages trouvés: ${messages.length}`, messages);
 
     container.innerHTML = '';
 
     if (messages.length === 0) {
+      console.log('ℹ️ Aucun message à afficher');
       container.innerHTML = '<p class="muted">Aucun message reçu pour le moment.</p>';
       return;
     }
