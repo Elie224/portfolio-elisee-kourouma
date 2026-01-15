@@ -621,6 +621,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Load messages
+    console.log('🔄 Chargement des messages au démarrage de l\'admin');
     renderMessages();
 
     // Load about
@@ -2366,8 +2367,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const messagesTab = document.querySelector('[data-tab="messages"]');
   if (messagesTab) {
     messagesTab.addEventListener('click', () => {
-      setTimeout(renderMessages, 100);
+      console.log('📬 Onglet Messages ouvert - rechargement des messages');
+      setTimeout(() => {
+        renderMessages();
+      }, 100);
     });
+  } else {
+    console.warn('⚠️ Onglet Messages non trouvé');
   }
 
   // Auto-refresh messages every 5 seconds when on messages tab
