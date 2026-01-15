@@ -1070,8 +1070,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
-  // Also check periodically to catch login from same tab
-  setInterval(checkAdminSessionAndShowLink, 2000);
+  // Listen for custom logout event
+  window.addEventListener('adminLoggedOut', () => {
+    checkAdminSessionAndShowLink();
+  });
+  
+  // Listen for custom login event
+  window.addEventListener('adminLoggedIn', () => {
+    checkAdminSessionAndShowLink();
+  });
+  
+  // Also check periodically to catch login from same tab (but less frequently)
+  setInterval(checkAdminSessionAndShowLink, 3000);
 
   // Migrate old paths to new paths
   const migrateOldPaths = () => {
