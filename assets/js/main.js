@@ -1634,6 +1634,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Save to localStorage
         localStorage.setItem('portfolioData', JSON.stringify(data));
+        
+        // Dispatch custom event to notify admin page of new message
+        try {
+          window.dispatchEvent(new CustomEvent('newContactMessage', {
+            detail: messageData
+          }));
+          // Also trigger storage event for cross-tab communication
+          window.dispatchEvent(new StorageEvent('storage', {
+            key: 'portfolioData',
+            newValue: JSON.stringify(data),
+            oldValue: localStorage.getItem('portfolioData'),
+            url: window.location.href,
+            storageArea: localStorage
+          }));
+        } catch (e) {
+          console.error('Erreur lors du déclenchement de l\'événement:', e);
+        }
 
         showMessage(`Merci ${messageData.name} ! Votre message a été envoyé avec succès.`, 'success');
         contactForm.reset();
