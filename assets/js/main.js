@@ -3344,10 +3344,10 @@ document.addEventListener('DOMContentLoaded', () => {
           // Default timeline content if no data
           aboutTimeline.innerHTML = `
             <div class="timeline-item" style="opacity: 0; transform: translateY(20px); transition: opacity 0.5s ease, transform 0.5s ease;">
-              <div class="timeline-date">2024 - Présent</div>
+              <div class="timeline-date">2025 - Présent</div>
               <h3>Master 1 en Intelligence Artificielle</h3>
               <p class="muted">École Supérieure d'Informatique de Paris (SUPINFO)</p>
-              <p>Spécialisation en IA, Machine Learning et traitement du langage naturel.</p>
+              <p>Spécialisation en IA, Machine Learning et traitement du langage naturel. Réalisation de projets majeurs incluant SUPFile (plateforme cloud) et Kairos (assistant pédagogique IA).</p>
             </div>
             <div class="timeline-item" style="opacity: 0; transform: translateY(20px); transition: opacity 0.5s ease 0.1s, transform 0.5s ease 0.1s;">
               <div class="timeline-date">2021 - 2024</div>
