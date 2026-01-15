@@ -2397,7 +2397,22 @@ document.addEventListener('DOMContentLoaded', () => {
       const messagesTabContent = document.getElementById('tab-messages');
       if (messagesTabContent && messagesTabContent.classList.contains('active')) {
         renderMessages();
+        // Show notification if there are new unread messages
+        const data = getPortfolioData();
+        const unreadCount = (data.contactMessages || []).filter(m => !m.read).length;
+        if (unreadCount > 0) {
+          showSuccess(`📬 ${unreadCount} nouveau${unreadCount > 1 ? 'x' : ''} message${unreadCount > 1 ? 's' : ''} reçu${unreadCount > 1 ? 's' : ''} !`);
+        }
       }
+    }
+  });
+
+  // Listen for custom newContactMessage event
+  window.addEventListener('newContactMessage', (e) => {
+    const messagesTabContent = document.getElementById('tab-messages');
+    if (messagesTabContent && messagesTabContent.classList.contains('active')) {
+      renderMessages();
+      showSuccess('📬 Nouveau message reçu !');
     }
   });
 
