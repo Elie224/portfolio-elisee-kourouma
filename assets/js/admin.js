@@ -420,6 +420,20 @@ document.addEventListener('DOMContentLoaded', () => {
       if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
         localStorage.removeItem('adminSession');
         showLogin();
+        // Trigger storage event to update other tabs/pages
+        try {
+          window.dispatchEvent(new StorageEvent('storage', {
+            key: 'adminSession',
+            newValue: null,
+            oldValue: localStorage.getItem('adminSession'),
+            url: window.location.href,
+            storageArea: localStorage
+          }));
+          // Also dispatch custom event
+          window.dispatchEvent(new CustomEvent('adminLoggedOut'));
+        } catch (e) {
+          console.error('Erreur lors du déclenchement de l\'événement de déconnexion:', e);
+        }
         window.location.href = 'admin.html';
       }
     });
