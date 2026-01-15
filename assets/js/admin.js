@@ -274,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         }
         
-        // Migrate timeline: remove "2023 - 2024" date from entries
+        // Migrate timeline: remove "2023 - 2024" date from entries and update Master 1 date
         if (data.timeline && Array.isArray(data.timeline)) {
           data.timeline.forEach(item => {
             if (item.date === '2023 - 2024' || item.date === '2023-2024') {
@@ -286,6 +286,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (item.title && item.title.includes('Développeur Full-Stack') && (item.date === '2023 - 2024' || item.date === '2023-2024')) {
               console.log(`🔄 Suppression de la date "2023 - 2024" de l'entrée "Développeur Full-Stack"`);
               item.date = '';
+              updated = true;
+            }
+            // Update Master 1 date from 2024 to 2025
+            if (item.title && item.title.includes('Master 1 en Intelligence Artificielle') && item.date === '2024 - Présent') {
+              console.log(`🔄 Mise à jour de la date du Master 1: 2024 → 2025`);
+              item.date = '2025 - Présent';
+              // Also update description if it's the old one
+              if (item.description === 'Spécialisation en IA, Machine Learning et traitement du langage naturel.') {
+                item.description = 'Spécialisation en IA, Machine Learning et traitement du langage naturel. Réalisation de projets majeurs incluant SUPFile (plateforme cloud) et Kairos (assistant pédagogique IA).';
+              }
               updated = true;
             }
           });
