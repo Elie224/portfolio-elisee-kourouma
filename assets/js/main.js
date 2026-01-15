@@ -1017,30 +1017,61 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   highlightActive();
 
-  // Check admin session and show "logged in" indicator if logged in
+  // Check admin session and show admin link ONLY if logged in
   const checkAdminSessionAndShowLink = () => {
+    const adminNavLink = document.querySelector('#admin-nav-link');
     const adminNavLinkLogged = document.querySelector('#admin-nav-link-logged');
-    if (adminNavLinkLogged) {
-      const session = localStorage.getItem('adminSession');
-      if (session) {
-        try {
-          const sessionData = JSON.parse(session);
-          const now = new Date().getTime();
-          if (sessionData.expires && now < sessionData.expires && sessionData.email === 'kouroumaelisee@gmail.com') {
-            adminNavLinkLogged.style.display = 'inline-flex';
-          } else {
-            adminNavLinkLogged.style.display = 'none';
-            localStorage.removeItem('adminSession');
-          }
-        } catch (e) {
-          adminNavLinkLogged.style.display = 'none';
+    
+    const session = localStorage.getItem('adminSession');
+    let isAdminLoggedIn = false;
+    
+    if (session) {
+      try {
+        const sessionData = JSON.parse(session);
+        const now = new Date().getTime();
+        if (sessionData.expires && now < sessionData.expires && sessionData.email === 'kouroumaelisee@gmail.com') {
+          isAdminLoggedIn = true;
+        } else {
+          localStorage.removeItem('adminSession');
         }
-      } else {
+      } catch (e) {
+        localStorage.removeItem('adminSession');
+      }
+    }
+    
+    // Show admin link ONLY if admin is logged in
+    if (isAdminLoggedIn) {
+      // Show "Admin (Connecté)" link
+      if (adminNavLinkLogged) {
+        adminNavLinkLogged.style.display = 'inline-flex';
+      }
+      // Hide regular admin link
+      if (adminNavLink) {
+        adminNavLink.style.display = 'none';
+      }
+    } else {
+      // Hide both links if not logged in
+      if (adminNavLink) {
+        adminNavLink.style.display = 'none';
+      }
+      if (adminNavLinkLogged) {
         adminNavLinkLogged.style.display = 'none';
       }
     }
   };
+  
+  // Check on page load
   checkAdminSessionAndShowLink();
+  
+  // Also check when storage changes (when admin logs in from another tab)
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'adminSession') {
+      checkAdminSessionAndShowLink();
+    }
+  });
+  
+  // Also check periodically to catch login from same tab
+  setInterval(checkAdminSessionAndShowLink, 2000);
 
   // Migrate old paths to new paths
   const migrateOldPaths = () => {
