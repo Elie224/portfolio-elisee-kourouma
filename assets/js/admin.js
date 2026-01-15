@@ -302,15 +302,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         // Ensure contactMessages exists and is preserved
-        if (!data.contactMessages) {
+        const existingMessagesCount = data.contactMessages ? data.contactMessages.length : 0;
+        if (!data.contactMessages || !Array.isArray(data.contactMessages)) {
+          console.log('⚠️ contactMessages manquant ou invalide, initialisation d\'un tableau vide');
           data.contactMessages = [];
           updated = true;
+        } else {
+          console.log(`✅ contactMessages préservé: ${existingMessagesCount} message(s) existant(s)`);
         }
         
         // Save all updates at once
         if (updated) {
+          // Vérifier qu'on ne perd pas les messages
+          const messagesBeforeSave = data.contactMessages ? data.contactMessages.length : 0;
           localStorage.setItem('portfolioData', JSON.stringify(data));
-          console.log('✅ Données mises à jour');
+          
+          // Vérification après sauvegarde
+          const verifyData = localStorage.getItem('portfolioData');
+          if (verifyData) {
+            const verifyParsed = JSON.parse(verifyData);
+            const messagesAfterSave = verifyParsed.contactMessages ? verifyParsed.contactMessages.length : 0;
+            console.log(`✅ Données mises à jour. Messages: ${messagesBeforeSave} → ${messagesAfterSave}`);
+            if (messagesBeforeSave !== messagesAfterSave) {
+              console.error(`❌ ERREUR: Perte de messages! ${messagesBeforeSave} → ${messagesAfterSave}`);
+            }
+          }
         }
         
         // Save update version to prevent unnecessary updates
