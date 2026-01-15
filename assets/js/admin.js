@@ -2321,8 +2321,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const data = getPortfolioData();
     console.log('📊 Données complètes:', data);
+    console.log('🔍 Vérification contactMessages:', {
+      exists: !!data.contactMessages,
+      isArray: Array.isArray(data.contactMessages),
+      length: data.contactMessages ? data.contactMessages.length : 0,
+      content: data.contactMessages
+    });
     let messages = data.contactMessages || [];
     console.log(`📬 Messages trouvés: ${messages.length}`, messages);
+    
+    // Si messages est vide mais qu'on devrait en avoir, vérifier localStorage directement
+    if (messages.length === 0) {
+      try {
+        const directData = localStorage.getItem('portfolioData');
+        if (directData) {
+          const directParsed = JSON.parse(directData);
+          const directMessages = directParsed.contactMessages || [];
+          if (directMessages.length > 0) {
+            console.warn('⚠️ Messages trouvés directement dans localStorage mais pas dans getPortfolioData()!', directMessages);
+            messages = directMessages;
+            // Corriger les données
+            data.contactMessages = directMessages;
+            // Sauvegarder la correction
+            localStorage.setItem('portfolioData', JSON.stringify(data));
+            console.log('✅ Données corrigées avec les messages manquants');
+          }
+        }
+      } catch (e) {
+        console.error('❌ Erreur lors de la vérification directe:', e);
+      }
+    }
 
     container.innerHTML = '';
 
