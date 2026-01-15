@@ -2261,10 +2261,15 @@ document.addEventListener('DOMContentLoaded', () => {
   // Contact Messages Management
   function renderMessages() {
     const container = document.getElementById('messages-list');
-    if (!container) return;
+    if (!container) {
+      console.log('⚠️ Container messages-list non trouvé');
+      return;
+    }
 
     const data = getPortfolioData();
     let messages = data.contactMessages || [];
+
+    console.log(`📬 Chargement de ${messages.length} message(s) dans l'admin`);
 
     container.innerHTML = '';
 

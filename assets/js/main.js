@@ -1608,14 +1608,16 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const formData = new FormData(contactForm);
         const messageData = {
-          id: Date.now(),
-          name: formData.get('name'),
-          email: formData.get('email'),
-          subject: formData.get('subject') || '',
-          message: formData.get('message'),
+          id: Date.now() + Math.random(), // Unique ID
+          name: formData.get('name').trim(),
+          email: formData.get('email').trim(),
+          subject: (formData.get('subject') || '').trim(),
+          message: formData.get('message').trim(),
           date: new Date().toISOString(),
           read: false
         };
+
+        console.log('💾 Sauvegarde du message:', messageData);
 
         // Get existing messages
         const portfolioData = localStorage.getItem('portfolioData');
@@ -1624,7 +1626,7 @@ document.addEventListener('DOMContentLoaded', () => {
           data.contactMessages = [];
         }
 
-        // Add new message
+        // Add new message at the beginning (most recent first)
         data.contactMessages.unshift(messageData);
         
         // Keep only last 100 messages
@@ -1633,23 +1635,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Save to localStorage
+        const oldData = localStorage.getItem('portfolioData');
         localStorage.setItem('portfolioData', JSON.stringify(data));
+        console.log('✅ Message sauvegardé dans localStorage. Total messages:', data.contactMessages.length);
         
         // Dispatch custom event to notify admin page of new message
         try {
           window.dispatchEvent(new CustomEvent('newContactMessage', {
             detail: messageData
           }));
+          console.log('📢 Événement newContactMessage déclenché');
+          
           // Also trigger storage event for cross-tab communication
           window.dispatchEvent(new StorageEvent('storage', {
             key: 'portfolioData',
             newValue: JSON.stringify(data),
-            oldValue: localStorage.getItem('portfolioData'),
+            oldValue: oldData,
             url: window.location.href,
             storageArea: localStorage
           }));
+          console.log('📢 Événement storage déclenché');
         } catch (e) {
-          console.error('Erreur lors du déclenchement de l\'événement:', e);
+          console.error('❌ Erreur lors du déclenchement de l\'événement:', e);
         }
 
         showMessage(`Merci ${messageData.name} ! Votre message a été envoyé avec succès.`, 'success');
