@@ -258,11 +258,15 @@ document.addEventListener('DOMContentLoaded', () => {
                                   oldShortDesc !== newShortDesc ||
                                   JSON.stringify(existingProject.features || []) !== JSON.stringify(defaultProject.features || []);
               
-              if (needsUpdate) {
-                console.log(`🔄 Mise à jour du projet "${defaultProject.title}" avec la nouvelle description`);
-                // Preserve user data (like public status, but update descriptions)
+              // Also update type if it changed (e.g., PFE Master 1 → PFA for Supfile)
+              const typeNeedsUpdate = existingProject.type !== defaultProject.type;
+              
+              if (needsUpdate || typeNeedsUpdate) {
+                console.log(`🔄 Mise à jour du projet "${defaultProject.title}" avec la nouvelle description${typeNeedsUpdate ? ' et type' : ''}`);
+                // Preserve user data (like public status, but update descriptions and type)
                 data.projects[existingProjectIndex] = {
                   ...existingProject,
+                  type: defaultProject.type, // Update type
                   description: defaultProject.description,
                   shortDesc: defaultProject.shortDesc,
                   features: defaultProject.features,
