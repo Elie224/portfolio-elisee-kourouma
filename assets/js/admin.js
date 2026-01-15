@@ -157,10 +157,10 @@ document.addEventListener('DOMContentLoaded', () => {
     testimonials: [],
     timeline: [
       {
-        date: '2024 - Présent',
+        date: '2025 - Présent',
         title: 'Master 1 en Intelligence Artificielle',
         subtitle: 'École Supérieure d\'Informatique de Paris (SUPINFO)',
-        description: 'Spécialisation en IA, Machine Learning et traitement du langage naturel.'
+        description: 'Spécialisation en IA, Machine Learning et traitement du langage naturel. Réalisation de projets majeurs incluant SUPFile (plateforme cloud) et Kairos (assistant pédagogique IA).'
       },
       {
         date: '2021 - 2024',
