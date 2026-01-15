@@ -2264,7 +2264,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!container) return;
 
     const data = getPortfolioData();
-    const messages = data.contactMessages || [];
+    let messages = data.contactMessages || [];
 
     container.innerHTML = '';
 
@@ -2273,13 +2273,36 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    // Trier les messages par date décroissante (plus récents en premier)
+    messages = messages.sort((a, b) => {
+      const dateA = new Date(a.date || a.id || 0);
+      const dateB = new Date(b.date || b.id || 0);
+      return dateB - dateA;
+    });
+
+    // Compter les messages non lus
+    const unreadCount = messages.filter(m => !m.read).length;
+    if (unreadCount > 0) {
+      const header = document.createElement('div');
+      header.style.cssText = 'margin-bottom: 16px; padding: 12px; background: rgba(91, 124, 250, 0.1); border: 1px solid rgba(91, 124, 250, 0.3); border-radius: 8px;';
+      header.innerHTML = `<strong>📬 ${unreadCount} message${unreadCount > 1 ? 's' : ''} non lu${unreadCount > 1 ? 's' : ''}</strong>`;
+      container.appendChild(header);
+    }
+
     messages.forEach((message, index) => {
+      // Trouver l'index réel dans le tableau original pour les fonctions de modification
+      const realIndex = data.contactMessages.findIndex(m => 
+        (m.id && message.id && m.id === message.id) || 
+        (m.date && message.date && m.date === message.date && m.email === message.email)
+      );
+      const displayIndex = realIndex !== -1 ? realIndex : index;
+
       const card = document.createElement('div');
       card.className = 'item-card';
       card.style.opacity = message.read ? '0.7' : '1';
       card.style.borderLeft = message.read ? '3px solid var(--line)' : '3px solid var(--accent)';
       
-      const date = new Date(message.date);
+      const date = new Date(message.date || message.id || Date.now());
       const dateStr = date.toLocaleDateString('fr-FR', { 
         year: 'numeric', 
         month: 'long', 
@@ -2288,19 +2311,23 @@ document.addEventListener('DOMContentLoaded', () => {
         minute: '2-digit'
       });
 
+      const subject = message.subject || '';
+      const replySubject = subject ? `Re: ${subject}` : `Re: ${message.name || 'Contact'}`;
+
       card.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-          <div>
+          <div style="flex: 1;">
             <h4 style="margin: 0;">${message.name || 'Anonyme'}</h4>
             <div class="item-meta">${message.email || ''} • ${dateStr}</div>
+            ${subject ? `<div style="margin-top: 4px; font-size: 13px; color: var(--accent); font-weight: 500;">📌 ${subject}</div>` : ''}
           </div>
-          ${!message.read ? '<span style="background: var(--accent); color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px;">Nouveau</span>' : ''}
+          ${!message.read ? '<span style="background: var(--accent); color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; white-space: nowrap; margin-left: 12px;">Nouveau</span>' : ''}
         </div>
-        <p style="font-size: 14px; margin-top: 12px; white-space: pre-wrap;">${message.message || ''}</p>
+        <p style="font-size: 14px; margin-top: 12px; white-space: pre-wrap; line-height: 1.6;">${message.message || ''}</p>
         <div class="item-actions">
-          <a href="mailto:${message.email}?subject=Re: ${encodeURIComponent(message.name || 'Contact')}" class="btn secondary">📧 Répondre</a>
-          <button class="btn secondary" onclick="markMessageAsRead(${index})">✓ Marquer comme lu</button>
-          <button class="btn btn-danger" onclick="deleteMessage(${index})">🗑️ Supprimer</button>
+          <a href="mailto:${message.email}?subject=${encodeURIComponent(replySubject)}&body=${encodeURIComponent(`Bonjour ${message.name},\n\n\n\n---\nMessage original:\n${message.message || ''}`)}" class="btn secondary">📧 Répondre</a>
+          ${!message.read ? `<button class="btn secondary" onclick="markMessageAsRead(${displayIndex})">✓ Marquer comme lu</button>` : ''}
+          <button class="btn btn-danger" onclick="deleteMessage(${displayIndex})">🗑️ Supprimer</button>
         </div>
       `;
       container.appendChild(card);
@@ -2337,6 +2364,45 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(renderMessages, 100);
     });
   }
+
+  // Auto-refresh messages every 5 seconds when on messages tab
+  let messagesRefreshInterval = null;
+  const setupMessagesAutoRefresh = () => {
+    // Clear existing interval
+    if (messagesRefreshInterval) {
+      clearInterval(messagesRefreshInterval);
+    }
+    
+    // Check if messages tab is active
+    const messagesTabContent = document.getElementById('tab-messages');
+    if (messagesTabContent && messagesTabContent.classList.contains('active')) {
+      // Refresh messages every 5 seconds
+      messagesRefreshInterval = setInterval(() => {
+        renderMessages();
+      }, 5000);
+    }
+  };
+
+  // Listen for tab changes
+  const allTabs = document.querySelectorAll('.admin-tab');
+  allTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      setTimeout(setupMessagesAutoRefresh, 200);
+    });
+  });
+
+  // Also listen for storage events to detect new messages from other tabs
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'portfolioData') {
+      const messagesTabContent = document.getElementById('tab-messages');
+      if (messagesTabContent && messagesTabContent.classList.contains('active')) {
+        renderMessages();
+      }
+    }
+  });
+
+  // Initial setup
+  setupMessagesAutoRefresh();
 
   // FAQ Management
   let editingFAQId = null;
