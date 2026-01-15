@@ -276,6 +276,25 @@ document.addEventListener('DOMContentLoaded', () => {
               }
             }
           });
+          
+          // Also migrate Supfile type from "PFE Master 1" to "PFA" for existing projects
+          data.projects.forEach((project, index) => {
+            if (project.title && project.title.includes('Supfile') && project.type === 'PFE Master 1') {
+              console.log(`🔄 Migration du type Supfile: PFE Master 1 → PFA`);
+              project.type = 'PFA';
+              // Update tags if they contain "PFE Master 1"
+              if (project.tags && Array.isArray(project.tags)) {
+                project.tags = project.tags.map(tag => 
+                  tag === 'PFE Master 1' ? 'PFA' : tag
+                );
+                // Add "Projet de Fin d'Année" if not already present
+                if (!project.tags.includes('Projet de Fin d\'Année')) {
+                  project.tags.push('Projet de Fin d\'Année');
+                }
+              }
+              updated = true;
+            }
+          });
         }
         
         // Migrate timeline: remove "2023 - 2024" date from entries and update Master 1 date
