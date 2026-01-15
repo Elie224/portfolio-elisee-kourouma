@@ -1641,10 +1641,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Add new message at the beginning (most recent first)
         data.contactMessages.unshift(messageData);
+        console.log('📝 Message ajouté. Total maintenant:', data.contactMessages.length);
         
         // Keep only last 100 messages
         if (data.contactMessages.length > 100) {
           data.contactMessages = data.contactMessages.slice(0, 100);
+          console.log('✂️ Messages limités à 100');
         }
 
         // Save to localStorage
