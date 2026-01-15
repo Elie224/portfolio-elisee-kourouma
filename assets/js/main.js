@@ -2,6 +2,218 @@ document.addEventListener('DOMContentLoaded', () => {
   const yearEl = document.querySelector('[data-year]');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
+  // Initialize default data if localStorage is empty (for first-time visitors on Render)
+  function initDefaultData() {
+    try {
+      const existingData = localStorage.getItem('portfolioData');
+      if (!existingData) {
+        console.log('📦 Initialisation des données par défaut (première visite)...');
+        
+        // Import DEFAULT_DATA structure from admin.js logic
+        const DEFAULT_DATA = {
+          personal: {
+            fullName: 'Nema Elisée Kourouma',
+            email: 'kouroumaelisee@gmail.com',
+            phone: '',
+            photo: 'assets/photo.jpeg',
+            currentEducation: 'Master 1 en Intelligence Artificielle à l\'École Supérieure d\'Informatique de Paris',
+            previousEducation: 'Licence en mathématiques et informatique (USMBA Fès)',
+            additionalInfo: []
+          },
+          projects: [
+            {
+              title: 'Analyse de sentiments des tweets en temps réel',
+              type: 'PFE Licence',
+              category: 'Intelligence Artificielle',
+              shortDesc: 'Projet de fin d\'étude (PFE) de Licence · Analyse des sentiments des tweets en temps réel avec ChatGPT et MongoDB',
+              description: 'Ce projet vise à intégrer Chat GPT, une intelligence artificielle avancée, avec MongoDB, une base de données NoSQL, pour analyser les sentiments des tweets en temps réel. Dans un contexte où les données générées quotidiennement sont massives, l\'analyse des sentiments devient cruciale pour comprendre les émotions humaines à grande échelle.\n\nLes réseaux sociaux, en particulier Twitter, offrent une source riche d\'informations en temps réel. Cependant, la collecte et l\'analyse de ces données posent des défis en raison de leur volume et de leur nature dynamique. Les tweets contiennent souvent des langages informels, des abréviations, des emojis et des références contextuelles.\n\nLes objectifs spécifiques du projet incluent l\'utilisation de Chat GPT pour analyser et classifier les sentiments des tweets en catégories positives, neutres et négatives, la configuration de MongoDB pour stocker efficacement les tweets et les résultats des analyses, et la création d\'un système robuste capable de traiter des flux de données continus et de fournir des insights en temps réel.',
+              features: [
+                'Extraction temps réel de tweets avec Selenium',
+                'Analyse de sentiments avec OpenAI (ChatGPT)',
+                'Classification en catégories : positif, neutre, négatif',
+                'Stockage et indexation dans MongoDB',
+                'API REST avec Flask pour l\'accès aux données',
+                'Visualisation des tendances et filtres dynamiques',
+                'Traitement de flux de données continus',
+                'Interface utilisateur interactive pour la visualisation'
+              ],
+              tags: ['Python', 'Flask', 'MongoDB', 'OpenAI', 'ChatGPT', 'Selenium', 'NLP', 'Analyse de sentiments', 'Traitement du langage naturel', 'Temps réel'],
+              link: '',
+              demoLink: '',
+              emailSubject: 'Demande d\'infos: Analyse de sentiments des tweets',
+              featured: true,
+              public: true
+            },
+            {
+              title: 'Kairos - Application Web',
+              type: 'Projet Personnel',
+              category: 'Application Web',
+              shortDesc: 'Application d\'apprentissage immersive avec support de cours, TD, TP, examens, quiz et IA conversationnelle',
+              description: 'Kairos est une application web d\'apprentissage immersive développée comme projet personnel.\n\nL\'application offre un support complet pour tous les types de contenus pédagogiques : cours, travaux dirigés (TD), travaux pratiques (TP), examens et quiz. Chaque format est pris en charge de manière optimale, permettant aux étudiants d\'accéder facilement à leurs ressources éducatives.\n\nKairos intègre une intelligence artificielle conversationnelle avancée qui permet aux utilisateurs d\'échanger directement avec l\'application. Cette IA est incorporée au cœur de la plateforme et offre une interaction naturelle, répondant aux questions, fournissant des explications détaillées sur les cours et les exercices, et proposant un support pédagogique personnalisé en temps réel.\n\nL\'application est hébergée sur Render et démontre l\'intégration réussie de technologies modernes d\'intelligence artificielle dans une plateforme éducative, créant une expérience d\'apprentissage véritablement immersive.',
+              features: [
+                'Plateforme d\'apprentissage immersive complète',
+                'Gestion et organisation des cours magistraux',
+                'Support dédié pour les travaux dirigés (TD)',
+                'Support dédié pour les travaux pratiques (TP)',
+                'Système d\'examens interactifs',
+                'Création et gestion de quiz personnalisés',
+                'Intelligence artificielle conversationnelle intégrée',
+                'Échange interactif avec l\'utilisateur via IA',
+                'Support pédagogique personnalisé et en temps réel',
+                'Interface utilisateur moderne et intuitive',
+                'Navigation structurée des contenus pédagogiques',
+                'Déploiement professionnel sur Render',
+                'Expérience utilisateur optimisée pour l\'apprentissage'
+              ],
+              tags: ['Web', 'Frontend', 'Application Web', 'IA', 'Intelligence Artificielle', 'Apprentissage', 'Éducation', 'IA Conversationnelle', 'Cours', 'TD', 'TP', 'Examens', 'Quiz', 'Render', 'Responsive', 'Déploiement'],
+              link: 'https://kairos-frontend-hjg9.onrender.com',
+              demoLink: '',
+              emailSubject: 'Demande d\'infos: Application Kairos',
+              featured: true,
+              public: true
+            },
+            {
+              title: 'Fylor - Application Web',
+              type: 'Projet Personnel',
+              category: 'Application Web',
+              shortDesc: 'Plateforme de stockage cloud avec 50 Go d\'espace · Application web et mobile complète',
+              description: 'Fylor est une plateforme de stockage cloud développée comme projet personnel, similaire à Supfile. Cette application permet aux utilisateurs de stocker, sécuriser et partager leurs fichiers personnels dans le cloud, avec un quota de 50 Go par utilisateur (contrairement à Supfile qui offre 30 Go).\n\nLe projet comprend le développement d\'une application web complète et d\'une application mobile, avec une architecture basée sur une API REST, des clients distincts et une base de données pour les métadonnées. L\'application offre les mêmes fonctionnalités avancées que Supfile, avec un espace de stockage plus généreux de 50 Go.\n\nL\'accent est mis sur la gestion performante des flux de données (upload/download), la navigation fluide dans une arborescence de dossiers, l\'ergonomie, la prévisualisation instantanée des fichiers et la synchronisation entre les clients web et mobile.',
+              features: [
+                'Gestionnaire de fichiers complet avec navigation intuitive',
+                'Connexion standard et OAuth2 (Google, GitHub, Microsoft)',
+                'Upload/Download avec barre de progression et drag & drop',
+                'Prévisualisation instantanée (PDF, images, audio, vidéo)',
+                'Partage sécurisé avec liens uniques, expiration et mot de passe',
+                'Recherche et filtres avancés par type et date',
+                'Dashboard avec visualisation de l\'utilisation du stockage',
+                'Gestion des dossiers (création, renommage, déplacement, suppression)',
+                'Corbeille avec restauration possible',
+                'Téléchargement de dossiers complets en archive ZIP',
+                'Paramètres utilisateurs (avatar, email, mot de passe, thème)',
+                'Architecture microservices avec API Gateway',
+                'Containérisation Docker avec docker-compose',
+                'Base de données pour les métadonnées',
+                'Quota généreux de 50 Go par utilisateur',
+                'Sécurité : JWT, hachage des mots de passe, gestion des secrets'
+              ],
+              tags: ['Web', 'Mobile', 'Application Web', 'Cloud Storage', 'API REST', 'Docker', 'OAuth2', 'JWT', '50 Go', 'Stockage Cloud', 'Déploiement'],
+              link: 'https://fylor-frontend.onrender.com/',
+              demoLink: '',
+              emailSubject: 'Demande d\'infos: Application Fylor',
+              featured: true,
+              public: true
+            },
+            {
+              title: 'Supfile - Application Web',
+              type: 'PFE Master 1',
+              category: 'Application Web',
+              shortDesc: 'Projet de fin d\'année à SUPINFO · Plateforme de stockage cloud concurrente de Dropbox et Google Drive',
+              description: 'SUPFile est un projet de fin d\'année développé dans le cadre du Master 1 en Intelligence Artificielle à l\'École Supérieure d\'Informatique de Paris (SUPINFO). Ce projet consiste à développer une plateforme de stockage cloud grand public concurrente de Dropbox ou Google Drive pour la société "SUPFile", spécialisée dans l\'infrastructure de stockage distribué.\n\nLe projet comprend le développement d\'une application web complète et d\'une application mobile, avec une architecture basée sur une API REST, des clients distincts et une base de données pour les métadonnées. L\'application permet aux utilisateurs de stocker, sécuriser et partager leurs fichiers personnels dans le cloud, avec un quota de 30 Go par utilisateur.\n\nL\'accent est mis sur la gestion performante des flux de données (upload/download), la navigation fluide dans une arborescence de dossiers, l\'ergonomie, la prévisualisation instantanée des fichiers et la synchronisation entre les clients web et mobile.',
+              features: [
+                'Gestionnaire de fichiers complet avec navigation intuitive',
+                'Connexion standard et OAuth2 (Google, GitHub, Microsoft)',
+                'Upload/Download avec barre de progression et drag & drop',
+                'Prévisualisation instantanée (PDF, images, audio, vidéo)',
+                'Partage sécurisé avec liens uniques, expiration et mot de passe',
+                'Recherche et filtres avancés par type et date',
+                'Dashboard avec visualisation de l\'utilisation du stockage',
+                'Gestion des dossiers (création, renommage, déplacement, suppression)',
+                'Corbeille avec restauration possible',
+                'Téléchargement de dossiers complets en archive ZIP',
+                'Paramètres utilisateurs (avatar, email, mot de passe, thème)',
+                'Architecture microservices avec API Gateway',
+                'Containérisation Docker avec docker-compose',
+                'Base de données pour les métadonnées',
+                'Sécurité : JWT, hachage des mots de passe, gestion des secrets'
+              ],
+              tags: ['Web', 'Mobile', 'Application Web', 'Cloud Storage', 'API REST', 'Docker', 'OAuth2', 'JWT', 'SUPINFO', 'PFE Master 1', 'Dropbox', 'Google Drive', 'Déploiement'],
+              link: 'https://supfile-frontend.onrender.com/',
+              demoLink: '',
+              emailSubject: 'Demande d\'infos: Application Supfile',
+              featured: true,
+              public: true
+            }
+          ],
+          skills: [
+            { icon: '🌐', name: 'Développement Web', skills: ['HTML5', 'CSS3', 'JavaScript', 'React', 'Responsive'] },
+            { icon: '🐍', name: 'Backend & DevOps', skills: ['Python', 'Node.js', 'Django', 'Flask', 'API REST', 'Docker'] },
+            { icon: '🤖', name: 'IA & Données', skills: ['MongoDB', 'NLP', 'OpenAI', 'Selenium', 'Analyse Exploratoire de Données', 'Apprentissage automatique supervisé', 'Apprentissage automatique non supervisé'] }
+          ],
+          links: {
+            cv: 'assets/CV.pdf',
+            cvFile: null,
+            cvFileName: null,
+            cvFileSize: null,
+            social: [
+              { name: 'WhatsApp', url: 'https://wa.me/33689306432' },
+              { name: 'Facebook', url: 'https://www.facebook.com/share/17xGVe29cL/' },
+              { name: 'LinkedIn', url: 'https://www.linkedin.com/' },
+              { name: 'GitHub', url: 'https://github.com/' }
+            ]
+          },
+          about: {
+            heroDescription: 'Master 1 en Intelligence Artificielle à l\'École Supérieure d\'Informatique de Paris. Titulaire d\'une licence en mathématiques et informatique (USMBA Fès).',
+            aboutDescription: 'Master 1 en Intelligence Artificielle à l\'École Supérieure d\'Informatique de Paris. Titulaire d\'une licence en mathématiques et informatique (USMBA Fès).',
+            stats: {
+              projects: 4,
+              experience: 2,
+              technologies: 15
+            }
+          },
+          testimonials: [],
+          timeline: [
+            {
+              date: '2024 - Présent',
+              title: 'Master 1 en Intelligence Artificielle',
+              subtitle: 'École Supérieure d\'Informatique de Paris (SUPINFO)',
+              description: 'Spécialisation en IA, Machine Learning et traitement du langage naturel.'
+            },
+            {
+              date: '2021 - 2024',
+              title: 'Licence en Mathématiques et Informatique',
+              subtitle: 'Université Sidi Mohamed Ben Abdellah, Fès',
+              description: 'Formation solide en mathématiques appliquées et informatique fondamentale. Acquisition de compétences en algorithmique, structures de données et développement logiciel.'
+            }
+          ],
+          services: [
+            {
+              icon: '💻',
+              title: 'Développement Web',
+              description: 'Création d\'applications web modernes et responsives avec les dernières technologies.',
+              features: ['Applications React/Vue.js', 'APIs REST & GraphQL', 'Architecture microservices']
+            },
+            {
+              icon: '🤖',
+              title: 'Intelligence Artificielle',
+              description: 'Solutions IA personnalisées pour automatiser et optimiser vos processus.',
+              features: ['Machine Learning', 'NLP & Chatbots', 'Analyse de données']
+            },
+            {
+              icon: '☁️',
+              title: 'Cloud & DevOps',
+              description: 'Déploiement et gestion d\'infrastructures cloud scalables et sécurisées.',
+              features: ['Docker & Kubernetes', 'CI/CD Pipelines', 'Cloud Architecture']
+            }
+          ],
+          certifications: [],
+          contactMessages: [],
+          faq: []
+        };
+        
+        localStorage.setItem('portfolioData', JSON.stringify(DEFAULT_DATA));
+        console.log('✅ Données par défaut initialisées avec succès !');
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'initialisation des données par défaut:', error);
+      return false;
+    }
+  }
+
+  // Initialize default data on page load (for first-time visitors)
+  initDefaultData();
+
   // Mobile Menu Toggle
   const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
   const navLinks = document.getElementById('nav-links');
