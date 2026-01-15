@@ -1621,10 +1621,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Get existing messages
         const portfolioData = localStorage.getItem('portfolioData');
-        let data = portfolioData ? JSON.parse(portfolioData) : {};
-        if (!data.contactMessages) {
+        let data = {};
+        try {
+          if (portfolioData) {
+            data = JSON.parse(portfolioData);
+          }
+        } catch (e) {
+          console.error('❌ Erreur lors du parsing de portfolioData:', e);
+          data = {};
+        }
+        
+        // Ensure contactMessages array exists
+        if (!data.contactMessages || !Array.isArray(data.contactMessages)) {
+          console.log('📝 Initialisation du tableau contactMessages');
           data.contactMessages = [];
         }
+        
+        console.log('📊 Messages existants avant ajout:', data.contactMessages.length);
 
         // Add new message at the beginning (most recent first)
         data.contactMessages.unshift(messageData);

@@ -301,6 +301,12 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         }
         
+        // Ensure contactMessages exists and is preserved
+        if (!data.contactMessages) {
+          data.contactMessages = [];
+          updated = true;
+        }
+        
         // Save all updates at once
         if (updated) {
           localStorage.setItem('portfolioData', JSON.stringify(data));
