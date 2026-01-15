@@ -1828,7 +1828,7 @@ document.addEventListener('DOMContentLoaded', () => {
               'Base de données pour les métadonnées',
               'Sécurité : JWT, hachage des mots de passe, gestion des secrets'
             ],
-            tags: ['Web', 'Mobile', 'Application Web', 'Cloud Storage', 'API REST', 'Docker', 'OAuth2', 'JWT', 'SUPINFO', 'PFE Master 1', 'Dropbox', 'Google Drive', 'Déploiement'],
+            tags: ['Web', 'Mobile', 'Application Web', 'Cloud Storage', 'API REST', 'Docker', 'OAuth2', 'JWT', 'SUPINFO', 'PFA', 'Projet de Fin d\'Année', 'Dropbox', 'Google Drive', 'Déploiement'],
             link: 'https://supfile-frontend.onrender.com/',
             demoLink: '',
             emailSubject: 'Demande d\'infos: Application Supfile',
@@ -1948,7 +1948,7 @@ document.addEventListener('DOMContentLoaded', () => {
               'Base de données pour les métadonnées',
               'Sécurité : JWT, hachage des mots de passe, gestion des secrets'
             ],
-            tags: ['Web', 'Mobile', 'Application Web', 'Cloud Storage', 'API REST', 'Docker', 'OAuth2', 'JWT', 'SUPINFO', 'PFE Master 1', 'Dropbox', 'Google Drive', 'Déploiement'],
+            tags: ['Web', 'Mobile', 'Application Web', 'Cloud Storage', 'API REST', 'Docker', 'OAuth2', 'JWT', 'SUPINFO', 'PFA', 'Projet de Fin d\'Année', 'Dropbox', 'Google Drive', 'Déploiement'],
             link: 'https://supfile-frontend.onrender.com/',
             demoLink: '',
             emailSubject: 'Demande d\'infos: Application Supfile',
