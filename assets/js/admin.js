@@ -410,6 +410,21 @@ document.addEventListener('DOMContentLoaded', () => {
       const sessionData = { email, expires, loginTime: new Date().getTime() };
       localStorage.setItem('adminSession', JSON.stringify(sessionData));
 
+      // Trigger storage event to update other tabs/pages
+      try {
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: 'adminSession',
+          newValue: JSON.stringify(sessionData),
+          oldValue: null,
+          url: window.location.href,
+          storageArea: localStorage
+        }));
+        // Also dispatch custom event
+        window.dispatchEvent(new CustomEvent('adminLoggedIn'));
+      } catch (e) {
+        console.error('Erreur lors du déclenchement de l\'événement de connexion:', e);
+      }
+
       showDashboard(email);
       loginForm.reset();
     });
