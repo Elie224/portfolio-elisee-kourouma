@@ -579,6 +579,7 @@ document.addEventListener('DOMContentLoaded', () => {
     tabs.forEach(tab => {
       tab.addEventListener('click', () => {
         const targetTab = tab.dataset.tab;
+        console.log('📑 Onglet cliqué:', targetTab);
         
         // Remove active class from all tabs and contents
         tabs.forEach(t => t.classList.remove('active'));
@@ -588,6 +589,14 @@ document.addEventListener('DOMContentLoaded', () => {
         tab.classList.add('active');
         const content = document.getElementById(`tab-${targetTab}`);
         if (content) content.classList.add('active');
+        
+        // Si c'est l'onglet messages, recharger les messages
+        if (targetTab === 'messages') {
+          console.log('📬 Onglet Messages ouvert - rechargement des messages');
+          setTimeout(() => {
+            renderMessages();
+          }, 100);
+        }
       });
     });
   }
@@ -636,7 +645,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Load messages
     console.log('🔄 Chargement des messages au démarrage de l\'admin');
-    renderMessages();
+    // Attendre un peu pour s'assurer que le DOM est prêt
+    setTimeout(() => {
+      renderMessages();
+    }, 200);
 
     // Load about
     if (data.about) {
@@ -2356,7 +2368,9 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       `;
       container.appendChild(card);
+      console.log(`✅ Message ${index + 1} ajouté au DOM:`, message.name);
     });
+    console.log(`✅ Total de ${messages.length} message(s) affiché(s) dans le conteneur`);
   }
 
   window.markMessageAsRead = function(index) {
