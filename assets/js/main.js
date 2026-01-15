@@ -1936,14 +1936,34 @@ document.addEventListener('DOMContentLoaded', () => {
           }, 100);
         }
       }, 50);
+      
+      // Hide loading state after rendering
+      if (projectsLoadingEl) {
+        projectsLoadingEl.style.display = 'none';
+      }
     } catch (error) {
-      console.error('Erreur lors du chargement des projets:', error);
-      // On error, keep original content
+      console.error('❌ Erreur lors du chargement des projets:', error);
+      // Hide loading state on error
+      if (projectsLoadingEl) {
+        projectsLoadingEl.style.display = 'none';
+      }
+      // Show empty state on error
+      const emptyState = document.getElementById('empty-state');
+      if (emptyState) {
+        emptyState.style.display = 'block';
+        emptyState.innerHTML = '<p class="muted">Erreur lors du chargement des projets. Veuillez rafraîchir la page.</p>';
+      }
     }
   }
 
   // Load projects on page load
-  loadProjects();
+  // Only load on projects page
+  if (document.getElementById('projects-grid')) {
+    console.log('📦 Chargement des projets...');
+    loadProjects();
+  } else {
+    console.log('ℹ️ Page projets non détectée - skip loadProjects');
+  }
 
   // Watch for changes in localStorage to reload projects when updated from admin
   // Only on projects page
