@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
             },
             {
               title: 'Supfile - Application Web',
-              type: 'PFE Master 1',
+              type: 'PFA',
               category: 'Application Web',
               shortDesc: 'Projet de fin d\'année à SUPINFO · Plateforme de stockage cloud concurrente de Dropbox et Google Drive',
               description: 'SUPFile est un projet de fin d\'année développé dans le cadre du Master 1 en Intelligence Artificielle à l\'École Supérieure d\'Informatique de Paris (SUPINFO). Ce projet consiste à développer une plateforme de stockage cloud grand public concurrente de Dropbox ou Google Drive pour la société "SUPFile", spécialisée dans l\'infrastructure de stockage distribué.\n\nLe projet comprend le développement d\'une application web complète et d\'une application mobile, avec une architecture basée sur une API REST, des clients distincts et une base de données pour les métadonnées. L\'application permet aux utilisateurs de stocker, sécuriser et partager leurs fichiers personnels dans le cloud, avec un quota de 30 Go par utilisateur.\n\nL\'accent est mis sur la gestion performante des flux de données (upload/download), la navigation fluide dans une arborescence de dossiers, l\'ergonomie, la prévisualisation instantanée des fichiers et la synchronisation entre les clients web et mobile.',
@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 'Base de données pour les métadonnées',
                 'Sécurité : JWT, hachage des mots de passe, gestion des secrets'
               ],
-              tags: ['Web', 'Mobile', 'Application Web', 'Cloud Storage', 'API REST', 'Docker', 'OAuth2', 'JWT', 'SUPINFO', 'PFE Master 1', 'Dropbox', 'Google Drive', 'Déploiement'],
+              tags: ['Web', 'Mobile', 'Application Web', 'Cloud Storage', 'API REST', 'Docker', 'OAuth2', 'JWT', 'SUPINFO', 'PFA', 'Projet de Fin d\'Année', 'Dropbox', 'Google Drive', 'Déploiement'],
               link: 'https://supfile-frontend.onrender.com/',
               demoLink: '',
               emailSubject: 'Demande d\'infos: Application Supfile',
