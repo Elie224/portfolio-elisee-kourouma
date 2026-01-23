@@ -19,14 +19,36 @@ router.post('/', authenticateAdmin, async (req, res) => {
   try {
     console.log('📥 Requête de mise à jour reçue:', {
       hasPersonal: !!req.body.personal,
-      projectsCount: req.body.projects?.length || 0,
-      skillsCount: req.body.skills?.length || 0
+      projectsType: typeof req.body.projects,
+      projectsIsArray: Array.isArray(req.body.projects),
+      projectsCount: Array.isArray(req.body.projects) ? req.body.projects.length : 'N/A',
+      skillsCount: Array.isArray(req.body.skills) ? req.body.skills.length : 'N/A'
+    });
+    
+    // Nettoyer et valider les données reçues
+    const cleanData = {
+      personal: req.body.personal || {},
+      projects: Array.isArray(req.body.projects) ? req.body.projects : (typeof req.body.projects === 'string' ? JSON.parse(req.body.projects) : []),
+      skills: Array.isArray(req.body.skills) ? req.body.skills : (typeof req.body.skills === 'string' ? JSON.parse(req.body.skills) : []),
+      links: req.body.links || {},
+      about: req.body.about || {},
+      timeline: Array.isArray(req.body.timeline) ? req.body.timeline : (typeof req.body.timeline === 'string' ? JSON.parse(req.body.timeline) : []),
+      services: Array.isArray(req.body.services) ? req.body.services : (typeof req.body.services === 'string' ? JSON.parse(req.body.services) : []),
+      certifications: Array.isArray(req.body.certifications) ? req.body.certifications : (typeof req.body.certifications === 'string' ? JSON.parse(req.body.certifications) : []),
+      contactMessages: Array.isArray(req.body.contactMessages) ? req.body.contactMessages : (typeof req.body.contactMessages === 'string' ? JSON.parse(req.body.contactMessages) : []),
+      faq: Array.isArray(req.body.faq) ? req.body.faq : (typeof req.body.faq === 'string' ? JSON.parse(req.body.faq) : [])
+    };
+    
+    console.log('📦 Données nettoyées:', {
+      projectsCount: cleanData.projects.length,
+      skillsCount: cleanData.skills.length,
+      timelineCount: cleanData.timeline.length
     });
     
     // Utiliser findOneAndUpdate pour mettre à jour ou créer
     const portfolio = await Portfolio.findOneAndUpdate(
       {}, // Pas de filtre, on veut le seul document
-      { $set: req.body }, // Mettre à jour tous les champs
+      { $set: cleanData }, // Mettre à jour tous les champs avec les données nettoyées
       { 
         new: true, // Retourner le document mis à jour
         upsert: true, // Créer si n'existe pas
@@ -53,7 +75,10 @@ router.post('/', authenticateAdmin, async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Erreur lors de la mise à jour du portfolio:', error);
-    console.error('Détails de l\'erreur:', error.message, error.stack);
+    console.error('Détails de l\'erreur:', error.message);
+    if (error.stack) {
+      console.error('Stack trace:', error.stack);
+    }
     res.status(500).json({ 
       error: 'Erreur lors de la mise à jour',
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
