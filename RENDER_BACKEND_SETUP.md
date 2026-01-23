@@ -41,7 +41,7 @@ Cliquer sur **"Advanced"** → Ajouter ces 3 variables :
 
 **Variable 1 :**
 - Key: `MONGODB_URI`
-- Value: `mongodb+srv://portfolio:YyNCfVI4Xm66zcmA@cluster0.u3cxqhm.mongodb.net/portfolio?retryWrites=true&w=majority`
+- Value: `mongodb+srv://portfolio:VOTRE_MOT_DE_PASSE@cluster0.u3cxqhm.mongodb.net/portfolio?retryWrites=true&w=majority`
 
 **Variable 2 :**
 - Key: `JWT_SECRET`
