@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Configuration API
   const API_BASE_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:3000/api' 
-    : 'https://votre-backend.onrender.com/api'; // À modifier avec votre URL de backend
+    : 'https://portfolio-backend-x47u.onrender.com/api';
   
   // Load portfolio data from API
   async function loadPortfolioFromAPI() {
