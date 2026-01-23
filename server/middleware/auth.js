@@ -2,7 +2,13 @@ const jwt = require('jsonwebtoken');
 
 const authenticateAdmin = (req, res, next) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1]; // Format: "Bearer TOKEN"
+    // Vérifier l'en-tête Authorization (Bearer token)
+    let token = req.headers.authorization?.split(' ')[1];
+    
+    // Si pas dans Authorization, vérifier dans x-auth-token
+    if (!token) {
+      token = req.headers['x-auth-token'];
+    }
     
     if (!token) {
       return res.status(401).json({ error: 'Token manquant' });
@@ -18,6 +24,7 @@ const authenticateAdmin = (req, res, next) => {
     req.admin = decoded;
     next();
   } catch (error) {
+    console.error('Erreur authentification:', error);
     return res.status(401).json({ error: 'Token invalide' });
   }
 };

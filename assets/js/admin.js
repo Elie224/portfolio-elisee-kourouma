@@ -411,6 +411,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Sauvegarder via API si token disponible
     if (apiToken) {
       try {
+        console.log('📤 Envoi des données au serveur...', {
+          projects: data.projects?.length || 0,
+          skills: data.skills?.length || 0,
+          hasToken: !!apiToken
+        });
+        
         const response = await fetch(`${API_BASE_URL}/portfolio`, {
           method: 'POST',
           headers: {
@@ -422,10 +428,20 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (response.ok) {
           const result = await response.json();
-          console.log('✅ Données sauvegardées sur le serveur:', result);
+          console.log('✅ Données sauvegardées sur le serveur:', {
+            projects: result.projects?.length || 0,
+            skills: result.skills?.length || 0
+          });
           showSuccess('Données sauvegardées avec succès sur le serveur !');
         } else {
-          console.error('❌ Erreur lors de la sauvegarde sur le serveur:', response.statusText);
+          const errorText = await response.text();
+          console.error('❌ Erreur lors de la sauvegarde sur le serveur:', response.status, errorText);
+          if (response.status === 401) {
+            // Token expiré, essayer de se reconnecter
+            console.log('🔄 Token expiré, reconnexion nécessaire');
+            localStorage.removeItem('apiToken');
+            apiToken = null;
+          }
           showSuccess('Données sauvegardées localement (serveur indisponible)');
         }
       } catch (error) {
@@ -562,8 +578,42 @@ document.addEventListener('DOMContentLoaded', () => {
     initPhotoUpload();
   }
 
+  // Login function to get JWT token from API
+  async function loginAdmin(email, password) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/portfolio/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.token) {
+          // Store JWT token
+          apiToken = data.token;
+          localStorage.setItem('apiToken', apiToken);
+          console.log('✅ Token JWT obtenu et stocké');
+          return true;
+        } else {
+          console.error('❌ Pas de token dans la réponse');
+          return false;
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Erreur serveur' }));
+        console.error('❌ Erreur de connexion API:', errorData);
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ Erreur réseau lors de la connexion:', error);
+      return false;
+    }
+  }
+
   if (loginForm) {
-    loginForm.addEventListener('submit', (e) => {
+    loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('admin-email').value.trim();
       const password = document.getElementById('admin-password').value;
@@ -571,6 +621,7 @@ document.addEventListener('DOMContentLoaded', () => {
       loginError.classList.remove('active');
       loginError.textContent = '';
 
+      // Vérification locale d'abord
       if (email !== ADMIN_EMAIL) {
         showError('Email incorrect. Accès refusé.');
         return;
@@ -581,6 +632,15 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
+      // Se connecter à l'API pour obtenir le token JWT
+      const apiLoginSuccess = await loginAdmin(email, password);
+      
+      if (!apiLoginSuccess) {
+        console.log('⚠️ Connexion API échouée, mais connexion locale autorisée');
+        // On continue quand même avec la connexion locale
+      }
+
+      // Créer la session locale
       const expires = new Date().getTime() + (24 * 60 * 60 * 1000);
       const sessionData = { email, expires, loginTime: new Date().getTime() };
       localStorage.setItem('adminSession', JSON.stringify(sessionData));
