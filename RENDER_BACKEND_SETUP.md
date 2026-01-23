@@ -45,11 +45,11 @@ Cliquer sur **"Advanced"** → Ajouter ces 3 variables :
 
 **Variable 2 :**
 - Key: `JWT_SECRET`
-- Value: `portfolio_jwt_secret_2024_changez_moi_en_production`
+- Value: Générer un secret JWT sécurisé (chaîne aléatoire longue)
 
 **Variable 3 :**
 - Key: `ADMIN_EMAIL`
-- Value: `kouroumaelisee@gmail.com`
+- Value: Votre email administrateur
 
 ⚠️ **Ne PAS ajouter `PORT`** - Render le définit automatiquement
 

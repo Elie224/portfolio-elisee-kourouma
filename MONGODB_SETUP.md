@@ -25,7 +25,7 @@ Créer un fichier `server/.env` avec :
 PORT=3000
 MONGODB_URI=votre_connection_string_ici
 JWT_SECRET=votre_secret_jwt_securise
-ADMIN_EMAIL=kouroumaelisee@gmail.com
+ADMIN_EMAIL=votre_email_admin@example.com
 ```
 
 ### Variables d'environnement sur Render
@@ -34,7 +34,7 @@ Dans le dashboard Render, ajouter :
 
 - `MONGODB_URI` : Votre connection string complète
 - `JWT_SECRET` : Votre secret JWT
-- `ADMIN_EMAIL` : kouroumaelisee@gmail.com
+- `ADMIN_EMAIL` : Votre email administrateur
 
 ## Sécurité
 

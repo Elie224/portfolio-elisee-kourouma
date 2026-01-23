@@ -51,8 +51,8 @@ Cliquer sur **"Advanced"** → **"Add Environment Variable"** et ajouter :
 | Key | Value |
 |-----|-------|
 | `MONGODB_URI` | Votre connection string MongoDB Atlas (récupérée depuis MongoDB Atlas Dashboard → Connect → Connect your application) |
-| `JWT_SECRET` | `portfolio_jwt_secret_2024_changez_moi_en_production` |
-| `ADMIN_EMAIL` | `kouroumaelisee@gmail.com` |
+| `JWT_SECRET` | Générer un secret JWT sécurisé (chaîne aléatoire longue) |
+| `ADMIN_EMAIL` | Votre email administrateur |
 | `PORT` | Laisser vide (Render le définit automatiquement) |
 
 ⚠️ **Important** : Ne pas mettre d'espaces avant ou après les valeurs !
