@@ -10,13 +10,30 @@ document.addEventListener('DOMContentLoaded', () => {
   // Vérifier si les données sont vraiment vides (pas juste un objet avec des tableaux vides)
   function isDataEmpty(data) {
     if (!data) return true;
+    
+    // Vérifier chaque type de donnée
     const hasProjects = data.projects && Array.isArray(data.projects) && data.projects.length > 0;
     const hasSkills = data.skills && Array.isArray(data.skills) && data.skills.length > 0;
     const hasTimeline = data.timeline && Array.isArray(data.timeline) && data.timeline.length > 0;
     const hasPersonal = data.personal && data.personal.photo;
     
     // Si aucune donnée significative, considérer comme vide
-    return !hasProjects && !hasSkills && !hasTimeline && !hasPersonal;
+    const isEmpty = !hasProjects && !hasSkills && !hasTimeline && !hasPersonal;
+    
+    if (isEmpty) {
+      console.log('🔍 Données détectées comme vides:', {
+        hasProjects,
+        hasSkills,
+        hasTimeline,
+        hasPersonal,
+        projectsCount: data.projects?.length || 0,
+        skillsCount: data.skills?.length || 0,
+        timelineCount: data.timeline?.length || 0,
+        hasPhoto: !!data.personal?.photo
+      });
+    }
+    
+    return isEmpty;
   }
 
   // Load portfolio data from API
