@@ -380,13 +380,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     try {
       const parsed = JSON.parse(data);
+      
+      // Vérifier et nettoyer les données si elles contiennent du code JavaScript
+      const hasCorruption = JSON.stringify(parsed).includes('`') || 
+                           JSON.stringify(parsed).includes(' + ') ||
+                           (parsed.projects && parsed.projects.some(p => typeof p === 'string' && p.includes('title:')));
+      
+      if (hasCorruption) {
+        console.warn('⚠️ Corruption détectée dans localStorage, réinitialisation avec données par défaut');
+        localStorage.setItem('portfolioData', JSON.stringify(DEFAULT_DATA));
+        return DEFAULT_DATA;
+      }
+      
       console.log('📦 Données récupérées de localStorage:', {
         hasContactMessages: !!parsed.contactMessages,
-        messagesCount: parsed.contactMessages ? parsed.contactMessages.length : 0
+        messagesCount: parsed.contactMessages ? parsed.contactMessages.length : 0,
+        projectsCount: parsed.projects ? parsed.projects.length : 0,
+        skillsCount: parsed.skills ? parsed.skills.length : 0
       });
       return parsed;
     } catch (e) {
       console.error('❌ Erreur lors du parsing des données:', e);
+      console.warn('⚠️ Réinitialisation avec données par défaut');
+      localStorage.setItem('portfolioData', JSON.stringify(DEFAULT_DATA));
       return DEFAULT_DATA;
     }
   }
