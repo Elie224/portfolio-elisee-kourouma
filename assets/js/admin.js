@@ -210,10 +210,42 @@ document.addEventListener('DOMContentLoaded', () => {
       // Migrate old paths to new paths
       try {
         const data = JSON.parse(existingData);
+        
+        // VÉRIFICATION CRITIQUE : Détecter la corruption AVANT toute migration
+        const dataStr = JSON.stringify(data);
+        const hasCorruption = dataStr.includes('`') || 
+                             dataStr.includes(' + ') ||
+                             dataStr.includes('\\n`') ||
+                             (data.projects && Array.isArray(data.projects) && data.projects.some(p => {
+                               if (typeof p === 'string') return true;
+                               if (p && typeof p === 'object') {
+                                 for (const key in p) {
+                                   if (typeof p[key] === 'string' && (p[key].includes('`') || p[key].includes(' + '))) {
+                                     return true;
+                                   }
+                                 }
+                               }
+                               return false;
+                             }));
+        
+        if (hasCorruption) {
+          console.error('❌ CORRUPTION DÉTECTÉE dans initData(), réinitialisation complète');
+          localStorage.removeItem('portfolioData');
+          localStorage.removeItem('portfolioLastUpdate');
+          localStorage.removeItem('portfolioUpdateVersion');
+          localStorage.setItem('portfolioData', JSON.stringify(DEFAULT_DATA));
+          localStorage.setItem('portfolioLastUpdate', new Date().toISOString());
+          localStorage.setItem('portfolioUpdateVersion', '1.0.2'); // Nouvelle version
+          if (typeof showError === 'function') {
+            showError('Corruption détectée. Données réinitialisées automatiquement.');
+          }
+          return; // Sortir de la fonction, les données sont déjà initialisées
+        }
+        
         let updated = false;
         
         // Force update flag - increment this when project descriptions change
-        const LAST_UPDATE_VERSION = '1.0.1'; // Increment this to force update
+        const LAST_UPDATE_VERSION = '1.0.2'; // Increment this to force update (corruption fix)
         const lastUpdate = localStorage.getItem('portfolioUpdateVersion');
         const shouldForceUpdate = !lastUpdate || lastUpdate !== LAST_UPDATE_VERSION;
         
