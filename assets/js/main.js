@@ -78,32 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
         
-        // Vérifier que les données de l'API sont valides avant de les utiliser
-        const hasValidAPIData = (data.projects?.length > 0) || 
-                               (data.skills?.length > 0) || 
-                               (data.timeline?.length > 0);
-        
-        if (!hasValidAPIData) {
-          console.log('⚠️ API retourne des données invalides, utilisation des données locales');
-          const existingDataStr = localStorage.getItem('portfolioData');
-          if (existingDataStr) {
-            try {
-              const existingData = JSON.parse(existingDataStr);
-              const hasValidLocalData = (existingData.projects?.length > 0) || 
-                                     (existingData.skills?.length > 0) || 
-                                     (existingData.timeline?.length > 0);
-              if (hasValidLocalData) {
-                return existingData;
-              }
-            } catch (e) {
-              // Ignorer
-            }
-          }
-          // Si pas de données locales valides, initialiser
-          initDefaultData();
-          return null;
-        }
-        
         // Supprimer les champs MongoDB (_id, __v, etc.)
         const cleanData = {
           personal: data.personal || {},
