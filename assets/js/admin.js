@@ -384,10 +384,29 @@ document.addEventListener('DOMContentLoaded', () => {
       // Vérifier et nettoyer les données si elles contiennent du code JavaScript
       const hasCorruption = JSON.stringify(parsed).includes('`') || 
                            JSON.stringify(parsed).includes(' + ') ||
-                           (parsed.projects && parsed.projects.some(p => typeof p === 'string' && p.includes('title:')));
+                           (parsed.projects && Array.isArray(parsed.projects) && parsed.projects.some(p => typeof p === 'string' && p.includes('title:')));
       
       if (hasCorruption) {
         console.warn('⚠️ Corruption détectée dans localStorage, réinitialisation avec données par défaut');
+        // Nettoyer complètement localStorage
+        localStorage.removeItem('portfolioData');
+        localStorage.removeItem('portfolioLastUpdate');
+        localStorage.setItem('portfolioData', JSON.stringify(DEFAULT_DATA));
+        localStorage.setItem('portfolioLastUpdate', new Date().toISOString());
+        return DEFAULT_DATA;
+      }
+      
+      // Validation supplémentaire : s'assurer que les structures de données sont correctes
+      if (parsed.projects && !Array.isArray(parsed.projects)) {
+        console.warn('⚠️ Structure de données invalide (projects n\'est pas un tableau), réinitialisation');
+        localStorage.removeItem('portfolioData');
+        localStorage.setItem('portfolioData', JSON.stringify(DEFAULT_DATA));
+        return DEFAULT_DATA;
+      }
+      
+      if (parsed.skills && !Array.isArray(parsed.skills)) {
+        console.warn('⚠️ Structure de données invalide (skills n\'est pas un tableau), réinitialisation');
+        localStorage.removeItem('portfolioData');
         localStorage.setItem('portfolioData', JSON.stringify(DEFAULT_DATA));
         return DEFAULT_DATA;
       }
@@ -421,16 +440,32 @@ document.addEventListener('DOMContentLoaded', () => {
   async function savePortfolioData(data) {
     // Fonction pour nettoyer et valider un objet
     const cleanObject = (obj) => {
-      if (!obj || typeof obj !== 'object') return {};
+      if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return {};
       const cleaned = {};
       for (const key in obj) {
         if (obj.hasOwnProperty(key)) {
           const value = obj[key];
-          // Ignorer les valeurs qui contiennent du code JavaScript
-          if (typeof value === 'string' && (value.includes('`') || value.includes(' + ') || value.includes('\\n`'))) {
+          
+          // Si c'est un tableau, le nettoyer
+          if (Array.isArray(value)) {
+            cleaned[key] = value.map(item => {
+              if (typeof item === 'string' && (item.includes('`') || item.includes(' + '))) {
+                return item.replace(/`/g, '').replace(/\s*\+\s*/g, ' ').trim();
+              }
+              return item;
+            });
+          }
+          // Si c'est une chaîne avec du code JavaScript, la nettoyer
+          else if (typeof value === 'string' && (value.includes('`') || value.includes(' + ') || value.includes('\\n`'))) {
             console.warn(`⚠️ Valeur suspecte détectée pour ${key}, nettoyée`);
-            cleaned[key] = value.replace(/`/g, '').replace(/\s*\+\s*/g, ' ').replace(/\\n/g, '\n');
-          } else {
+            cleaned[key] = value.replace(/`/g, '').replace(/\s*\+\s*/g, ' ').replace(/\\n/g, '\n').trim();
+          }
+          // Si c'est un objet, le nettoyer récursivement
+          else if (value && typeof value === 'object' && !Array.isArray(value)) {
+            cleaned[key] = cleanObject(value);
+          }
+          // Sinon, garder la valeur telle quelle
+          else {
             cleaned[key] = value;
           }
         }

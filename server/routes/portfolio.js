@@ -73,17 +73,34 @@ router.post('/', authenticateAdmin, async (req, res) => {
     
     // Helper pour nettoyer un objet et s'assurer qu'il est valide
     const cleanObject = (obj) => {
-      if (!obj || typeof obj !== 'object') return {};
+      if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return {};
       const cleaned = {};
       for (const key in obj) {
         if (obj.hasOwnProperty(key)) {
           const value = obj[key];
-          if (typeof value === 'string' && (value.includes('`') || value.includes(' + '))) {
-            // C'est probablement du code JavaScript, on l'ignore
-            console.warn(`⚠️ Valeur suspecte détectée pour ${key}, ignorée`);
-            continue;
+          
+          // Si c'est un tableau, le nettoyer
+          if (Array.isArray(value)) {
+            cleaned[key] = value.map(item => {
+              if (typeof item === 'string' && (item.includes('`') || item.includes(' + '))) {
+                return item.replace(/`/g, '').replace(/\s*\+\s*/g, ' ').trim();
+              }
+              return item;
+            });
           }
-          cleaned[key] = value;
+          // Si c'est une chaîne avec du code JavaScript, la nettoyer
+          else if (typeof value === 'string' && (value.includes('`') || value.includes(' + '))) {
+            console.warn(`⚠️ Valeur suspecte détectée pour ${key}, nettoyée`);
+            cleaned[key] = value.replace(/`/g, '').replace(/\s*\+\s*/g, ' ').trim();
+          }
+          // Si c'est un objet, le nettoyer récursivement
+          else if (value && typeof value === 'object' && !Array.isArray(value)) {
+            cleaned[key] = cleanObject(value);
+          }
+          // Sinon, garder la valeur telle quelle
+          else {
+            cleaned[key] = value;
+          }
         }
       }
       return cleaned;
