@@ -534,6 +534,9 @@ document.addEventListener('DOMContentLoaded', () => {
       faq: cleanArray(data.faq || [])
     };
     
+    // Récupérer l'ancienne valeur pour l'événement storage
+    const oldData = localStorage.getItem('portfolioData');
+    
     // Validation finale avant sauvegarde
     try {
       // Tester que les données peuvent être sérialisées correctement
@@ -611,10 +614,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Trigger storage event for other tabs/windows
     try {
+      const newDataString = JSON.stringify(cleanData);
       const storageEvent = new StorageEvent('storage', {
         key: 'portfolioData',
-        newValue: JSON.stringify(data),
-        oldValue: oldData,
+        newValue: newDataString,
+        oldValue: oldData || null,
         url: window.location.href,
         storageArea: localStorage
       });
@@ -622,7 +626,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // Also trigger a custom event
       window.dispatchEvent(new CustomEvent('portfolioDataUpdated', { 
-        detail: { projects: data.projects } 
+        detail: { projects: cleanData.projects } 
       }));
       
       console.log('📤 Événement de stockage déclenché pour mettre à jour les autres pages');

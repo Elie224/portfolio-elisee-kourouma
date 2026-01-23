@@ -170,7 +170,12 @@ router.post('/', authenticateAdmin, async (req, res) => {
       skillsCount: cleanData.skills.length,
       timelineCount: cleanData.timeline.length,
       hasPersonal: !!cleanData.personal,
-      hasAbout: !!cleanData.about
+      hasAbout: !!cleanData.about,
+      projectsSample: cleanData.projects.length > 0 ? {
+        title: cleanData.projects[0].title,
+        type: typeof cleanData.projects[0],
+        hasTitle: !!cleanData.projects[0].title
+      } : null
     });
     
     // Validation finale : s'assurer qu'on a au moins des données minimales
