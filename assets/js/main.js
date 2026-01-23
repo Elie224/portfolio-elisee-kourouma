@@ -45,40 +45,63 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Vérifier si les données sont vraiment vides
         if (isDataEmpty(data)) {
-          console.log('⚠️ API retourne un document vide, utilisation du cache local ou données par défaut');
+          console.log('⚠️ API retourne un document vide, vérification localStorage...');
           // Vérifier localStorage
           const existingDataStr = localStorage.getItem('portfolioData');
           if (existingDataStr) {
             try {
               const existingData = JSON.parse(existingDataStr);
-              // Si localStorage est aussi vide, ne pas écraser
-              // initDefaultData() a déjà été appelé au chargement de la page
-              if (isDataEmpty(existingData)) {
-                console.log('📦 localStorage contient des données vides, ne pas écraser (garder données initialisées)');
-                return null; // Ne pas utiliser les données vides, garder ce qui existe déjà
-              } else {
-                // Double vérification : s'assurer que les données sont vraiment valides
-                const hasValidData = (existingData.projects?.length > 0) || 
-                                   (existingData.skills?.length > 0) || 
-                                   (existingData.timeline?.length > 0) || 
-                                   (existingData.personal?.photo);
-                
-                if (!hasValidData) {
-                  console.log('📦 localStorage contient un objet mais sans données valides, ne pas écraser');
-                  return null; // Ne pas utiliser les données vides
-                }
-                
-                console.log('✅ Utilisation des données locales existantes');
+              // Vérifier si les données locales sont valides
+              const hasValidData = (existingData.projects?.length > 0) || 
+                                 (existingData.skills?.length > 0) || 
+                                 (existingData.timeline?.length > 0) || 
+                                 (existingData.personal?.photo);
+              
+              if (hasValidData) {
+                console.log('✅ Utilisation des données locales valides (API vide)');
                 return existingData; // Utiliser les données locales valides
+              } else {
+                console.log('⚠️ localStorage aussi vide, initialisation des données par défaut');
+                // Réinitialiser avec données par défaut
+                initDefaultData();
+                return null; // Ne pas écraser, les données par défaut sont déjà dans localStorage
               }
             } catch (e) {
-              console.log('📦 Erreur parsing localStorage, ne pas écraser');
-              return null; // Ne pas écraser, garder les données initialisées
+              console.log('📦 Erreur parsing localStorage, initialisation des données par défaut');
+              initDefaultData();
+              return null;
             }
           } else {
-            console.log('📦 localStorage vide, ne pas écraser (données déjà initialisées)');
-            return null; // Ne pas écraser, garder les données initialisées
+            console.log('📦 localStorage vide, initialisation des données par défaut');
+            initDefaultData();
+            return null;
           }
+        }
+        
+        // Vérifier que les données de l'API sont valides avant de les utiliser
+        const hasValidAPIData = (data.projects?.length > 0) || 
+                               (data.skills?.length > 0) || 
+                               (data.timeline?.length > 0);
+        
+        if (!hasValidAPIData) {
+          console.log('⚠️ API retourne des données invalides, utilisation des données locales');
+          const existingDataStr = localStorage.getItem('portfolioData');
+          if (existingDataStr) {
+            try {
+              const existingData = JSON.parse(existingDataStr);
+              const hasValidLocalData = (existingData.projects?.length > 0) || 
+                                     (existingData.skills?.length > 0) || 
+                                     (existingData.timeline?.length > 0);
+              if (hasValidLocalData) {
+                return existingData;
+              }
+            } catch (e) {
+              // Ignorer
+            }
+          }
+          // Si pas de données locales valides, initialiser
+          initDefaultData();
+          return null;
         }
         
         // Supprimer les champs MongoDB (_id, __v, etc.)
@@ -342,11 +365,36 @@ document.addEventListener('DOMContentLoaded', () => {
         
         localStorage.setItem('portfolioData', JSON.stringify(DEFAULT_DATA));
         localStorage.setItem('portfolioLastUpdate', new Date().toISOString());
-        console.log('✅ Données par défaut initialisées avec succès !');
+        console.log('✅ Données par défaut initialisées avec succès !', {
+          projects: DEFAULT_DATA.projects.length,
+          skills: DEFAULT_DATA.skills.length,
+          timeline: DEFAULT_DATA.timeline.length
+        });
         
         // Recharger toutes les données après initialisation
         reloadAllData();
         return true;
+      } else {
+        console.log('ℹ️ Données déjà présentes dans localStorage, pas d\'initialisation nécessaire');
+        // Vérifier quand même que les données ne sont pas corrompues
+        try {
+          const existingData = JSON.parse(existingDataStr);
+          const hasValidData = (existingData.projects?.length > 0) || 
+                             (existingData.skills?.length > 0) || 
+                             (existingData.timeline?.length > 0);
+          if (!hasValidData) {
+            console.warn('⚠️ Données présentes mais vides, réinitialisation...');
+            localStorage.setItem('portfolioData', JSON.stringify(DEFAULT_DATA));
+            localStorage.setItem('portfolioLastUpdate', new Date().toISOString());
+            reloadAllData();
+          }
+        } catch (e) {
+          console.error('❌ Erreur lors de la vérification des données:', e);
+          // Réinitialiser en cas d'erreur
+          localStorage.setItem('portfolioData', JSON.stringify(DEFAULT_DATA));
+          localStorage.setItem('portfolioLastUpdate', new Date().toISOString());
+          reloadAllData();
+        }
       }
       return false;
     } catch (error) {
