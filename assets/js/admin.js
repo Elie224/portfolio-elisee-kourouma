@@ -544,19 +544,37 @@ document.addEventListener('DOMContentLoaded', () => {
   const adminEmailDisplay = document.getElementById('admin-email-display');
 
   function checkAdminSession() {
+    // Vérifier si on a un token API stocké
+    const storedToken = localStorage.getItem('apiToken');
+    if (storedToken) {
+      apiToken = storedToken;
+      console.log('✅ Token API récupéré depuis localStorage');
+    }
+    
     const session = localStorage.getItem('adminSession');
     if (session) {
       try {
         const sessionData = JSON.parse(session);
         const now = new Date().getTime();
         if (sessionData.expires && now < sessionData.expires && sessionData.email === ADMIN_EMAIL) {
+          // Si on a une session mais pas de token, essayer de se reconnecter à l'API
+          if (!apiToken) {
+            console.log('🔄 Session locale trouvée mais pas de token API, reconnexion...');
+            loginAdmin(ADMIN_EMAIL, ADMIN_PASSWORD).catch(err => {
+              console.log('⚠️ Reconnexion API échouée, mais session locale valide');
+            });
+          }
           showDashboard(sessionData.email);
           return true;
         } else {
           localStorage.removeItem('adminSession');
+          localStorage.removeItem('apiToken');
+          apiToken = null;
         }
       } catch (e) {
         localStorage.removeItem('adminSession');
+        localStorage.removeItem('apiToken');
+        apiToken = null;
       }
     }
     return false;

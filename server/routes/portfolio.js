@@ -56,12 +56,14 @@ router.post('/login', async (req, res) => {
         { expiresIn: '24h' }
       );
       
+      console.log('✅ Connexion admin réussie:', email);
       res.json({ 
         success: true, 
         token,
         expiresIn: '24h'
       });
     } else {
+      console.log('❌ Tentative de connexion avec email invalide:', email);
       res.status(401).json({ error: 'Email invalide' });
     }
   } catch (error) {
