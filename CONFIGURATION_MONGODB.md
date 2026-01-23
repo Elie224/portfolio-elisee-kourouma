@@ -13,7 +13,7 @@ Votre backend est maintenant configuré avec MongoDB Atlas :
 Le fichier `server/.env` contient :
 ```
 PORT=3000
-MONGODB_URI=mongodb+srv://portfolio:VOTRE_MOT_DE_PASSE@cluster0.u3cxqhm.mongodb.net/portfolio?retryWrites=true&w=majority
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority
 JWT_SECRET=portfolio_jwt_secret_2024_changez_moi_en_production
 ADMIN_EMAIL=kouroumaelisee@gmail.com
 ```
@@ -52,7 +52,7 @@ Sinon, la connexion échouera depuis Render.
 
 Quand vous déployez sur Render, ajouter ces variables d'environnement :
 
-- `MONGODB_URI` : `mongodb+srv://portfolio:VOTRE_MOT_DE_PASSE@cluster0.u3cxqhm.mongodb.net/portfolio?retryWrites=true&w=majority`
+- `MONGODB_URI` : Votre connection string MongoDB Atlas (format: `mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority`)
 - `JWT_SECRET` : `portfolio_jwt_secret_2024_changez_moi_en_production`
 - `ADMIN_EMAIL` : `kouroumaelisee@gmail.com`
 - `PORT` : (Render le définit automatiquement)

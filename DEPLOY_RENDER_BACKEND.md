@@ -50,7 +50,7 @@ Cliquer sur **"Advanced"** → **"Add Environment Variable"** et ajouter :
 
 | Key | Value |
 |-----|-------|
-| `MONGODB_URI` | `mongodb+srv://portfolio:VOTRE_MOT_DE_PASSE@cluster0.u3cxqhm.mongodb.net/portfolio?retryWrites=true&w=majority` |
+| `MONGODB_URI` | Votre connection string MongoDB Atlas (récupérée depuis MongoDB Atlas Dashboard → Connect → Connect your application) |
 | `JWT_SECRET` | `portfolio_jwt_secret_2024_changez_moi_en_production` |
 | `ADMIN_EMAIL` | `kouroumaelisee@gmail.com` |
 | `PORT` | Laisser vide (Render le définit automatiquement) |

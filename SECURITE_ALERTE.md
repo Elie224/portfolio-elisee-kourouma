@@ -27,8 +27,14 @@ Des identifiants MongoDB ont été détectés dans les fichiers commités sur Gi
 Dans `server/.env`, mettre à jour avec le nouveau mot de passe :
 
 ```env
-MONGODB_URI=mongodb+srv://portfolio:NOUVEAU_MOT_DE_PASSE@cluster0.u3cxqhm.mongodb.net/portfolio?retryWrites=true&w=majority
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority
 ```
+
+Remplacez :
+- `username` par votre nom d'utilisateur MongoDB
+- `password` par votre nouveau mot de passe
+- `cluster.mongodb.net` par votre cluster MongoDB Atlas
+- `database` par le nom de votre base de données
 
 ### 3. Mettre à Jour Render (si déjà déployé)
 
