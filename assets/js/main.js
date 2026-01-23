@@ -128,18 +128,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 100);
   }
 
-  // Try to load from API first, then fallback to localStorage
-  loadPortfolioFromAPI().then(apiData => {
-    if (apiData) {
-      // Trigger reload of all data-dependent functions
-      reloadAllData();
-    } else {
-      // Si l'API est vide, vérifier si initDefaultData a été appelé
-      // et recharger les données après un court délai
-      reloadAllData();
-    }
-  });
-
   // Initialize default data if localStorage is empty (for first-time visitors on Render)
   function initDefaultData() {
     try {
