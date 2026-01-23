@@ -403,49 +403,84 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Save portfolio data to API and localStorage
   async function savePortfolioData(data) {
+    // Fonction pour nettoyer et valider un objet
+    const cleanObject = (obj) => {
+      if (!obj || typeof obj !== 'object') return {};
+      const cleaned = {};
+      for (const key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          const value = obj[key];
+          // Ignorer les valeurs qui contiennent du code JavaScript
+          if (typeof value === 'string' && (value.includes('`') || value.includes(' + ') || value.includes('\\n`'))) {
+            console.warn(`⚠️ Valeur suspecte détectée pour ${key}, nettoyée`);
+            cleaned[key] = value.replace(/`/g, '').replace(/\s*\+\s*/g, ' ').replace(/\\n/g, '\n');
+          } else {
+            cleaned[key] = value;
+          }
+        }
+      }
+      return cleaned;
+    };
+    
+    // Fonction pour nettoyer un tableau
+    const cleanArray = (arr, itemCleaner = (item) => item) => {
+      if (!Array.isArray(arr)) return [];
+      return arr.map(item => {
+        // Si c'est une chaîne, essayer de la parser
+        if (typeof item === 'string') {
+          // Si ça ressemble à du code JavaScript, on l'ignore
+          if (item.includes('`') || item.includes(' + ') || item.trim().startsWith('[') && item.includes('title:')) {
+            console.warn('⚠️ Élément suspect détecté dans le tableau, ignoré');
+            return null;
+          }
+          try {
+            const parsed = JSON.parse(item);
+            return itemCleaner(parsed);
+          } catch (e) {
+            console.warn('⚠️ Impossible de parser l\'élément, ignoré');
+            return null;
+          }
+        }
+        // Nettoyer l'objet si c'est un objet
+        if (item && typeof item === 'object') {
+          return itemCleaner(cleanObject(item));
+        }
+        return itemCleaner(item);
+      }).filter(item => item !== null && item !== undefined);
+    };
+    
     // Nettoyer les données avant sauvegarde
-    // S'assurer que tous les tableaux sont bien des tableaux d'objets, pas des chaînes
     const cleanData = {
-      personal: data.personal || {},
-      projects: Array.isArray(data.projects) ? data.projects.map(p => {
-        // S'assurer que chaque projet est un objet, pas une chaîne
-        if (typeof p === 'string') {
-          try {
-            return JSON.parse(p);
-          } catch (e) {
-            console.error('Erreur parsing projet:', e);
-            return null;
-          }
+      personal: cleanObject(data.personal || {}),
+      projects: cleanArray(data.projects || [], (project) => {
+        // S'assurer que toutes les propriétés du projet sont valides
+        const cleaned = cleanObject(project);
+        // Vérifier que les propriétés essentielles existent
+        if (!cleaned.title || typeof cleaned.title !== 'string') {
+          return null;
         }
-        return p;
-      }).filter(p => p !== null) : [],
-      skills: Array.isArray(data.skills) ? data.skills.map(s => {
-        if (typeof s === 'string') {
-          try {
-            return JSON.parse(s);
-          } catch (e) {
-            console.error('Erreur parsing skill:', e);
-            return null;
-          }
+        return cleaned;
+      }),
+      skills: cleanArray(data.skills || [], (skill) => {
+        const cleaned = cleanObject(skill);
+        if (!cleaned.name || typeof cleaned.name !== 'string') {
+          return null;
         }
-        return s;
-      }).filter(s => s !== null) : [],
-      links: data.links || {},
-      about: data.about || {},
-      timeline: Array.isArray(data.timeline) ? data.timeline.map(t => {
-        if (typeof t === 'string') {
-          try {
-            return JSON.parse(t);
-          } catch (e) {
-            return null;
-          }
+        return cleaned;
+      }),
+      links: cleanObject(data.links || {}),
+      about: cleanObject(data.about || {}),
+      timeline: cleanArray(data.timeline || [], (timelineItem) => {
+        const cleaned = cleanObject(timelineItem);
+        if (!cleaned.title || typeof cleaned.title !== 'string') {
+          return null;
         }
-        return t;
-      }).filter(t => t !== null) : [],
-      services: Array.isArray(data.services) ? data.services : [],
-      certifications: Array.isArray(data.certifications) ? data.certifications : [],
-      contactMessages: Array.isArray(data.contactMessages) ? data.contactMessages : [],
-      faq: Array.isArray(data.faq) ? data.faq : []
+        return cleaned;
+      }),
+      services: cleanArray(data.services || []),
+      certifications: cleanArray(data.certifications || []),
+      contactMessages: cleanArray(data.contactMessages || []),
+      faq: cleanArray(data.faq || [])
     };
     
     // Sauvegarder dans localStorage comme cache

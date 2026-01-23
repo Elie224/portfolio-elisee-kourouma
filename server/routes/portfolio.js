@@ -31,31 +31,89 @@ router.post('/', authenticateAdmin, async (req, res) => {
     // Nettoyer et valider les données reçues
     // Helper function pour parser les chaînes JSON si nécessaire
     const parseIfString = (value, defaultValue = []) => {
-      if (Array.isArray(value)) return value;
+      if (Array.isArray(value)) {
+        // Vérifier que tous les éléments sont des objets, pas des chaînes
+        return value.map(item => {
+          if (typeof item === 'string') {
+            try {
+              return JSON.parse(item);
+            } catch (e) {
+              console.error('Erreur parsing élément du tableau:', e);
+              return null;
+            }
+          }
+          return item;
+        }).filter(item => item !== null);
+      }
       if (typeof value === 'string') {
         try {
           const parsed = JSON.parse(value);
-          return Array.isArray(parsed) ? parsed : defaultValue;
+          if (Array.isArray(parsed)) {
+            return parsed.map(item => {
+              if (typeof item === 'string') {
+                try {
+                  return JSON.parse(item);
+                } catch (e) {
+                  return null;
+                }
+              }
+              return item;
+            }).filter(item => item !== null);
+          }
+          return defaultValue;
         } catch (e) {
-          console.error('Erreur parsing JSON:', e);
+          // Si le parsing JSON échoue, c'est peut-être du code JavaScript
+          // Dans ce cas, on retourne un tableau vide pour éviter l'erreur
+          console.error('Erreur parsing JSON (peut-être du code JS):', value.substring(0, 100));
           return defaultValue;
         }
       }
       return defaultValue;
     };
     
+    // Helper pour nettoyer un objet et s'assurer qu'il est valide
+    const cleanObject = (obj) => {
+      if (!obj || typeof obj !== 'object') return {};
+      const cleaned = {};
+      for (const key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          const value = obj[key];
+          if (typeof value === 'string' && (value.includes('`') || value.includes(' + '))) {
+            // C'est probablement du code JavaScript, on l'ignore
+            console.warn(`⚠️ Valeur suspecte détectée pour ${key}, ignorée`);
+            continue;
+          }
+          cleaned[key] = value;
+        }
+      }
+      return cleaned;
+    };
+    
     const cleanData = {
-      personal: req.body.personal || {},
+      personal: cleanObject(req.body.personal),
       projects: parseIfString(req.body.projects, []),
       skills: parseIfString(req.body.skills, []),
-      links: req.body.links || {},
-      about: req.body.about || {},
+      links: cleanObject(req.body.links),
+      about: cleanObject(req.body.about),
       timeline: parseIfString(req.body.timeline, []),
       services: parseIfString(req.body.services, []),
       certifications: parseIfString(req.body.certifications, []),
       contactMessages: parseIfString(req.body.contactMessages, []),
       faq: parseIfString(req.body.faq, [])
     };
+    
+    // Validation finale : s'assurer que tous les projets sont des objets valides
+    cleanData.projects = cleanData.projects.filter(project => {
+      if (!project || typeof project !== 'object') return false;
+      // Vérifier qu'il n'y a pas de code JavaScript dans les propriétés
+      for (const key in project) {
+        if (typeof project[key] === 'string' && (project[key].includes('`') || project[key].includes(' + '))) {
+          console.warn(`⚠️ Projet "${project.title || 'sans titre'}" contient du code JS, ignoré`);
+          return false;
+        }
+      }
+      return true;
+    });
     
     console.log('📦 Données nettoyées:', {
       projectsCount: cleanData.projects.length,
