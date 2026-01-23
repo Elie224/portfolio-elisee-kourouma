@@ -327,7 +327,11 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         
         localStorage.setItem('portfolioData', JSON.stringify(DEFAULT_DATA));
+        localStorage.setItem('portfolioLastUpdate', new Date().toISOString());
         console.log('✅ Données par défaut initialisées avec succès !');
+        
+        // Recharger toutes les données après initialisation
+        reloadAllData();
         return true;
       }
       return false;
