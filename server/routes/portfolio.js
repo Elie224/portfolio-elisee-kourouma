@@ -7,6 +7,22 @@ const { authenticateAdmin } = require('../middleware/auth');
 router.get('/', async (req, res) => {
   try {
     const portfolio = await Portfolio.getPortfolio();
+    
+    // Log pour debug
+    const hasData = (portfolio.projects?.length > 0) || 
+                   (portfolio.skills?.length > 0) || 
+                   (portfolio.timeline?.length > 0) ||
+                   (portfolio.personal?.photo);
+    
+    console.log('📊 GET /api/portfolio:', {
+      hasData,
+      projects: portfolio.projects?.length || 0,
+      skills: portfolio.skills?.length || 0,
+      timeline: portfolio.timeline?.length || 0,
+      hasPhoto: !!portfolio.personal?.photo,
+      responseSize: JSON.stringify(portfolio).length
+    });
+    
     res.json(portfolio);
   } catch (error) {
     console.error('Erreur lors de la récupération du portfolio:', error);
