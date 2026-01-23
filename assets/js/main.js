@@ -51,11 +51,11 @@ document.addEventListener('DOMContentLoaded', () => {
           if (existingDataStr) {
             try {
               const existingData = JSON.parse(existingDataStr);
-              // Si localStorage est aussi vide, initialiser les données par défaut
+              // Si localStorage est aussi vide, ne pas écraser
+              // initDefaultData() a déjà été appelé au chargement de la page
               if (isDataEmpty(existingData)) {
-                console.log('📦 localStorage contient des données vides, initialisation des données par défaut...');
-                initDefaultData();
-                return null;
+                console.log('📦 localStorage contient des données vides, ne pas écraser (garder données initialisées)');
+                return null; // Ne pas utiliser les données vides, garder ce qui existe déjà
               } else {
                 // Double vérification : s'assurer que les données sont vraiment valides
                 const hasValidData = (existingData.projects?.length > 0) || 
@@ -64,9 +64,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                    (existingData.personal?.photo);
                 
                 if (!hasValidData) {
-                  console.log('📦 localStorage contient un objet mais sans données valides, initialisation...');
-                  initDefaultData();
-                  return null;
+                  console.log('📦 localStorage contient un objet mais sans données valides, ne pas écraser');
+                  return null; // Ne pas utiliser les données vides
                 }
                 
                 console.log('✅ Utilisation des données locales existantes');
