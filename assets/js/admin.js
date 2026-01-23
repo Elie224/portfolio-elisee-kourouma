@@ -70,8 +70,8 @@ document.addEventListener('DOMContentLoaded', () => {
             title: 'Fylor - Application Web',
             type: 'Projet Personnel',
             category: 'Application Web',
-            shortDesc: 'Plateforme de stockage cloud avec 50 Go d\'espace · Application web et mobile complète',
-            description: 'Fylor est une plateforme de stockage cloud développée comme projet personnel, similaire à Supfile. Cette application permet aux utilisateurs de stocker, sécuriser et partager leurs fichiers personnels dans le cloud, avec un quota de 50 Go par utilisateur (contrairement à Supfile qui offre 30 Go).\n\nLe projet comprend le développement d\'une application web complète et d\'une application mobile, avec une architecture basée sur une API REST, des clients distincts et une base de données pour les métadonnées. L\'application offre les mêmes fonctionnalités avancées que Supfile, avec un espace de stockage plus généreux de 50 Go.\n\nL\'accent est mis sur la gestion performante des flux de données (upload/download), la navigation fluide dans une arborescence de dossiers, l\'ergonomie, la prévisualisation instantanée des fichiers et la synchronisation entre les clients web et mobile.',
+            shortDesc: 'Plateforme de stockage cloud avec 20 Go d\'espace · Application web et mobile complète',
+            description: 'Fylor est une plateforme de stockage cloud développée comme projet personnel, similaire à Supfile. Cette application permet aux utilisateurs de stocker, sécuriser et partager leurs fichiers personnels dans le cloud, avec un quota de 20 Go par utilisateur (contrairement à Supfile qui offre 30 Go).\n\nLe projet comprend le développement d\'une application web complète et d\'une application mobile, avec une architecture basée sur une API REST, des clients distincts et une base de données pour les métadonnées. L\'application offre les mêmes fonctionnalités avancées que Supfile, avec un espace de stockage de 20 Go.\n\nL\'accent est mis sur la gestion performante des flux de données (upload/download), la navigation fluide dans une arborescence de dossiers, l\'ergonomie, la prévisualisation instantanée des fichiers et la synchronisation entre les clients web et mobile.',
             features: [
               'Gestionnaire de fichiers complet avec navigation intuitive',
               'Connexion standard et OAuth2 (Google, GitHub, Microsoft)',
@@ -87,10 +87,10 @@ document.addEventListener('DOMContentLoaded', () => {
               'Architecture microservices avec API Gateway',
               'Containérisation Docker avec docker-compose',
               'Base de données pour les métadonnées',
-              'Quota généreux de 50 Go par utilisateur',
+              'Quota généreux de 20 Go par utilisateur',
               'Sécurité : JWT, hachage des mots de passe, gestion des secrets'
             ],
-            tags: ['Web', 'Mobile', 'Application Web', 'Cloud Storage', 'API REST', 'Docker', 'OAuth2', 'JWT', '50 Go', 'Stockage Cloud', 'Déploiement'],
+            tags: ['Web', 'Mobile', 'Application Web', 'Cloud Storage', 'API REST', 'Docker', 'OAuth2', 'JWT', '20 Go', 'Stockage Cloud', 'Déploiement'],
             link: 'https://fylor-frontend.onrender.com/',
             demoLink: '',
             emailSubject: 'Demande d\'infos: Application Fylor',
