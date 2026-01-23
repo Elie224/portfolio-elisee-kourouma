@@ -119,17 +119,47 @@ router.post('/', authenticateAdmin, async (req, res) => {
       faq: parseIfString(req.body.faq, [])
     };
     
+    // Fonction pour nettoyer une chaîne de code JavaScript
+    const cleanStringValue = (str) => {
+      if (typeof str !== 'string') return str;
+      return str.replace(/`/g, '').replace(/\s*\+\s*/g, ' ').replace(/\\n/g, '\n').trim();
+    };
+    
     // Validation finale : s'assurer que tous les projets sont des objets valides
     cleanData.projects = cleanData.projects
       .map(project => {
-        if (!project || typeof project !== 'object') return null;
+        if (!project || typeof project !== 'object' || Array.isArray(project)) {
+          console.warn('⚠️ Projet invalide (pas un objet), ignoré');
+          return null;
+        }
         
         // Nettoyer chaque projet récursivement
         const cleanedProject = cleanObject(project);
         
+        // Nettoyer toutes les chaînes du projet
+        for (const key in cleanedProject) {
+          if (typeof cleanedProject[key] === 'string') {
+            cleanedProject[key] = cleanStringValue(cleanedProject[key]);
+          } else if (Array.isArray(cleanedProject[key])) {
+            cleanedProject[key] = cleanedProject[key].map(item => {
+              if (typeof item === 'string') {
+                return cleanStringValue(item);
+              }
+              return item;
+            });
+          }
+        }
+        
         // Vérifier que les propriétés essentielles existent
         if (!cleanedProject.title || typeof cleanedProject.title !== 'string') {
           console.warn('⚠️ Projet sans titre valide, ignoré');
+          return null;
+        }
+        
+        // Vérifier qu'il n'y a pas de code JavaScript restant
+        const projectStr = JSON.stringify(cleanedProject);
+        if (projectStr.includes('`') || projectStr.includes(' + ')) {
+          console.warn(`⚠️ Projet "${cleanedProject.title}" contient encore du code JS, ignoré`);
           return null;
         }
         
@@ -148,9 +178,23 @@ router.post('/', authenticateAdmin, async (req, res) => {
     // Validation similaire pour les skills
     cleanData.skills = cleanData.skills
       .map(skill => {
-        if (!skill || typeof skill !== 'object') return null;
+        if (!skill || typeof skill !== 'object' || Array.isArray(skill)) return null;
         
         const cleanedSkill = cleanObject(skill);
+        
+        // Nettoyer toutes les chaînes
+        for (const key in cleanedSkill) {
+          if (typeof cleanedSkill[key] === 'string') {
+            cleanedSkill[key] = cleanStringValue(cleanedSkill[key]);
+          } else if (Array.isArray(cleanedSkill[key])) {
+            cleanedSkill[key] = cleanedSkill[key].map(item => {
+              if (typeof item === 'string') {
+                return cleanStringValue(item);
+              }
+              return item;
+            });
+          }
+        }
         
         if (!cleanedSkill.name || typeof cleanedSkill.name !== 'string') {
           console.warn('⚠️ Skill sans nom valide, ignoré');

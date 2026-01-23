@@ -438,6 +438,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Save portfolio data to API and localStorage
   async function savePortfolioData(data) {
+    // Fonction pour nettoyer une chaîne de code JavaScript en chaîne normale
+    const cleanString = (str) => {
+      if (typeof str !== 'string') return str;
+      // Détecter et nettoyer les patterns de code JavaScript
+      let cleaned = str;
+      
+      // Supprimer les backticks
+      cleaned = cleaned.replace(/`/g, '');
+      
+      // Remplacer les concaténations de chaînes ( ' + ' ou " + ")
+      cleaned = cleaned.replace(/\s*\+\s*/g, ' ');
+      
+      // Nettoyer les échappements de nouvelles lignes
+      cleaned = cleaned.replace(/\\n/g, '\n');
+      cleaned = cleaned.replace(/\\'/g, "'");
+      cleaned = cleaned.replace(/\\"/g, '"');
+      
+      // Supprimer les patterns de template literals restants
+      cleaned = cleaned.replace(/\$\{.*?\}/g, '');
+      
+      return cleaned.trim();
+    };
+    
     // Fonction pour nettoyer et valider un objet
     const cleanObject = (obj) => {
       if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return {};
@@ -449,16 +472,18 @@ document.addEventListener('DOMContentLoaded', () => {
           // Si c'est un tableau, le nettoyer
           if (Array.isArray(value)) {
             cleaned[key] = value.map(item => {
-              if (typeof item === 'string' && (item.includes('`') || item.includes(' + '))) {
-                return item.replace(/`/g, '').replace(/\s*\+\s*/g, ' ').trim();
+              if (typeof item === 'string') {
+                return cleanString(item);
+              }
+              if (item && typeof item === 'object') {
+                return cleanObject(item);
               }
               return item;
             });
           }
-          // Si c'est une chaîne avec du code JavaScript, la nettoyer
-          else if (typeof value === 'string' && (value.includes('`') || value.includes(' + ') || value.includes('\\n`'))) {
-            console.warn(`⚠️ Valeur suspecte détectée pour ${key}, nettoyée`);
-            cleaned[key] = value.replace(/`/g, '').replace(/\s*\+\s*/g, ' ').replace(/\\n/g, '\n').trim();
+          // Si c'est une chaîne, la nettoyer
+          else if (typeof value === 'string') {
+            cleaned[key] = cleanString(value);
           }
           // Si c'est un objet, le nettoyer récursivement
           else if (value && typeof value === 'object' && !Array.isArray(value)) {
@@ -475,26 +500,46 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Fonction pour nettoyer un tableau
     const cleanArray = (arr, itemCleaner = (item) => item) => {
-      if (!Array.isArray(arr)) return [];
+      if (!Array.isArray(arr)) {
+        // Si ce n'est pas un tableau, essayer de le parser
+        if (typeof arr === 'string') {
+          try {
+            const parsed = JSON.parse(arr);
+            if (Array.isArray(parsed)) {
+              return cleanArray(parsed, itemCleaner);
+            }
+          } catch (e) {
+            console.warn('⚠️ Impossible de parser le tableau, retour tableau vide');
+            return [];
+          }
+        }
+        return [];
+      }
+      
       return arr.map(item => {
         // Si c'est une chaîne, essayer de la parser
         if (typeof item === 'string') {
           // Si ça ressemble à du code JavaScript, on l'ignore
-          if (item.includes('`') || item.includes(' + ') || item.trim().startsWith('[') && item.includes('title:')) {
+          if (item.includes('`') || item.includes(' + ') || (item.trim().startsWith('[') && item.includes('title:'))) {
             console.warn('⚠️ Élément suspect détecté dans le tableau, ignoré');
             return null;
           }
           try {
             const parsed = JSON.parse(item);
-            return itemCleaner(parsed);
+            return itemCleaner(cleanObject(parsed));
           } catch (e) {
             console.warn('⚠️ Impossible de parser l\'élément, ignoré');
             return null;
           }
         }
         // Nettoyer l'objet si c'est un objet
-        if (item && typeof item === 'object') {
-          return itemCleaner(cleanObject(item));
+        if (item && typeof item === 'object' && !Array.isArray(item)) {
+          const cleaned = cleanObject(item);
+          return itemCleaner(cleaned);
+        }
+        // Si c'est un tableau, le nettoyer récursivement
+        if (Array.isArray(item)) {
+          return cleanArray(item, itemCleaner);
         }
         return itemCleaner(item);
       }).filter(item => item !== null && item !== undefined);
@@ -544,13 +589,48 @@ document.addEventListener('DOMContentLoaded', () => {
       const testDeserialization = JSON.parse(testSerialization);
       
       // Vérifier qu'il n'y a pas de corruption après sérialisation
-      if (testSerialization.includes('`') || testSerialization.includes(' + ')) {
-        console.error('❌ Corruption détectée après nettoyage, utilisation des données par défaut');
+      if (testSerialization.includes('`') || testSerialization.includes(' + ') || testSerialization.includes('\\n`')) {
+        console.error('❌ Corruption détectée après nettoyage, réinitialisation complète');
+        // Nettoyer complètement localStorage
+        localStorage.removeItem('portfolioData');
+        localStorage.removeItem('portfolioLastUpdate');
         localStorage.setItem('portfolioData', JSON.stringify(DEFAULT_DATA));
         localStorage.setItem('portfolioLastUpdate', new Date().toISOString());
         if (typeof showError === 'function') {
-          showError('Erreur: Les données contiennent des erreurs. Réinitialisation effectuée.');
+          showError('Erreur: Les données contiennent des erreurs. Réinitialisation complète effectuée.');
         }
+        // Recharger la page pour appliquer les changements
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+        return;
+      }
+      
+      // Vérification supplémentaire : s'assurer que les projets sont bien des objets
+      const deserializedProjects = testDeserialization.projects || [];
+      const hasCorruptedProjects = deserializedProjects.some(p => {
+        if (!p || typeof p !== 'object') return true;
+        // Vérifier si les propriétés contiennent du code JS
+        for (const key in p) {
+          if (typeof p[key] === 'string' && (p[key].includes('`') || p[key].includes(' + '))) {
+            return true;
+          }
+        }
+        return false;
+      });
+      
+      if (hasCorruptedProjects) {
+        console.error('❌ Projets corrompus détectés, réinitialisation complète');
+        localStorage.removeItem('portfolioData');
+        localStorage.removeItem('portfolioLastUpdate');
+        localStorage.setItem('portfolioData', JSON.stringify(DEFAULT_DATA));
+        localStorage.setItem('portfolioLastUpdate', new Date().toISOString());
+        if (typeof showError === 'function') {
+          showError('Erreur: Projets corrompus détectés. Réinitialisation complète effectuée.');
+        }
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
         return;
       }
       
