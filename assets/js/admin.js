@@ -403,18 +403,65 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Save portfolio data to API and localStorage
   async function savePortfolioData(data) {
+    // Nettoyer les données avant sauvegarde
+    // S'assurer que tous les tableaux sont bien des tableaux d'objets, pas des chaînes
+    const cleanData = {
+      personal: data.personal || {},
+      projects: Array.isArray(data.projects) ? data.projects.map(p => {
+        // S'assurer que chaque projet est un objet, pas une chaîne
+        if (typeof p === 'string') {
+          try {
+            return JSON.parse(p);
+          } catch (e) {
+            console.error('Erreur parsing projet:', e);
+            return null;
+          }
+        }
+        return p;
+      }).filter(p => p !== null) : [],
+      skills: Array.isArray(data.skills) ? data.skills.map(s => {
+        if (typeof s === 'string') {
+          try {
+            return JSON.parse(s);
+          } catch (e) {
+            console.error('Erreur parsing skill:', e);
+            return null;
+          }
+        }
+        return s;
+      }).filter(s => s !== null) : [],
+      links: data.links || {},
+      about: data.about || {},
+      timeline: Array.isArray(data.timeline) ? data.timeline.map(t => {
+        if (typeof t === 'string') {
+          try {
+            return JSON.parse(t);
+          } catch (e) {
+            return null;
+          }
+        }
+        return t;
+      }).filter(t => t !== null) : [],
+      services: Array.isArray(data.services) ? data.services : [],
+      certifications: Array.isArray(data.certifications) ? data.certifications : [],
+      contactMessages: Array.isArray(data.contactMessages) ? data.contactMessages : [],
+      faq: Array.isArray(data.faq) ? data.faq : []
+    };
+    
     // Sauvegarder dans localStorage comme cache
     const oldData = localStorage.getItem('portfolioData');
-    localStorage.setItem('portfolioData', JSON.stringify(data));
+    localStorage.setItem('portfolioData', JSON.stringify(cleanData));
     localStorage.setItem('portfolioLastUpdate', new Date().toISOString());
     
     // Sauvegarder via API si token disponible
     if (apiToken) {
       try {
         console.log('📤 Envoi des données au serveur...', {
-          projects: data.projects?.length || 0,
-          skills: data.skills?.length || 0,
-          hasToken: !!apiToken
+          projects: cleanData.projects?.length || 0,
+          skills: cleanData.skills?.length || 0,
+          hasToken: !!apiToken,
+          projectsType: typeof cleanData.projects,
+          projectsIsArray: Array.isArray(cleanData.projects)
         });
         
         const response = await fetch(`${API_BASE_URL}/portfolio`, {
@@ -423,7 +470,7 @@ document.addEventListener('DOMContentLoaded', () => {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${apiToken}`
           },
-          body: JSON.stringify(data)
+          body: JSON.stringify(cleanData)
         });
         
         if (response.ok) {
