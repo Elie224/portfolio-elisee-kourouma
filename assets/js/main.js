@@ -118,7 +118,36 @@ document.addEventListener('DOMContentLoaded', () => {
           faq: data.faq || []
         };
         
-        // Sauvegarder dans localStorage comme cache
+        // Vérifier que les données de l'API sont vraiment valides avant de les sauvegarder
+        const hasValidAPIData = (cleanData.projects?.length > 0) || 
+                               (cleanData.skills?.length > 0) || 
+                               (cleanData.timeline?.length > 0);
+        
+        if (!hasValidAPIData) {
+          console.warn('⚠️ API retourne des données vides, ne pas écraser localStorage');
+          // Ne pas écraser localStorage avec des données vides
+          const existingDataStr = localStorage.getItem('portfolioData');
+          if (existingDataStr) {
+            try {
+              const existingData = JSON.parse(existingDataStr);
+              const hasValidLocalData = (existingData.projects?.length > 0) || 
+                                     (existingData.skills?.length > 0) || 
+                                     (existingData.timeline?.length > 0);
+              if (hasValidLocalData) {
+                console.log('✅ Utilisation des données locales valides (API vide)');
+                return existingData;
+              }
+            } catch (e) {
+              // Ignorer
+            }
+          }
+          // Si pas de données locales valides, initialiser
+          console.log('⚠️ Pas de données locales valides, initialisation...');
+          initDefaultData();
+          return null;
+        }
+        
+        // Sauvegarder dans localStorage comme cache seulement si les données sont valides
         localStorage.setItem('portfolioData', JSON.stringify(cleanData));
         localStorage.setItem('portfolioLastUpdate', new Date().toISOString());
         
