@@ -21,8 +21,11 @@ router.post('/', authenticateAdmin, async (req, res) => {
       hasPersonal: !!req.body.personal,
       projectsType: typeof req.body.projects,
       projectsIsArray: Array.isArray(req.body.projects),
+      projectsIsString: typeof req.body.projects === 'string',
+      projectsStringLength: typeof req.body.projects === 'string' ? req.body.projects.length : 0,
       projectsCount: Array.isArray(req.body.projects) ? req.body.projects.length : 'N/A',
-      skillsCount: Array.isArray(req.body.skills) ? req.body.skills.length : 'N/A'
+      skillsCount: Array.isArray(req.body.skills) ? req.body.skills.length : 'N/A',
+      bodyKeys: Object.keys(req.body)
     });
     
     // Nettoyer et valider les données reçues
