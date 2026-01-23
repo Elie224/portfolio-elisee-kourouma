@@ -245,16 +245,30 @@ portfolioSchema.statics.getPortfolio = async function() {
     await portfolio.save();
   } else {
     // Vérifier si le document est vide et l'initialiser si nécessaire
-    const hasData = (portfolio.projects && portfolio.projects.length > 0) ||
-                   (portfolio.skills && portfolio.skills.length > 0) ||
-                   (portfolio.timeline && portfolio.timeline.length > 0) ||
+    const hasData = (portfolio.projects && Array.isArray(portfolio.projects) && portfolio.projects.length > 0) ||
+                   (portfolio.skills && Array.isArray(portfolio.skills) && portfolio.skills.length > 0) ||
+                   (portfolio.timeline && Array.isArray(portfolio.timeline) && portfolio.timeline.length > 0) ||
                    (portfolio.personal && portfolio.personal.photo);
     
     if (!hasData) {
       console.log('📦 Portfolio vide détecté, initialisation avec les données par défaut');
-      // Mettre à jour avec les données par défaut
-      Object.assign(portfolio, DEFAULT_PORTFOLIO_DATA);
-      await portfolio.save();
+      console.log('🔍 État actuel:', {
+        hasProjects: portfolio.projects?.length || 0,
+        hasSkills: portfolio.skills?.length || 0,
+        hasTimeline: portfolio.timeline?.length || 0,
+        hasPhoto: !!portfolio.personal?.photo
+      });
+      // Mettre à jour avec les données par défaut en utilisant findOneAndUpdate
+      portfolio = await this.findOneAndUpdate(
+        { _id: portfolio._id },
+        { $set: DEFAULT_PORTFOLIO_DATA },
+        { new: true, runValidators: false }
+      );
+      console.log('✅ Portfolio initialisé avec les données par défaut:', {
+        projects: portfolio.projects?.length || 0,
+        skills: portfolio.skills?.length || 0,
+        timeline: portfolio.timeline?.length || 0
+      });
     }
   }
   // Convertir en objet JavaScript simple et supprimer les champs MongoDB
