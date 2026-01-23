@@ -731,7 +731,86 @@
               </div>
               <div class="form-group">
                 <label for="skill-category-icon">Icône (emoji) *</label>
-                <input type="text" id="skill-category-icon" placeholder="🌐" maxlength="2" required />
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                  <input type="text" id="skill-category-icon" placeholder="🌐" maxlength="2" required style="flex: 1; min-width: 100px;" />
+                  <select id="emoji-selector" onchange="document.getElementById('skill-category-icon').value = this.value; this.value = '';" style="padding: 8px 12px; border: 2px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--text); cursor: pointer; font-size: 16px;">
+                    <option value="">Choisir un emoji...</option>
+                    <option value="🌐">🌐 Web</option>
+                    <option value="💻">💻 Ordinateur</option>
+                    <option value="🖥️">🖥️ Desktop</option>
+                    <option value="📱">📱 Mobile</option>
+                    <option value="⚙️">⚙️ Configuration</option>
+                    <option value="🔧">🔧 Outils</option>
+                    <option value="🚀">🚀 Déploiement</option>
+                    <option value="🔐">🔐 Sécurité</option>
+                    <option value="📊">📊 Données</option>
+                    <option value="🗄️">🗄️ Base de données</option>
+                    <option value="☁️">☁️ Cloud</option>
+                    <option value="🤖">🤖 IA</option>
+                    <option value="🧠">🧠 Machine Learning</option>
+                    <option value="🔍">🔍 Recherche</option>
+                    <option value="💡">💡 Innovation</option>
+                    <option value="🎨">🎨 Design</option>
+                    <option value="📝">📝 Documentation</option>
+                    <option value="🔌">🔌 API</option>
+                    <option value="🌍">🌍 Réseau</option>
+                    <option value="⚡">⚡ Performance</option>
+                    <option value="🛠️">🛠️ Développement</option>
+                    <option value="📦">📦 Package</option>
+                    <option value="🔒">🔒 Sécurité</option>
+                    <option value="🌐">🌐 Internet</option>
+                    <option value="💾">💾 Stockage</option>
+                    <option value="🔄">🔄 Synchronisation</option>
+                    <option value="🎯">🎯 Cible</option>
+                    <option value="📈">📈 Analytics</option>
+                    <option value="🔬">🔬 Test</option>
+                    <option value="🎮">🎮 Gaming</option>
+                    <option value="📡">📡 Communication</option>
+                    <option value="🖼️">🖼️ Image</option>
+                    <option value="🎬">🎬 Vidéo</option>
+                    <option value="🎵">🎵 Audio</option>
+                    <option value="📚">📚 Apprentissage</option>
+                    <option value="🏗️">🏗️ Architecture</option>
+                    <option value="🔋">🔋 Énergie</option>
+                    <option value="🌱">🌱 Croissance</option>
+                    <option value="⭐">⭐ Favori</option>
+                    <option value="🎁">🎁 Package</option>
+                    <option value="🔮">🔮 Futur</option>
+                    <option value="💎">💎 Premium</option>
+                    <option value="🎪">🎪 Fun</option>
+                    <option value="🏆">🏆 Récompense</option>
+                    <option value="🎓">🎓 Éducation</option>
+                    <option value="👨‍💻">👨‍💻 Développeur</option>
+                    <option value="👩‍💻">👩‍💻 Développeuse</option>
+                    <option value="🤝">🤝 Collaboration</option>
+                    <option value="💼">💼 Business</option>
+                    <option value="🎨">🎨 Créativité</option>
+                    <option value="🔔">🔔 Notification</option>
+                    <option value="📲">📲 Application</option>
+                    <option value="🌙">🌙 Mode sombre</option>
+                    <option value="☀️">☀️ Mode clair</option>
+                    <option value="🎭">🎭 Performance</option>
+                    <option value="🎪">🎪 Événement</option>
+                    <option value="🎯">🎯 Objectif</option>
+                    <option value="📌">📌 Épingler</option>
+                    <option value="📍">📍 Localisation</option>
+                    <option value="🔗">🔗 Lien</option>
+                    <option value="📎">📎 Pièce jointe</option>
+                    <option value="✏️">✏️ Édition</option>
+                    <option value="🗑️">🗑️ Suppression</option>
+                    <option value="✅">✅ Validation</option>
+                    <option value="❌">❌ Erreur</option>
+                    <option value="⚠️">⚠️ Avertissement</option>
+                    <option value="ℹ️">ℹ️ Information</option>
+                    <option value="🔵">🔵 Technologie</option>
+                    <option value="🟢">🟢 Succès</option>
+                    <option value="🟡">🟡 Attention</option>
+                    <option value="🔴">🔴 Urgent</option>
+                  </select>
+                </div>
+                <div style="margin-top: 8px; font-size: 12px; color: var(--muted);">
+                  💡 Astuce : Utilisez le menu déroulant pour choisir un emoji ou tapez-en un directement
+                </div>
               </div>
               <div class="form-group">
                 <label for="skill-category-skills">Compétences (séparées par des virgules) *</label>
