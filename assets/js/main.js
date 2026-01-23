@@ -2803,17 +2803,26 @@ document.addEventListener('DOMContentLoaded', () => {
   // Also load timeline, services dynamically if they exist
   function loadTimeline() {
     const timelineContainer = document.querySelector('.timeline-container');
-    if (!timelineContainer) return;
+    if (!timelineContainer) {
+      console.log('ℹ️ loadTimeline: Aucun conteneur timeline trouvé');
+      return;
+    }
 
     try {
       const portfolioData = localStorage.getItem('portfolioData');
       if (!portfolioData) {
+        console.log('⚠️ loadTimeline: Aucune donnée dans localStorage');
         // Keep original HTML content if no data
         return;
       }
 
       const data = JSON.parse(portfolioData);
       const timeline = data.timeline || [];
+      
+      console.log('📊 loadTimeline: Données chargées depuis localStorage:', {
+        timelineCount: timeline.length,
+        timeline: timeline
+      });
 
       // Only replace content if there are actual timeline items from admin
       // Check if timeline container already has data-attribute to know if it's been loaded before
@@ -3114,12 +3123,23 @@ document.addEventListener('DOMContentLoaded', () => {
   function loadSkills() {
     try {
       const portfolioData = localStorage.getItem('portfolioData');
-      if (!portfolioData) return;
+      if (!portfolioData) {
+        console.log('⚠️ loadSkills: Aucune donnée dans localStorage');
+        return;
+      }
 
       const data = JSON.parse(portfolioData);
       const skills = data.skills || [];
+      
+      console.log('📊 loadSkills: Données chargées depuis localStorage:', {
+        skillsCount: skills.length,
+        skills: skills
+      });
 
-      if (skills.length === 0) return;
+      if (skills.length === 0) {
+        console.log('⚠️ loadSkills: Aucune compétence trouvée dans les données');
+        return;
+      }
 
       // Find skills section by looking for h2 with "Compétences"
       const allSections = document.querySelectorAll('section');
@@ -3402,7 +3422,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 100 + index * 100);
           });
         } else {
-          console.log('⚠️ Aucune donnée timeline trouvée, utilisation du contenu par défaut');
+          console.log('⚠️ loadAboutPageContent: Aucune donnée timeline trouvée dans localStorage, utilisation du contenu par défaut');
           // Default timeline content if no data
           aboutTimeline.innerHTML = `
             <div class="timeline-item" style="opacity: 0; transform: translateY(20px); transition: opacity 0.5s ease, transform 0.5s ease;">
