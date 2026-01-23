@@ -87,9 +87,17 @@ const portfolioSchema = new mongoose.Schema({
 portfolioSchema.statics.getPortfolio = async function() {
   let portfolio = await this.findOne();
   if (!portfolio) {
-    portfolio = await this.create({});
+    // Créer un document vide si aucun n'existe
+    portfolio = new this({});
+    await portfolio.save();
   }
-  return portfolio;
+  // Convertir en objet JavaScript simple et supprimer les champs MongoDB
+  const portfolioObj = portfolio.toObject();
+  delete portfolioObj._id;
+  delete portfolioObj.__v;
+  delete portfolioObj.createdAt;
+  delete portfolioObj.updatedAt;
+  return portfolioObj;
 };
 
 module.exports = mongoose.model('Portfolio', portfolioSchema);
