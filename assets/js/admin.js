@@ -3,6 +3,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const ADMIN_EMAIL = 'kouroumaelisee@gmail.com';
   const ADMIN_PASSWORD = 'admin123';
   
+  // Configuration API
+  const API_BASE_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:3000/api' 
+    : 'https://votre-backend.onrender.com/api'; // À modifier avec votre URL de backend
+  
+  let apiToken = localStorage.getItem('apiToken') || null;
+  
   // Initialize default data structure
   const DEFAULT_DATA = {
     personal: {

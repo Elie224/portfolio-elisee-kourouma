@@ -37,3 +37,8 @@ build/
 # Backup files
 *.bak
 *.backup
+
+# Backend
+server/node_modules/
+server/.env
+server/.env.local

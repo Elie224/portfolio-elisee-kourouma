@@ -2,6 +2,58 @@ document.addEventListener('DOMContentLoaded', () => {
   const yearEl = document.querySelector('[data-year]');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
+  // Configuration API
+  const API_BASE_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:3000/api' 
+    : 'https://votre-backend.onrender.com/api'; // À modifier avec votre URL de backend
+  
+  // Load portfolio data from API
+  async function loadPortfolioFromAPI() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/portfolio`);
+      if (response.ok) {
+        const data = await response.json();
+        // Supprimer les champs MongoDB (_id, __v, etc.)
+        const cleanData = {
+          personal: data.personal,
+          projects: data.projects,
+          skills: data.skills,
+          links: data.links,
+          about: data.about,
+          timeline: data.timeline,
+          services: data.services,
+          certifications: data.certifications,
+          contactMessages: data.contactMessages,
+          faq: data.faq
+        };
+        
+        // Sauvegarder dans localStorage comme cache
+        localStorage.setItem('portfolioData', JSON.stringify(cleanData));
+        localStorage.setItem('portfolioLastUpdate', new Date().toISOString());
+        
+        console.log('✅ Données chargées depuis l\'API');
+        return cleanData;
+    } else {
+        console.log('⚠️ Impossible de charger depuis l\'API, utilisation du cache local');
+        return null;
+      }
+    } catch (error) {
+      console.log('⚠️ Erreur réseau, utilisation du cache local:', error);
+      return null;
+    }
+  }
+  
+  // Try to load from API first, then fallback to localStorage
+  loadPortfolioFromAPI().then(apiData => {
+    if (apiData) {
+      // Trigger reload of all data-dependent functions
+      if (typeof loadProjects === 'function') loadProjects();
+      if (typeof loadTimeline === 'function') loadTimeline();
+      if (typeof loadSkills === 'function') loadSkills();
+      if (typeof loadAboutPageContent === 'function') loadAboutPageContent();
+    }
+  });
+
   // Initialize default data if localStorage is empty (for first-time visitors on Render)
   function initDefaultData() {
     try {
