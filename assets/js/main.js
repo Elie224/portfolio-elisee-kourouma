@@ -73,14 +73,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 return existingData; // Utiliser les données locales valides
               }
             } catch (e) {
-              console.log('📦 Erreur parsing localStorage, initialisation des données par défaut...');
-              initDefaultData();
-              return null;
+              console.log('📦 Erreur parsing localStorage, ne pas écraser');
+              return null; // Ne pas écraser, garder les données initialisées
             }
           } else {
-            console.log('📦 localStorage vide, initialisation des données par défaut...');
-            initDefaultData();
-            return null;
+            console.log('📦 localStorage vide, ne pas écraser (données déjà initialisées)');
+            return null; // Ne pas écraser, garder les données initialisées
           }
         }
         
@@ -360,6 +358,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initialize default data on page load (for first-time visitors)
   initDefaultData();
+  
+  // Try to load from API after initialization
+  // Si l'API a des données valides, elles remplaceront les données par défaut
+  // Si l'API est vide, les données par défaut resteront (ne pas écraser)
+  loadPortfolioFromAPI().then(apiData => {
+    if (apiData) {
+      // Trigger reload of all data-dependent functions
+      reloadAllData();
+    } else {
+      // Si l'API est vide, utiliser les données locales (déjà initialisées par initDefaultData)
+      reloadAllData();
+    }
+  });
 
   // Mobile Menu Toggle
   const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
