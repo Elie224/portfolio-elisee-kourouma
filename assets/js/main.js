@@ -89,21 +89,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   
+  // Fonction pour recharger toutes les données
+  function reloadAllData() {
+    setTimeout(() => {
+      if (typeof loadProjects === 'function') loadProjects();
+      if (typeof loadTimeline === 'function') loadTimeline();
+      if (typeof loadSkills === 'function') loadSkills();
+      if (typeof loadAboutPageContent === 'function') loadAboutPageContent();
+    }, 100);
+  }
+
   // Try to load from API first, then fallback to localStorage
   loadPortfolioFromAPI().then(apiData => {
     if (apiData) {
       // Trigger reload of all data-dependent functions
-      if (typeof loadProjects === 'function') loadProjects();
-      if (typeof loadTimeline === 'function') loadTimeline();
-      if (typeof loadSkills === 'function') loadSkills();
-      if (typeof loadAboutPageContent === 'function') loadAboutPageContent();
+      reloadAllData();
     } else {
-      // Si l'API est vide, utiliser les données locales existantes
-      console.log('📦 Utilisation des données locales');
-      if (typeof loadProjects === 'function') loadProjects();
-      if (typeof loadTimeline === 'function') loadTimeline();
-      if (typeof loadSkills === 'function') loadSkills();
-      if (typeof loadAboutPageContent === 'function') loadAboutPageContent();
+      // Si l'API est vide, vérifier si initDefaultData a été appelé
+      // et recharger les données après un court délai
+      reloadAllData();
     }
   });
 
