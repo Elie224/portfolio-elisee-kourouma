@@ -381,18 +381,43 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const parsed = JSON.parse(data);
       
-      // Vérifier et nettoyer les données si elles contiennent du code JavaScript
-      const hasCorruption = JSON.stringify(parsed).includes('`') || 
-                           JSON.stringify(parsed).includes(' + ') ||
-                           (parsed.projects && Array.isArray(parsed.projects) && parsed.projects.some(p => typeof p === 'string' && p.includes('title:')));
+      // Fonction pour détecter la corruption
+      const detectCorruption = (data) => {
+        const str = JSON.stringify(data);
+        // Détecter les patterns de code JavaScript
+        if (str.includes('`') || str.includes(' + ') || str.includes('\\n`')) {
+          return true;
+        }
+        // Vérifier que les projets sont bien des objets
+        if (data.projects && Array.isArray(data.projects)) {
+          for (const project of data.projects) {
+            if (typeof project === 'string' && project.includes('title:')) {
+              return true;
+            }
+            if (project && typeof project === 'object') {
+              for (const key in project) {
+                if (typeof project[key] === 'string' && (project[key].includes('`') || project[key].includes(' + '))) {
+                  return true;
+                }
+              }
+            }
+          }
+        }
+        return false;
+      };
       
-      if (hasCorruption) {
-        console.warn('⚠️ Corruption détectée dans localStorage, réinitialisation avec données par défaut');
+      // Vérifier et nettoyer les données si elles contiennent du code JavaScript
+      if (detectCorruption(parsed)) {
+        console.error('❌ Corruption détectée dans localStorage, réinitialisation complète');
         // Nettoyer complètement localStorage
         localStorage.removeItem('portfolioData');
         localStorage.removeItem('portfolioLastUpdate');
         localStorage.setItem('portfolioData', JSON.stringify(DEFAULT_DATA));
         localStorage.setItem('portfolioLastUpdate', new Date().toISOString());
+        // Afficher un message à l'utilisateur
+        if (typeof showError === 'function') {
+          showError('Corruption détectée. Données réinitialisées.');
+        }
         return DEFAULT_DATA;
       }
       
