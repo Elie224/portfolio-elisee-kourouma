@@ -26,17 +26,32 @@ router.post('/', authenticateAdmin, async (req, res) => {
     });
     
     // Nettoyer et valider les données reçues
+    // Helper function pour parser les chaînes JSON si nécessaire
+    const parseIfString = (value, defaultValue = []) => {
+      if (Array.isArray(value)) return value;
+      if (typeof value === 'string') {
+        try {
+          const parsed = JSON.parse(value);
+          return Array.isArray(parsed) ? parsed : defaultValue;
+        } catch (e) {
+          console.error('Erreur parsing JSON:', e);
+          return defaultValue;
+        }
+      }
+      return defaultValue;
+    };
+    
     const cleanData = {
       personal: req.body.personal || {},
-      projects: Array.isArray(req.body.projects) ? req.body.projects : (typeof req.body.projects === 'string' ? JSON.parse(req.body.projects) : []),
-      skills: Array.isArray(req.body.skills) ? req.body.skills : (typeof req.body.skills === 'string' ? JSON.parse(req.body.skills) : []),
+      projects: parseIfString(req.body.projects, []),
+      skills: parseIfString(req.body.skills, []),
       links: req.body.links || {},
       about: req.body.about || {},
-      timeline: Array.isArray(req.body.timeline) ? req.body.timeline : (typeof req.body.timeline === 'string' ? JSON.parse(req.body.timeline) : []),
-      services: Array.isArray(req.body.services) ? req.body.services : (typeof req.body.services === 'string' ? JSON.parse(req.body.services) : []),
-      certifications: Array.isArray(req.body.certifications) ? req.body.certifications : (typeof req.body.certifications === 'string' ? JSON.parse(req.body.certifications) : []),
-      contactMessages: Array.isArray(req.body.contactMessages) ? req.body.contactMessages : (typeof req.body.contactMessages === 'string' ? JSON.parse(req.body.contactMessages) : []),
-      faq: Array.isArray(req.body.faq) ? req.body.faq : (typeof req.body.faq === 'string' ? JSON.parse(req.body.faq) : [])
+      timeline: parseIfString(req.body.timeline, []),
+      services: parseIfString(req.body.services, []),
+      certifications: parseIfString(req.body.certifications, []),
+      contactMessages: parseIfString(req.body.contactMessages, []),
+      faq: parseIfString(req.body.faq, [])
     };
     
     console.log('📦 Données nettoyées:', {
