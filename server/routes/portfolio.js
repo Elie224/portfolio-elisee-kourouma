@@ -183,17 +183,55 @@ router.post('/', authenticateAdmin, async (req, res) => {
     if (!cleanData.about) cleanData.about = {};
     if (!cleanData.links) cleanData.links = {};
     
+    // Vérification finale avant sauvegarde MongoDB
+    console.log('🔍 Validation finale avant MongoDB:', {
+      projectsAreArray: Array.isArray(cleanData.projects),
+      projectsLength: cleanData.projects.length,
+      firstProjectType: cleanData.projects.length > 0 ? typeof cleanData.projects[0] : 'N/A',
+      firstProjectIsObject: cleanData.projects.length > 0 ? (typeof cleanData.projects[0] === 'object' && !Array.isArray(cleanData.projects[0])) : false,
+      firstProjectTitle: cleanData.projects.length > 0 ? cleanData.projects[0].title : 'N/A'
+    });
+    
     // Utiliser findOneAndUpdate pour mettre à jour ou créer
-    const portfolio = await Portfolio.findOneAndUpdate(
-      {}, // Pas de filtre, on veut le seul document
-      { $set: cleanData }, // Mettre à jour tous les champs avec les données nettoyées
-      { 
-        new: true, // Retourner le document mis à jour
-        upsert: true, // Créer si n'existe pas
-        runValidators: false, // Désactiver les validateurs pour éviter les erreurs
-        setDefaultsOnInsert: true // Utiliser les valeurs par défaut du schéma si création
+    let portfolio;
+    try {
+      portfolio = await Portfolio.findOneAndUpdate(
+        {}, // Pas de filtre, on veut le seul document
+        { $set: cleanData }, // Mettre à jour tous les champs avec les données nettoyées
+        { 
+          new: true, // Retourner le document mis à jour
+          upsert: true, // Créer si n'existe pas
+          runValidators: false, // Désactiver les validateurs pour éviter les erreurs
+          setDefaultsOnInsert: true // Utiliser les valeurs par défaut du schéma si création
+        }
+      );
+    } catch (mongoError) {
+      console.error('❌ Erreur MongoDB:', mongoError.message);
+      console.error('Stack:', mongoError.stack);
+      // Essayer de sauvegarder avec des données minimales si l'erreur persiste
+      if (mongoError.message.includes('Cast')) {
+        console.log('🔄 Tentative de sauvegarde avec données minimales...');
+        const minimalData = {
+          personal: cleanData.personal || {},
+          projects: [],
+          skills: [],
+          links: cleanData.links || {},
+          about: cleanData.about || {},
+          timeline: [],
+          services: [],
+          certifications: [],
+          contactMessages: cleanData.contactMessages || [],
+          faq: []
+        };
+        portfolio = await Portfolio.findOneAndUpdate(
+          {},
+          { $set: minimalData },
+          { new: true, upsert: true, runValidators: false }
+        );
+        throw new Error('Données corrompues détectées. Portfolio réinitialisé avec données minimales.');
       }
-    );
+      throw mongoError;
+    }
     
     console.log('✅ Portfolio mis à jour avec succès:', {
       projects: portfolio.projects?.length || 0,
