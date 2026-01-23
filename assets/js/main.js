@@ -110,9 +110,26 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize default data if localStorage is empty (for first-time visitors on Render)
   function initDefaultData() {
     try {
-      const existingData = localStorage.getItem('portfolioData');
-      if (!existingData) {
-        console.log('📦 Initialisation des données par défaut (première visite)...');
+      const existingDataStr = localStorage.getItem('portfolioData');
+      let shouldInit = false;
+      
+      if (!existingDataStr) {
+        shouldInit = true;
+      } else {
+        // Vérifier si les données existantes sont vides
+        try {
+          const existingData = JSON.parse(existingDataStr);
+          if (isDataEmpty(existingData)) {
+            shouldInit = true;
+          }
+        } catch (e) {
+          // Si erreur de parsing, initialiser
+          shouldInit = true;
+        }
+      }
+      
+      if (shouldInit) {
+        console.log('📦 Initialisation des données par défaut (première visite ou données vides)...');
         
         // Import DEFAULT_DATA structure from admin.js logic
         const DEFAULT_DATA = {
