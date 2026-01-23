@@ -21,10 +21,7 @@ app.get('/health', (req, res) => {
 });
 
 // Connexion à MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/portfolio', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/portfolio')
 .then(() => {
   console.log('✅ Connecté à MongoDB');
   
