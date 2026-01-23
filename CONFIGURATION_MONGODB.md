@@ -11,13 +11,18 @@ Pour obtenir votre connection string :
 
 ## Fichier .env créé
 
-Le fichier `server/.env` contient :
+Le fichier `server/.env` doit contenir :
 ```
 PORT=3000
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority
-JWT_SECRET=portfolio_jwt_secret_2024_changez_moi_en_production
-ADMIN_EMAIL=kouroumaelisee@gmail.com
+MONGODB_URI=votre_connection_string_mongodb_atlas
+JWT_SECRET=votre_secret_jwt_securise
+ADMIN_EMAIL=votre_email_admin
 ```
+
+Pour obtenir la connection string MongoDB :
+1. Aller sur MongoDB Atlas Dashboard
+2. Connect → Connect your application
+3. Copier la connection string fournie
 
 ## ✅ Dépendances installées
 
@@ -53,9 +58,9 @@ Sinon, la connexion échouera depuis Render.
 
 Quand vous déployez sur Render, ajouter ces variables d'environnement :
 
-- `MONGODB_URI` : Votre connection string MongoDB Atlas (format: `mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority`)
-- `JWT_SECRET` : `portfolio_jwt_secret_2024_changez_moi_en_production`
-- `ADMIN_EMAIL` : `kouroumaelisee@gmail.com`
+- `MONGODB_URI` : Récupérer depuis MongoDB Atlas Dashboard
+- `JWT_SECRET` : Générer un secret JWT sécurisé
+- `ADMIN_EMAIL` : Votre email administrateur
 - `PORT` : (Render le définit automatiquement)
 
 ## Sécurité

@@ -31,10 +31,15 @@ cp .env.example .env
 2. Éditer `.env` avec vos valeurs :
 ```env
 PORT=3000
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/portfolio?retryWrites=true&w=majority
-JWT_SECRET=votre_secret_jwt_tres_securise_changez_moi
-ADMIN_EMAIL=kouroumaelisee@gmail.com
+MONGODB_URI=votre_connection_string_mongodb_atlas
+JWT_SECRET=votre_secret_jwt_tres_securise
+ADMIN_EMAIL=votre_email_admin
 ```
+
+Pour obtenir la connection string MongoDB :
+- Aller sur MongoDB Atlas Dashboard
+- Connect → Connect your application
+- Copier la connection string fournie
 
 ## Étape 3 : Installation locale (test)
 

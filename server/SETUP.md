@@ -45,9 +45,9 @@ Ouvrir dans le navigateur :
    - **Build Command** : `cd server && npm install`
    - **Start Command** : `cd server && npm start`
 5. Variables d'environnement à ajouter dans Render :
-   - `MONGODB_URI` : Votre connection string MongoDB Atlas (format: `mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority`)
-   - `JWT_SECRET` : `portfolio_jwt_secret_2024_changez_moi_en_production`
-   - `ADMIN_EMAIL` : `kouroumaelisee@gmail.com`
+   - `MONGODB_URI` : Récupérer depuis MongoDB Atlas Dashboard → Connect → Connect your application
+   - `JWT_SECRET` : Générer un secret JWT sécurisé (chaîne aléatoire longue)
+   - `ADMIN_EMAIL` : Votre email administrateur
    - `PORT` : (Render le définit automatiquement)
 
 ### 5. Mettre à jour l'URL de l'API dans le frontend

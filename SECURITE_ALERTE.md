@@ -27,14 +27,14 @@ Des identifiants MongoDB ont été détectés dans les fichiers commités sur Gi
 Dans `server/.env`, mettre à jour avec le nouveau mot de passe :
 
 ```env
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority
+MONGODB_URI=votre_connection_string_complete
 ```
 
-Remplacez :
-- `username` par votre nom d'utilisateur MongoDB
-- `password` par votre nouveau mot de passe
-- `cluster.mongodb.net` par votre cluster MongoDB Atlas
-- `database` par le nom de votre base de données
+Pour obtenir la connection string :
+1. Aller sur MongoDB Atlas Dashboard
+2. Connect → Connect your application
+3. Copier la connection string
+4. Remplacer `<password>` par votre nouveau mot de passe
 
 ### 3. Mettre à Jour Render (si déjà déployé)
 

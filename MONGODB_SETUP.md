@@ -13,9 +13,7 @@
 
 ## Format de la Connection String
 
-```
-mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority
-```
+La connection string suit le format standard MongoDB Atlas. Elle vous sera fournie directement par MongoDB Atlas dans le format approprié.
 
 ## Configuration dans le Backend
 
