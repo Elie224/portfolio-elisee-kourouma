@@ -459,31 +459,55 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   
+  // Vérifier si les données sont vraiment vides
+  function isDataEmpty(data) {
+    if (!data) return true;
+    const hasProjects = data.projects && Array.isArray(data.projects) && data.projects.length > 0;
+    const hasSkills = data.skills && Array.isArray(data.skills) && data.skills.length > 0;
+    const hasTimeline = data.timeline && Array.isArray(data.timeline) && data.timeline.length > 0;
+    const hasPersonal = data.personal && data.personal.photo;
+    
+    // Si aucune donnée significative, considérer comme vide
+    return !hasProjects && !hasSkills && !hasTimeline && !hasPersonal;
+  }
+
   // Load portfolio data from API
   async function loadPortfolioFromAPI() {
     try {
       const response = await fetch(`${API_BASE_URL}/portfolio`);
       if (response.ok) {
         const data = await response.json();
+        
+        // Vérifier si les données sont vraiment vides
+        if (isDataEmpty(data)) {
+          console.log('⚠️ API retourne un document vide, ne pas écraser localStorage');
+          // Ne pas écraser localStorage si l'API est vide
+          return null;
+        }
+        
         // Supprimer les champs MongoDB (_id, __v, etc.)
         const cleanData = {
-          personal: data.personal,
-          projects: data.projects,
-          skills: data.skills,
-          links: data.links,
-          about: data.about,
-          timeline: data.timeline,
-          services: data.services,
-          certifications: data.certifications,
-          contactMessages: data.contactMessages,
-          faq: data.faq
+          personal: data.personal || {},
+          projects: data.projects || [],
+          skills: data.skills || [],
+          links: data.links || {},
+          about: data.about || {},
+          timeline: data.timeline || [],
+          services: data.services || [],
+          certifications: data.certifications || [],
+          contactMessages: data.contactMessages || [],
+          faq: data.faq || []
         };
         
-        // Sauvegarder dans localStorage comme cache
+        // Sauvegarder dans localStorage comme cache SEULEMENT si les données sont valides
         localStorage.setItem('portfolioData', JSON.stringify(cleanData));
         localStorage.setItem('portfolioLastUpdate', new Date().toISOString());
         
-        console.log('✅ Données chargées depuis l\'API');
+        console.log('✅ Données chargées depuis l\'API:', {
+          projects: cleanData.projects.length,
+          skills: cleanData.skills.length,
+          timeline: cleanData.timeline.length
+        });
         return cleanData;
       } else {
         console.log('⚠️ Impossible de charger depuis l\'API, utilisation du cache local');
