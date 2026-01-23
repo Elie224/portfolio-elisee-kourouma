@@ -2176,7 +2176,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Load Projects Dynamically from localStorage
-  function loadProjects() {
+  async function loadProjects() {
     const projectsGrid = document.getElementById('projects-grid');
     const projectsLoadingEl = document.getElementById('projects-loading');
     
@@ -2192,31 +2192,73 @@ document.addEventListener('DOMContentLoaded', () => {
     // initDefaultProject() is only for adding missing projects, not for overwriting existing ones
 
     try {
-      const portfolioData = localStorage.getItem('portfolioData');
+      let portfolioData = localStorage.getItem('portfolioData');
+      let data;
+      let projects = [];
+      
+      // Si pas de données, initialiser
       if (!portfolioData) {
-        console.log('⚠️ Aucune donnée portfolio trouvée dans localStorage');
-        // Hide loading state
-        if (projectsLoadingEl) {
-          projectsLoadingEl.style.display = 'none';
+        console.log('⚠️ Aucune donnée portfolio trouvée dans localStorage, initialisation...');
+        initDefaultData();
+        // Attendre un peu pour que l'initialisation soit complète
+        await new Promise(resolve => setTimeout(resolve, 200));
+        portfolioData = localStorage.getItem('portfolioData');
+        if (!portfolioData) {
+          console.error('❌ Impossible d\'initialiser les données');
+          if (projectsLoadingEl) projectsLoadingEl.style.display = 'none';
+          return;
         }
-        // Show empty state
-        const emptyState = document.getElementById('empty-state');
-        if (emptyState) {
-          emptyState.style.display = 'block';
-          emptyState.style.opacity = '1';
-        }
-        // Keep original HTML projects if no data
-        return;
       }
-
-      const data = JSON.parse(portfolioData);
-      let projects = data.projects || [];
+      
+      // Parser les données
+      try {
+        data = JSON.parse(portfolioData);
+        projects = data.projects || [];
+      } catch (e) {
+        console.error('❌ Erreur parsing données:', e);
+        // Réinitialiser si erreur de parsing
+        initDefaultData();
+        await new Promise(resolve => setTimeout(resolve, 200));
+        portfolioData = localStorage.getItem('portfolioData');
+        if (portfolioData) {
+          data = JSON.parse(portfolioData);
+          projects = data.projects || [];
+        }
+      }
+      
+      // Si pas de projets, essayer d'initialiser
+      if (!projects || projects.length === 0) {
+        console.warn('⚠️ Aucun projet trouvé dans localStorage, initialisation des données par défaut...');
+        initDefaultData();
+        // Attendre un peu puis réessayer
+        await new Promise(resolve => setTimeout(resolve, 200));
+        const updatedData = localStorage.getItem('portfolioData');
+        if (updatedData) {
+          try {
+            data = JSON.parse(updatedData);
+            projects = data.projects || [];
+            console.log(`✅ ${projects.length} projet(s) chargé(s) après initialisation`);
+          } catch (e) {
+            console.error('❌ Erreur lors du rechargement des données:', e);
+            if (projectsLoadingEl) projectsLoadingEl.style.display = 'none';
+            return;
+          }
+        } else {
+          console.error('❌ Impossible d\'initialiser les données');
+          if (projectsLoadingEl) projectsLoadingEl.style.display = 'none';
+          return;
+        }
+      }
       
       // Debug: Log all projects with their public status
-      console.log('🔍 Tous les projets dans localStorage:');
-      projects.forEach((p, i) => {
-        console.log(`  ${i + 1}. "${p.title}" - public=${p.public} (type: ${typeof p.public}, strict false: ${p.public === false})`);
-      });
+      console.log('🔍 Tous les projets dans localStorage:', projects.length);
+      if (projects.length > 0) {
+        projects.forEach((p, i) => {
+          console.log(`  ${i + 1}. "${p.title}" - public=${p.public} (type: ${typeof p.public}, strict false: ${p.public === false})`);
+        });
+      } else {
+        console.warn('⚠️ Aucun projet dans le tableau après toutes les vérifications');
+      }
 
       // Check if admin is logged in
       const isAdminLoggedIn = (() => {
