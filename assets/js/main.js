@@ -95,7 +95,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Vérifier que les données de l'API sont vraiment valides avant de les sauvegarder
         const hasValidAPIData = (cleanData.projects?.length > 0) || 
                                (cleanData.skills?.length > 0) || 
-                               (cleanData.timeline?.length > 0);
+                               (cleanData.timeline?.length > 0) ||
+                               (cleanData.personal?.photo);
         
         if (!hasValidAPIData) {
           console.warn('⚠️ API retourne des données vides, ne pas écraser localStorage');
@@ -109,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                      (existingData.timeline?.length > 0);
               if (hasValidLocalData) {
                 console.log('✅ Utilisation des données locales valides (API vide)');
-                return existingData;
+                return existingData; // Retourner les données locales au lieu de null
               }
             } catch (e) {
               // Ignorer

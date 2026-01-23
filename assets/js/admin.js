@@ -791,13 +791,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (response.ok) {
         const data = await response.json();
         
-        // Vérifier si les données sont vraiment vides
-        if (isDataEmpty(data)) {
-          console.log('⚠️ API retourne un document vide, ne pas écraser localStorage');
-          // Ne pas écraser localStorage si l'API est vide
-          return null;
-        }
-        
         // Supprimer les champs MongoDB (_id, __v, etc.)
         const cleanData = {
           personal: data.personal || {},
@@ -811,6 +804,34 @@ document.addEventListener('DOMContentLoaded', () => {
           contactMessages: data.contactMessages || [],
           faq: data.faq || []
         };
+        
+        // Vérifier si les données nettoyées sont vraiment vides AVANT de sauvegarder
+        const hasValidData = (cleanData.projects?.length > 0) || 
+                           (cleanData.skills?.length > 0) || 
+                           (cleanData.timeline?.length > 0) ||
+                           (cleanData.personal?.photo);
+        
+        if (!hasValidData) {
+          console.log('⚠️ API retourne un document vide, ne pas écraser localStorage');
+          // Vérifier si on a des données locales valides à préserver
+          const existingDataStr = localStorage.getItem('portfolioData');
+          if (existingDataStr) {
+            try {
+              const existingData = JSON.parse(existingDataStr);
+              const hasValidLocalData = (existingData.projects?.length > 0) || 
+                                     (existingData.skills?.length > 0) || 
+                                     (existingData.timeline?.length > 0);
+              if (hasValidLocalData) {
+                console.log('✅ Préservation des données locales valides (API vide)');
+                return existingData; // Retourner les données locales au lieu de null
+              }
+            } catch (e) {
+              // Ignorer
+            }
+          }
+          // Ne pas écraser localStorage si l'API est vide
+          return null;
+        }
         
         // Sauvegarder dans localStorage comme cache SEULEMENT si les données sont valides
         localStorage.setItem('portfolioData', JSON.stringify(cleanData));
