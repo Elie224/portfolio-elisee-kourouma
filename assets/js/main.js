@@ -13,25 +13,45 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch(`${API_BASE_URL}/portfolio`);
       if (response.ok) {
         const data = await response.json();
+        
+        // Vérifier si les données sont vides (nouveau document MongoDB)
+        const isEmpty = !data.projects || data.projects.length === 0;
+        
+        if (isEmpty) {
+          console.log('⚠️ API retourne un document vide, utilisation du cache local ou données par défaut');
+          // Ne pas écraser localStorage si l'API est vide
+          // Initialiser les données par défaut si localStorage est aussi vide
+          const existingData = localStorage.getItem('portfolioData');
+          if (!existingData) {
+            console.log('📦 Initialisation des données par défaut...');
+            initDefaultData();
+          }
+          return null; // Ne pas utiliser les données vides de l'API
+        }
+        
         // Supprimer les champs MongoDB (_id, __v, etc.)
         const cleanData = {
-          personal: data.personal,
-          projects: data.projects,
-          skills: data.skills,
-          links: data.links,
-          about: data.about,
-          timeline: data.timeline,
-          services: data.services,
-          certifications: data.certifications,
-          contactMessages: data.contactMessages,
-          faq: data.faq
+          personal: data.personal || {},
+          projects: data.projects || [],
+          skills: data.skills || [],
+          links: data.links || {},
+          about: data.about || {},
+          timeline: data.timeline || [],
+          services: data.services || [],
+          certifications: data.certifications || [],
+          contactMessages: data.contactMessages || [],
+          faq: data.faq || []
         };
         
         // Sauvegarder dans localStorage comme cache
         localStorage.setItem('portfolioData', JSON.stringify(cleanData));
         localStorage.setItem('portfolioLastUpdate', new Date().toISOString());
         
-        console.log('✅ Données chargées depuis l\'API');
+        console.log('✅ Données chargées depuis l\'API:', {
+          projects: cleanData.projects.length,
+          skills: cleanData.skills.length,
+          timeline: cleanData.timeline.length
+        });
         return cleanData;
     } else {
         console.log('⚠️ Impossible de charger depuis l\'API, utilisation du cache local');
@@ -47,6 +67,13 @@ document.addEventListener('DOMContentLoaded', () => {
   loadPortfolioFromAPI().then(apiData => {
     if (apiData) {
       // Trigger reload of all data-dependent functions
+      if (typeof loadProjects === 'function') loadProjects();
+      if (typeof loadTimeline === 'function') loadTimeline();
+      if (typeof loadSkills === 'function') loadSkills();
+      if (typeof loadAboutPageContent === 'function') loadAboutPageContent();
+    } else {
+      // Si l'API est vide, utiliser les données locales existantes
+      console.log('📦 Utilisation des données locales');
       if (typeof loadProjects === 'function') loadProjects();
       if (typeof loadTimeline === 'function') loadTimeline();
       if (typeof loadSkills === 'function') loadSkills();
