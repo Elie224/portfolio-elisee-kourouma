@@ -250,20 +250,21 @@ portfolioSchema.statics.getPortfolio = async function() {
     const projectsCount = portfolio.projects && Array.isArray(portfolio.projects) ? portfolio.projects.length : 0;
     const skillsCount = portfolio.skills && Array.isArray(portfolio.skills) ? portfolio.skills.length : 0;
     const timelineCount = portfolio.timeline && Array.isArray(portfolio.timeline) ? portfolio.timeline.length : 0;
-    const hasPhoto = portfolio.personal && portfolio.personal.photo;
+    const hasPhoto = !!(portfolio.personal && portfolio.personal.photo);
     
-    const hasData = projectsCount > 0 || skillsCount > 0 || timelineCount > 0 || hasPhoto;
+    // Le document est considéré comme vide si TOUS les tableaux sont vides (même si la photo existe)
+    const hasData = projectsCount > 0 || skillsCount > 0 || timelineCount > 0;
     
     console.log('🔍 Vérification du portfolio existant:', {
       hasData,
       projects: projectsCount,
       skills: skillsCount,
       timeline: timelineCount,
-      hasPhoto: !!hasPhoto
+      hasPhoto: hasPhoto
     });
     
     if (!hasData) {
-      console.log('📦 Portfolio vide détecté, suppression et recréation avec les données par défaut');
+      console.log('📦 Portfolio vide détecté (tableaux vides), suppression et recréation avec les données par défaut');
       // Supprimer le document vide et en créer un nouveau
       await this.deleteOne({ _id: portfolio._id });
       portfolio = new this(DEFAULT_PORTFOLIO_DATA);
