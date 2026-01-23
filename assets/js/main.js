@@ -122,6 +122,36 @@ document.addEventListener('DOMContentLoaded', () => {
           return null;
         }
         
+        // Vérification finale AVANT de sauvegarder : s'assurer que les données sont vraiment valides
+        const finalCheck = (cleanData.projects?.length > 0) || 
+                          (cleanData.skills?.length > 0) || 
+                          (cleanData.timeline?.length > 0) ||
+                          (cleanData.personal?.photo);
+        
+        if (!finalCheck) {
+          console.warn('⚠️ Vérification finale échouée : API retourne des données vides, ne pas écraser localStorage');
+          // Ne pas écraser localStorage avec des données vides
+          const existingDataStr = localStorage.getItem('portfolioData');
+          if (existingDataStr) {
+            try {
+              const existingData = JSON.parse(existingDataStr);
+              const hasValidLocalData = (existingData.projects?.length > 0) || 
+                                     (existingData.skills?.length > 0) || 
+                                     (existingData.timeline?.length > 0);
+              if (hasValidLocalData) {
+                console.log('✅ Préservation des données locales valides (vérification finale échouée)');
+                return existingData; // Retourner les données locales au lieu de null
+              }
+            } catch (e) {
+              // Ignorer
+            }
+          }
+          // Si pas de données locales valides, initialiser
+          console.log('⚠️ Pas de données locales valides, initialisation...');
+          initDefaultData();
+          return null;
+        }
+        
         // Sauvegarder dans localStorage comme cache seulement si les données sont valides
         localStorage.setItem('portfolioData', JSON.stringify(cleanData));
         localStorage.setItem('portfolioLastUpdate', new Date().toISOString());
