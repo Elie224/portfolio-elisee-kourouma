@@ -370,8 +370,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Get portfolio data
+  // Get portfolio data (from localStorage or API)
   function getPortfolioData() {
+    // Pour l'instant, utiliser localStorage (l'API sera chargée au démarrage)
     const data = localStorage.getItem('portfolioData');
     if (!data) {
       console.log('⚠️ Aucune donnée dans localStorage, utilisation des données par défaut');
@@ -389,12 +390,52 @@ document.addEventListener('DOMContentLoaded', () => {
       return DEFAULT_DATA;
     }
   }
+  
+  // Load from API on page load
+  loadPortfolioFromAPI().then(apiData => {
+    if (apiData) {
+      // Recharger toutes les données
+      if (typeof loadAllData === 'function') {
+        loadAllData();
+      }
+    }
+  });
 
-  // Save portfolio data
-  function savePortfolioData(data) {
+  // Save portfolio data to API and localStorage
+  async function savePortfolioData(data) {
+    // Sauvegarder dans localStorage comme cache
     const oldData = localStorage.getItem('portfolioData');
     localStorage.setItem('portfolioData', JSON.stringify(data));
     localStorage.setItem('portfolioLastUpdate', new Date().toISOString());
+    
+    // Sauvegarder via API si token disponible
+    if (apiToken) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/portfolio`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiToken}`
+          },
+          body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          console.log('✅ Données sauvegardées sur le serveur:', result);
+          showSuccess('Données sauvegardées avec succès sur le serveur !');
+        } else {
+          console.error('❌ Erreur lors de la sauvegarde sur le serveur:', response.statusText);
+          showSuccess('Données sauvegardées localement (serveur indisponible)');
+        }
+      } catch (error) {
+        console.error('❌ Erreur réseau lors de la sauvegarde:', error);
+        showSuccess('Données sauvegardées localement (erreur réseau)');
+      }
+    } else {
+      console.log('⚠️ Pas de token API, sauvegarde locale uniquement');
+      showSuccess('Données sauvegardées localement');
+    }
     
     // Trigger storage event for other tabs/windows
     try {
@@ -416,8 +457,42 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {
       console.error('Erreur lors du déclenchement de l\'événement:', e);
     }
-    
-    showSuccess('Données sauvegardées avec succès !');
+  }
+  
+  // Load portfolio data from API
+  async function loadPortfolioFromAPI() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/portfolio`);
+      if (response.ok) {
+        const data = await response.json();
+        // Supprimer les champs MongoDB (_id, __v, etc.)
+        const cleanData = {
+          personal: data.personal,
+          projects: data.projects,
+          skills: data.skills,
+          links: data.links,
+          about: data.about,
+          timeline: data.timeline,
+          services: data.services,
+          certifications: data.certifications,
+          contactMessages: data.contactMessages,
+          faq: data.faq
+        };
+        
+        // Sauvegarder dans localStorage comme cache
+        localStorage.setItem('portfolioData', JSON.stringify(cleanData));
+        localStorage.setItem('portfolioLastUpdate', new Date().toISOString());
+        
+        console.log('✅ Données chargées depuis l\'API');
+        return cleanData;
+      } else {
+        console.log('⚠️ Impossible de charger depuis l\'API, utilisation du cache local');
+        return null;
+      }
+    } catch (error) {
+      console.log('⚠️ Erreur réseau, utilisation du cache local:', error);
+      return null;
+    }
   }
 
   // Authentication
