@@ -7,6 +7,18 @@ document.addEventListener('DOMContentLoaded', () => {
     ? 'http://localhost:3000/api' 
     : 'https://portfolio-backend-x47u.onrender.com/api';
   
+  // Vérifier si les données sont vraiment vides (pas juste un objet avec des tableaux vides)
+  function isDataEmpty(data) {
+    if (!data) return true;
+    const hasProjects = data.projects && Array.isArray(data.projects) && data.projects.length > 0;
+    const hasSkills = data.skills && Array.isArray(data.skills) && data.skills.length > 0;
+    const hasTimeline = data.timeline && Array.isArray(data.timeline) && data.timeline.length > 0;
+    const hasPersonal = data.personal && data.personal.photo;
+    
+    // Si aucune donnée significative, considérer comme vide
+    return !hasProjects && !hasSkills && !hasTimeline && !hasPersonal;
+  }
+
   // Load portfolio data from API
   async function loadPortfolioFromAPI() {
     try {
@@ -14,19 +26,33 @@ document.addEventListener('DOMContentLoaded', () => {
       if (response.ok) {
         const data = await response.json();
         
-        // Vérifier si les données sont vides (nouveau document MongoDB)
-        const isEmpty = !data.projects || data.projects.length === 0;
-        
-        if (isEmpty) {
+        // Vérifier si les données sont vraiment vides
+        if (isDataEmpty(data)) {
           console.log('⚠️ API retourne un document vide, utilisation du cache local ou données par défaut');
-          // Ne pas écraser localStorage si l'API est vide
-          // Initialiser les données par défaut si localStorage est aussi vide
-          const existingData = localStorage.getItem('portfolioData');
-          if (!existingData) {
-            console.log('📦 Initialisation des données par défaut...');
+          // Vérifier localStorage
+          const existingDataStr = localStorage.getItem('portfolioData');
+          if (existingDataStr) {
+            try {
+              const existingData = JSON.parse(existingDataStr);
+              // Si localStorage est aussi vide, initialiser les données par défaut
+              if (isDataEmpty(existingData)) {
+                console.log('📦 localStorage est vide, initialisation des données par défaut...');
+                initDefaultData();
+                return null;
+              } else {
+                console.log('✅ Utilisation des données locales existantes');
+                return existingData; // Utiliser les données locales valides
+              }
+            } catch (e) {
+              console.log('📦 Erreur parsing localStorage, initialisation des données par défaut...');
+              initDefaultData();
+              return null;
+            }
+          } else {
+            console.log('📦 localStorage vide, initialisation des données par défaut...');
             initDefaultData();
+            return null;
           }
-          return null; // Ne pas utiliser les données vides de l'API
         }
         
         // Supprimer les champs MongoDB (_id, __v, etc.)
