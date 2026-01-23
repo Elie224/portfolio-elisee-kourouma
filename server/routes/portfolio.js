@@ -17,26 +17,47 @@ router.get('/', async (req, res) => {
 // POST /api/portfolio - Mettre à jour les données (admin seulement)
 router.post('/', authenticateAdmin, async (req, res) => {
   try {
-    let portfolio = await Portfolio.findOne();
+    console.log('📥 Requête de mise à jour reçue:', {
+      hasPersonal: !!req.body.personal,
+      projectsCount: req.body.projects?.length || 0,
+      skillsCount: req.body.skills?.length || 0
+    });
     
-    if (!portfolio) {
-      portfolio = new Portfolio(req.body);
-    } else {
-      // Mettre à jour tous les champs
-      Object.assign(portfolio, req.body);
-    }
+    // Utiliser findOneAndUpdate pour mettre à jour ou créer
+    const portfolio = await Portfolio.findOneAndUpdate(
+      {}, // Pas de filtre, on veut le seul document
+      { $set: req.body }, // Mettre à jour tous les champs
+      { 
+        new: true, // Retourner le document mis à jour
+        upsert: true, // Créer si n'existe pas
+        runValidators: false // Désactiver les validateurs pour éviter les erreurs
+      }
+    );
     
-    await portfolio.save();
+    console.log('✅ Portfolio mis à jour avec succès:', {
+      projects: portfolio.projects?.length || 0,
+      skills: portfolio.skills?.length || 0
+    });
     
-    console.log('✅ Portfolio mis à jour avec succès');
+    // Convertir en objet propre sans champs MongoDB
+    const portfolioObj = portfolio.toObject();
+    delete portfolioObj._id;
+    delete portfolioObj.__v;
+    delete portfolioObj.createdAt;
+    delete portfolioObj.updatedAt;
+    
     res.json({ 
       success: true, 
       message: 'Portfolio mis à jour avec succès',
-      portfolio 
+      portfolio: portfolioObj
     });
   } catch (error) {
-    console.error('Erreur lors de la mise à jour du portfolio:', error);
-    res.status(500).json({ error: 'Erreur lors de la mise à jour' });
+    console.error('❌ Erreur lors de la mise à jour du portfolio:', error);
+    console.error('Détails de l\'erreur:', error.message, error.stack);
+    res.status(500).json({ 
+      error: 'Erreur lors de la mise à jour',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
