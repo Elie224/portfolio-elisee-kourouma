@@ -534,10 +534,33 @@ document.addEventListener('DOMContentLoaded', () => {
       faq: cleanArray(data.faq || [])
     };
     
-    // Sauvegarder dans localStorage comme cache
-    const oldData = localStorage.getItem('portfolioData');
-    localStorage.setItem('portfolioData', JSON.stringify(cleanData));
-    localStorage.setItem('portfolioLastUpdate', new Date().toISOString());
+    // Validation finale avant sauvegarde
+    try {
+      // Tester que les données peuvent être sérialisées correctement
+      const testSerialization = JSON.stringify(cleanData);
+      const testDeserialization = JSON.parse(testSerialization);
+      
+      // Vérifier qu'il n'y a pas de corruption après sérialisation
+      if (testSerialization.includes('`') || testSerialization.includes(' + ')) {
+        console.error('❌ Corruption détectée après nettoyage, utilisation des données par défaut');
+        localStorage.setItem('portfolioData', JSON.stringify(DEFAULT_DATA));
+        localStorage.setItem('portfolioLastUpdate', new Date().toISOString());
+        if (typeof showError === 'function') {
+          showError('Erreur: Les données contiennent des erreurs. Réinitialisation effectuée.');
+        }
+        return;
+      }
+      
+      // Sauvegarder dans localStorage comme cache
+      localStorage.setItem('portfolioData', testSerialization);
+      localStorage.setItem('portfolioLastUpdate', new Date().toISOString());
+    } catch (e) {
+      console.error('❌ Erreur lors de la sérialisation des données:', e);
+      if (typeof showError === 'function') {
+        showError('Erreur lors de la sauvegarde locale. Les données peuvent être corrompues.');
+      }
+      return;
+    }
     
     // Sauvegarder via API si token disponible
     if (apiToken) {
