@@ -120,23 +120,63 @@ router.post('/', authenticateAdmin, async (req, res) => {
     };
     
     // Validation finale : s'assurer que tous les projets sont des objets valides
-    cleanData.projects = cleanData.projects.filter(project => {
-      if (!project || typeof project !== 'object') return false;
-      // Vérifier qu'il n'y a pas de code JavaScript dans les propriétés
-      for (const key in project) {
-        if (typeof project[key] === 'string' && (project[key].includes('`') || project[key].includes(' + '))) {
-          console.warn(`⚠️ Projet "${project.title || 'sans titre'}" contient du code JS, ignoré`);
-          return false;
+    cleanData.projects = cleanData.projects
+      .map(project => {
+        if (!project || typeof project !== 'object') return null;
+        
+        // Nettoyer chaque projet récursivement
+        const cleanedProject = cleanObject(project);
+        
+        // Vérifier que les propriétés essentielles existent
+        if (!cleanedProject.title || typeof cleanedProject.title !== 'string') {
+          console.warn('⚠️ Projet sans titre valide, ignoré');
+          return null;
         }
-      }
-      return true;
-    });
+        
+        // S'assurer que les tableaux sont bien des tableaux
+        if (cleanedProject.features && !Array.isArray(cleanedProject.features)) {
+          cleanedProject.features = [];
+        }
+        if (cleanedProject.tags && !Array.isArray(cleanedProject.tags)) {
+          cleanedProject.tags = [];
+        }
+        
+        return cleanedProject;
+      })
+      .filter(project => project !== null);
+    
+    // Validation similaire pour les skills
+    cleanData.skills = cleanData.skills
+      .map(skill => {
+        if (!skill || typeof skill !== 'object') return null;
+        
+        const cleanedSkill = cleanObject(skill);
+        
+        if (!cleanedSkill.name || typeof cleanedSkill.name !== 'string') {
+          console.warn('⚠️ Skill sans nom valide, ignoré');
+          return null;
+        }
+        
+        if (cleanedSkill.skills && !Array.isArray(cleanedSkill.skills)) {
+          cleanedSkill.skills = [];
+        }
+        
+        return cleanedSkill;
+      })
+      .filter(skill => skill !== null);
     
     console.log('📦 Données nettoyées:', {
       projectsCount: cleanData.projects.length,
       skillsCount: cleanData.skills.length,
-      timelineCount: cleanData.timeline.length
+      timelineCount: cleanData.timeline.length,
+      hasPersonal: !!cleanData.personal,
+      hasAbout: !!cleanData.about
     });
+    
+    // Validation finale : s'assurer qu'on a au moins des données minimales
+    if (!cleanData.personal) cleanData.personal = {};
+    if (!cleanData.about) cleanData.about = {};
+    if (!cleanData.links) cleanData.links = {};
     
     // Utiliser findOneAndUpdate pour mettre à jour ou créer
     const portfolio = await Portfolio.findOneAndUpdate(
@@ -145,7 +185,8 @@ router.post('/', authenticateAdmin, async (req, res) => {
       { 
         new: true, // Retourner le document mis à jour
         upsert: true, // Créer si n'existe pas
-        runValidators: false // Désactiver les validateurs pour éviter les erreurs
+        runValidators: false, // Désactiver les validateurs pour éviter les erreurs
+        setDefaultsOnInsert: true // Utiliser les valeurs par défaut du schéma si création
       }
     );
     
