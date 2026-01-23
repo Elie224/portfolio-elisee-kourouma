@@ -238,45 +238,62 @@ const DEFAULT_PORTFOLIO_DATA = {
 // Il n'y aura qu'un seul document portfolio
 portfolioSchema.statics.getPortfolio = async function() {
   let portfolio = await this.findOne();
+  
   if (!portfolio) {
     // Créer un document avec les données par défaut si aucun n'existe
-    console.log('📦 Initialisation du portfolio avec les données par défaut');
+    console.log('📦 Aucun document trouvé, création avec les données par défaut');
     portfolio = new this(DEFAULT_PORTFOLIO_DATA);
     await portfolio.save();
+    console.log('✅ Portfolio créé avec les données par défaut');
   } else {
     // Vérifier si le document est vide et l'initialiser si nécessaire
-    const hasData = (portfolio.projects && Array.isArray(portfolio.projects) && portfolio.projects.length > 0) ||
-                   (portfolio.skills && Array.isArray(portfolio.skills) && portfolio.skills.length > 0) ||
-                   (portfolio.timeline && Array.isArray(portfolio.timeline) && portfolio.timeline.length > 0) ||
-                   (portfolio.personal && portfolio.personal.photo);
+    const projectsCount = portfolio.projects && Array.isArray(portfolio.projects) ? portfolio.projects.length : 0;
+    const skillsCount = portfolio.skills && Array.isArray(portfolio.skills) ? portfolio.skills.length : 0;
+    const timelineCount = portfolio.timeline && Array.isArray(portfolio.timeline) ? portfolio.timeline.length : 0;
+    const hasPhoto = portfolio.personal && portfolio.personal.photo;
+    
+    const hasData = projectsCount > 0 || skillsCount > 0 || timelineCount > 0 || hasPhoto;
+    
+    console.log('🔍 Vérification du portfolio existant:', {
+      hasData,
+      projects: projectsCount,
+      skills: skillsCount,
+      timeline: timelineCount,
+      hasPhoto: !!hasPhoto
+    });
     
     if (!hasData) {
-      console.log('📦 Portfolio vide détecté, initialisation avec les données par défaut');
-      console.log('🔍 État actuel:', {
-        hasProjects: portfolio.projects?.length || 0,
-        hasSkills: portfolio.skills?.length || 0,
-        hasTimeline: portfolio.timeline?.length || 0,
-        hasPhoto: !!portfolio.personal?.photo
-      });
-      // Mettre à jour avec les données par défaut en utilisant findOneAndUpdate
-      portfolio = await this.findOneAndUpdate(
-        { _id: portfolio._id },
-        { $set: DEFAULT_PORTFOLIO_DATA },
-        { new: true, runValidators: false }
-      );
-      console.log('✅ Portfolio initialisé avec les données par défaut:', {
-        projects: portfolio.projects?.length || 0,
-        skills: portfolio.skills?.length || 0,
-        timeline: portfolio.timeline?.length || 0
+      console.log('📦 Portfolio vide détecté, suppression et recréation avec les données par défaut');
+      // Supprimer le document vide et en créer un nouveau
+      await this.deleteOne({ _id: portfolio._id });
+      portfolio = new this(DEFAULT_PORTFOLIO_DATA);
+      await portfolio.save();
+      console.log('✅ Portfolio réinitialisé avec les données par défaut:', {
+        projects: portfolio.projects.length,
+        skills: portfolio.skills.length,
+        timeline: portfolio.timeline.length
       });
     }
   }
+  
   // Convertir en objet JavaScript simple et supprimer les champs MongoDB
   const portfolioObj = portfolio.toObject();
   delete portfolioObj._id;
   delete portfolioObj.__v;
   delete portfolioObj.createdAt;
   delete portfolioObj.updatedAt;
+  
+  // Log final pour vérification
+  const finalProjects = portfolioObj.projects?.length || 0;
+  const finalSkills = portfolioObj.skills?.length || 0;
+  const finalTimeline = portfolioObj.timeline?.length || 0;
+  console.log('📤 Retour du portfolio:', {
+    projects: finalProjects,
+    skills: finalSkills,
+    timeline: finalTimeline,
+    responseSize: JSON.stringify(portfolioObj).length
+  });
+  
   return portfolioObj;
 };
 
