@@ -1,12 +1,13 @@
 # ✅ Configuration MongoDB Atlas - Terminée
 
-## Identifiants configurés
+## Configuration MongoDB Atlas
 
-Votre backend est maintenant configuré avec MongoDB Atlas :
+Votre backend est configuré pour utiliser MongoDB Atlas.
 
-- **Username** : `portfolio`
-- **Cluster** : `cluster0.u3cxqhm.mongodb.net`
-- **Base de données** : `portfolio`
+Pour obtenir votre connection string :
+1. Aller sur [MongoDB Atlas Dashboard](https://cloud.mongodb.com)
+2. Cliquer sur "Connect" → "Connect your application"
+3. Copier la connection string fournie
 
 ## Fichier .env créé
 
