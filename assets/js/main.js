@@ -387,18 +387,20 @@ document.addEventListener('DOMContentLoaded', () => {
                              (existingData.timeline?.length > 0);
           if (!hasValidData) {
             console.warn('⚠️ Données présentes mais vides, réinitialisation...');
-            localStorage.setItem('portfolioData', JSON.stringify(DEFAULT_DATA));
-            localStorage.setItem('portfolioLastUpdate', new Date().toISOString());
-            reloadAllData();
+            // Réinitialiser en appelant à nouveau initDefaultData avec force
+            shouldInit = true;
+            // Continuer avec l'initialisation ci-dessous
           }
         } catch (e) {
           console.error('❌ Erreur lors de la vérification des données:', e);
           // Réinitialiser en cas d'erreur
-          localStorage.setItem('portfolioData', JSON.stringify(DEFAULT_DATA));
-          localStorage.setItem('portfolioLastUpdate', new Date().toISOString());
-          reloadAllData();
+          shouldInit = true;
+          // Continuer avec l'initialisation ci-dessous
         }
       }
+      
+      // Si on doit initialiser (première fois ou données vides/corrompues)
+      if (shouldInit) {
       return false;
     } catch (error) {
       console.error('❌ Erreur lors de l\'initialisation des données par défaut:', error);
