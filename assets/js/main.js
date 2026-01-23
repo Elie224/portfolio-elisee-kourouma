@@ -343,6 +343,38 @@ document.addEventListener('DOMContentLoaded', () => {
           contactMessages: [],
           faq: []
         };
+    
+    try {
+      const existingDataStr = localStorage.getItem('portfolioData');
+      let shouldInit = false;
+      
+      if (!existingDataStr) {
+        shouldInit = true;
+      } else {
+        // Vérifier si les données existantes sont vides
+        try {
+          const existingData = JSON.parse(existingDataStr);
+          if (isDataEmpty(existingData)) {
+            shouldInit = true;
+          } else {
+            // Vérifier quand même que les données ne sont pas corrompues
+            const hasValidData = (existingData.projects?.length > 0) || 
+                               (existingData.skills?.length > 0) || 
+                               (existingData.timeline?.length > 0);
+            if (!hasValidData) {
+              console.warn('⚠️ Données présentes mais vides, réinitialisation...');
+              shouldInit = true;
+            }
+          }
+        } catch (e) {
+          // Si erreur de parsing, initialiser
+          console.error('❌ Erreur lors de la vérification des données:', e);
+          shouldInit = true;
+        }
+      }
+      
+      if (shouldInit) {
+        console.log('📦 Initialisation des données par défaut (première visite ou données vides)...');
         
         localStorage.setItem('portfolioData', JSON.stringify(DEFAULT_DATA));
         localStorage.setItem('portfolioLastUpdate', new Date().toISOString());
@@ -357,28 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return true;
       } else {
         console.log('ℹ️ Données déjà présentes dans localStorage, pas d\'initialisation nécessaire');
-        // Vérifier quand même que les données ne sont pas corrompues
-        try {
-          const existingData = JSON.parse(existingDataStr);
-          const hasValidData = (existingData.projects?.length > 0) || 
-                             (existingData.skills?.length > 0) || 
-                             (existingData.timeline?.length > 0);
-          if (!hasValidData) {
-            console.warn('⚠️ Données présentes mais vides, réinitialisation...');
-            // Réinitialiser en appelant à nouveau initDefaultData avec force
-            shouldInit = true;
-            // Continuer avec l'initialisation ci-dessous
-          }
-        } catch (e) {
-          console.error('❌ Erreur lors de la vérification des données:', e);
-          // Réinitialiser en cas d'erreur
-          shouldInit = true;
-          // Continuer avec l'initialisation ci-dessous
-        }
       }
-      
-      // Si on doit initialiser (première fois ou données vides/corrompues)
-      if (shouldInit) {
       return false;
     } catch (error) {
       console.error('❌ Erreur lors de l\'initialisation des données par défaut:', error);
