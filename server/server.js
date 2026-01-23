@@ -6,10 +6,50 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());
+// Middleware CORS - Configuration complète pour gérer les preflight requests
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Autoriser les requêtes sans origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Liste des origines autorisées
+    const allowedOrigins = [
+      'http://localhost:8000',
+      'http://localhost:3000',
+      'https://mon-portfolio-sdlk.onrender.com',
+      'https://portfolio-sdlk.onrender.com',
+      /^https:\/\/.*\.onrender\.com$/, // Tous les sous-domaines Render
+    ];
+    
+    // Vérifier si l'origine est autorisée
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (typeof allowed === 'string') {
+        return origin === allowed;
+      } else if (allowed instanceof RegExp) {
+        return allowed.test(origin);
+      }
+      return false;
+    });
+    
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      // En développement, on peut être plus permissif
+      callback(null, true); // Autoriser toutes les origines pour le moment
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token'],
+  exposedHeaders: ['x-auth-token']
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Gérer explicitement les requêtes OPTIONS (preflight)
+app.options('*', cors(corsOptions));
 
 // Routes
 const portfolioRoutes = require('./routes/portfolio');
