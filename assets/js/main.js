@@ -163,6 +163,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (typeof loadTimeline === 'function') loadTimeline();
       if (typeof loadSkills === 'function') loadSkills();
       if (typeof loadAboutPageContent === 'function') loadAboutPageContent();
+      if (typeof loadHomepageProjects === 'function') loadHomepageProjects();
+      if (typeof loadHomepageSkills === 'function') loadHomepageSkills();
     }, 100);
   }
 
@@ -327,6 +329,76 @@ document.addEventListener('DOMContentLoaded', () => {
     loadTimeline();
   }
 
+  // Load recent projects on homepage
+  function loadHomepageProjects() {
+    const data = JSON.parse(localStorage.getItem('portfolioData') || '{}');
+    const projects = data.projects || [];
+    
+    const homepageProjectsContainer = document.getElementById('homepage-projects');
+    if (homepageProjectsContainer) {
+      if (projects.length === 0) {
+        homepageProjectsContainer.innerHTML = '<div class="card" style="text-align: center; padding: 32px; grid-column: 1/-1;"><h3>Mes projets apparaîtront ici</h3><p class="muted">Les projets ajoutés via l\'admin seront affichés dynamiquement.</p><a href="projects.html" class="btn secondary" style="margin-top: 16px;">Voir tous les projets</a></div>';
+      } else {
+        // Show only first 4 projects on homepage
+        const recentProjects = projects.slice(0, 4);
+        let projectsHtml = recentProjects.map(project => `
+          <div class="card project-card" data-scroll-reveal="bottom">
+            <h3>${project.title}</h3>
+            <p class="muted">${project.shortDesc || project.description}</p>
+            <div class="tech-tags">
+              ${(project.tags || []).map(tag => `<span class="tech-tag">${tag}</span>`).join('')}
+            </div>
+          </div>
+        `).join('');
+        
+        // Add "See all projects" button if there are more than 4 projects
+        if (projects.length > 4) {
+          projectsHtml += '<div class="card" style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 32px;"><a href="projects.html" class="btn">Voir tous les projets</a></div>';
+        } else if (projects.length > 0) {
+          // Add link to projects page even if we show all projects
+          projectsHtml += '<div class="card" style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 32px; grid-column: span 2;"><a href="projects.html" class="btn secondary">Gérer mes projets</a></div>';
+        }
+        
+        homepageProjectsContainer.innerHTML = projectsHtml;
+      }
+    }
+  }
+
+  // Load skills on homepage
+  function loadHomepageSkills() {
+    const data = JSON.parse(localStorage.getItem('portfolioData') || '{}');
+    const skills = data.skills || [];
+    
+    const homepageSkillsContainer = document.getElementById('homepage-skills');
+    if (homepageSkillsContainer) {
+      if (skills.length === 0) {
+        homepageSkillsContainer.innerHTML = '<div class="card" style="text-align: center; padding: 32px; grid-column: 1/-1;"><h3>Mes compétences apparaîtront ici</h3><p class="muted">Les compétences ajoutées via l\'admin seront affichées dynamiquement.</p></div>';
+      } else {
+        // Show only first 3 skills on homepage
+        const recentSkills = skills.slice(0, 3);
+        let skillsHtml = recentSkills.map(skill => `
+          <div class="card skill-card" data-scroll-reveal="bottom">
+            <div style="text-align: center; font-size: 48px; margin-bottom: 16px;">${skill.icon || '💻'}</div>
+            <h3 style="text-align: center; margin-bottom: 12px;">${skill.name}</h3>
+            <div class="skill-list">
+              ${(skill.skills || []).map(s => `<span class="tech-tag">${s}</span>`).join('')}
+            </div>
+          </div>
+        `).join('');
+        
+        // Add "See all skills" button if needed
+        if (skills.length > 3) {
+          skillsHtml += '<div class="card" style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 32px;"><a href="about.html" class="btn secondary">Voir toutes mes compétences</a></div>';
+        } else if (skills.length > 0) {
+          // Add link to about page even if we show all skills
+          skillsHtml += '<div class="card" style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 32px; grid-column: span 3;"><a href="about.html" class="btn secondary">En savoir plus sur moi</a></div>';
+        }
+        
+        homepageSkillsContainer.innerHTML = skillsHtml;
+      }
+    }
+  }
+
   // Load and display portfolio data on page load
   async function loadAndDisplayData() {
     try {
@@ -338,6 +410,8 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
           loadProjects();
           loadAboutPageContent();
+          loadHomepageProjects();
+          loadHomepageSkills();
         }, 100);
       }
     } catch (error) {

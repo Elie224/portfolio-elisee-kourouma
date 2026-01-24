@@ -68,43 +68,24 @@
       </section>
 
       <section data-animate>
-        <h2>Compétences</h2>
-        <div class="grid cols-3">
-          <div class="card skill-card">
-            <div class="skill-icon">🌐</div>
-            <h3>Développement Web</h3>
-            <div class="skill-tags">
-              <span class="skill-tag">HTML5</span>
-              <span class="skill-tag">CSS3</span>
-              <span class="skill-tag">JavaScript</span>
-              <span class="skill-tag">React</span>
-              <span class="skill-tag">Responsive</span>
-            </div>
+        <h2>Projets récents</h2>
+        <div class="grid cols-2" id="homepage-projects">
+          <!-- Recent projects will be loaded dynamically -->
+          <div class="card" style="text-align: center; padding: 32px; grid-column: 1/-1;">
+            <h3>Mes projets apparaîtront ici</h3>
+            <p class="muted">Les projets ajoutés via l'admin seront affichés dynamiquement.</p>
+            <a href="projects.html" class="btn secondary" style="margin-top: 16px;">Voir tous les projets</a>
           </div>
-          <div class="card skill-card">
-            <div class="skill-icon">🐍</div>
-            <h3>Backend & DevOps</h3>
-            <div class="skill-tags">
-              <span class="skill-tag">Python</span>
-              <span class="skill-tag">Node.js</span>
-              <span class="skill-tag">Django</span>
-              <span class="skill-tag">Flask</span>
-              <span class="skill-tag">API REST</span>
-              <span class="skill-tag">Docker</span>
-            </div>
-          </div>
-          <div class="card skill-card">
-            <div class="skill-icon">🤖</div>
-            <h3>IA & Données</h3>
-            <div class="skill-tags">
-              <span class="skill-tag">MongoDB</span>
-              <span class="skill-tag">NLP</span>
-              <span class="skill-tag">OpenAI</span>
-              <span class="skill-tag">Selenium</span>
-              <span class="skill-tag">Analyse Exploratoire de Données</span>
-              <span class="skill-tag">Apprentissage automatique supervisé</span>
-              <span class="skill-tag">Apprentissage automatique non supervisé</span>
-            </div>
+        </div>
+      </section>
+
+      <section data-animate>
+        <h2>Mes compétences</h2>
+        <div class="grid cols-3" id="homepage-skills">
+          <!-- Skills will be loaded dynamically -->
+          <div class="card" style="text-align: center; padding: 32px; grid-column: 1/-1;">
+            <h3>Mes compétences apparaîtront ici</h3>
+            <p class="muted">Les compétences ajoutées via l'admin seront affichées dynamiquement.</p>
           </div>
         </div>
       </section>
