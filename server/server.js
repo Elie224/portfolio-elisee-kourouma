@@ -65,18 +65,55 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/portfolio
 .then(async () => {
   console.log('✅ Connecté à MongoDB');
   
-  // Nettoyer les documents corrompus au démarrage
+  // Nettoyer COMPLETEMENT la base de données MongoDB au démarrage
   try {
     const Portfolio = require('./models/Portfolio');
-    console.log('🧹 Nettoyage des documents corrompus...');
+    console.log('🧹 NETTOYAGE COMPLET de la base MongoDB...');
     
-    // Supprimer tous les documents existants pour repartir à zéro
+    // 1. Supprimer tous les documents
     const deleteResult = await Portfolio.deleteMany({});
     console.log(`🗑️ ${deleteResult.deletedCount} document(s) supprimé(s)`);
     
-    console.log('✅ Nettoyage terminé - Le prochain appel API créera des données propres');
+    // 2. Supprimer complètement la collection
+    try {
+      await Portfolio.collection.drop();
+      console.log('💥 Collection Portfolio supprimée complètement');
+    } catch (dropError) {
+      console.log('ℹ️ Collection déjà vide ou inexistante');
+    }
+    
+    // 3. Recréer la collection avec des données propres
+    console.log('🔧 Création de nouvelles données propres...');
+    const cleanData = {
+      personal: {
+        fullName: "Nema Elisée Kourouma",
+        email: "kouroumaelisee@gmail.com",
+        phone: "",
+        photo: "assets/photo.jpeg",
+        currentEducation: "Master 1 en Intelligence Artificielle à l'École Supérieure d'Informatique de Paris",
+        previousEducation: "Licence en mathématiques et informatique (USMBA Fès)",
+        additionalInfo: []
+      },
+      projects: [],  // Vide pour éviter tout problème
+      skills: [],    // Vide pour éviter tout problème  
+      links: { cv: "assets/CV.pdf", social: [] },
+      about: { 
+        heroDescription: "Master 1 en Intelligence Artificielle",
+        stats: { projects: 0, experience: 2, technologies: 10 }
+      },
+      timeline: [],
+      services: [],
+      certifications: [],
+      contactMessages: [],
+      faq: []
+    };
+    
+    const newPortfolio = await Portfolio.create(cleanData);
+    console.log('✅ Portfolio minimal créé avec succès:', newPortfolio._id);
+    
+    console.log('🎉 NETTOYAGE COMPLET terminé - Base MongoDB réinitialisée');
   } catch (cleanupError) {
-    console.error('⚠️ Erreur lors du nettoyage:', cleanupError.message);
+    console.error('⚠️ Erreur lors du nettoyage complet:', cleanupError.message);
   }
   
   // Démarrer le serveur
