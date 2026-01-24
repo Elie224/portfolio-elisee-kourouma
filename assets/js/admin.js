@@ -40,95 +40,27 @@ document.addEventListener('DOMContentLoaded', () => {
       previousEducation: 'Licence en mathématiques et informatique',
       additionalInfo: []
     },
-    projects: [
-      {
-        title: 'Analyse de sentiments des tweets',
-        type: 'PFE',
-        category: 'IA',
-        shortDesc: 'Analyse de sentiments avec ChatGPT et MongoDB',
-        description: 'Projet analyse sentiments tweets avec IA',
-        features: ['Python', 'ChatGPT', 'MongoDB'],
-        tags: ['Python', 'IA', 'ChatGPT'],
-        link: '',
-        demoLink: '',
-        emailSubject: 'Infos: Tweets',
-        featured: true,
-        public: true
-      },
-      {
-        title: 'Kairos',
-        type: 'Web',
-        category: 'App',
-        shortDesc: 'App apprentissage avec IA',
-        description: 'Application web apprentissage',
-        features: ['Web', 'IA', 'Cours'],
-        tags: ['Web', 'IA'],
-        link: 'https://kairos-frontend-hjg9.onrender.com',
-        demoLink: '',
-        emailSubject: 'Infos: Kairos',
-        featured: true,
-        public: true
-      },
-      {
-        title: 'Fylor',
-        type: 'Web',
-        category: 'Cloud',
-        shortDesc: 'Stockage cloud 20Go',
-        description: 'Plateforme stockage cloud',
-        features: ['Cloud', 'Upload', 'Download'],
-        tags: ['Web', 'Cloud'],
-        link: 'https://fylor-frontend.onrender.com/',
-        demoLink: '',
-        emailSubject: 'Infos: Fylor',
-            featured: true,
-            public: true
-          },
-          {
-        title: 'Supfile',
-        type: 'PFA',
-        category: 'Cloud',
-        shortDesc: 'Stockage cloud 30Go',
-        description: 'Plateforme stockage cloud',
-        features: ['Cloud', 'Upload', 'Download'],
-        tags: ['Web', 'Cloud'],
-        link: 'https://supfile-frontend.onrender.com/',
-        demoLink: '',
-        emailSubject: 'Infos: Supfile',
-        featured: true,
-        public: true
-      }
-    ],
+    projects: [],
     skills: [],
     links: {
       cv: 'assets/CV.pdf',
       cvFile: null, // Base64 encoded PDF file
       cvFileName: null,
       cvFileSize: null,
-      social: [
-        { name: 'WhatsApp', url: 'https://wa.me/33689306432' },
-        { name: 'Facebook', url: 'https://www.facebook.com/share/17xGVe29cL/' },
-        { name: 'LinkedIn', url: 'https://www.linkedin.com/' },
-        { name: 'GitHub', url: 'https://github.com/' }
-      ]
+      social: []
     },
     about: {
       heroDescription: 'Master 1 en Intelligence Artificielle à l\'École Supérieure d\'Informatique de Paris. Titulaire d\'une licence en mathématiques et informatique (USMBA Fès).',
       aboutDescription: 'Master 1 en Intelligence Artificielle à l\'École Supérieure d\'Informatique de Paris. Titulaire d\'une licence en mathématiques et informatique (USMBA Fès).',
       stats: {
-        projects: 4,
+        projects: 0,
         experience: 2,
-        technologies: 15
+        technologies: 10
       }
     },
     testimonials: [],
-    timeline: [
-      { date: '2025', title: 'Master IA', subtitle: 'SUPINFO', description: 'Master IA' },
-      { date: '2021-2024', title: 'Licence', subtitle: 'Universite Fes', description: 'Licence maths info' }
-    ],
-    services: [
-      { icon: 'W', title: 'Web', description: 'Dev web', features: ['HTML', 'CSS'] },
-      { icon: 'I', title: 'IA', description: 'Intelligence artificielle', features: ['Python', 'ML'] }
-    ],
+    timeline: [],
+    services: [],
     certifications: [],
     contactMessages: [],
     faq: []
@@ -195,78 +127,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         // Migrate projects: if projects array is empty, add default projects
-        if (!data.projects || data.projects.length === 0) {
-          data.projects = DEFAULT_DATA.projects.slice(); // Copy default projects
+        if (!data.projects) {
+          data.projects = [];
           updated = true;
-        } else {
-          // Check if new default projects need to be added
-          const existingTitles = data.projects.map(p => p.title);
-          const defaultProjectsToAdd = DEFAULT_DATA.projects.filter(p => !existingTitles.includes(p.title));
-          
-          if (defaultProjectsToAdd.length > 0) {
-            console.log(`📦 Ajout de ${defaultProjectsToAdd.length} nouveau(x) projet(s) par défaut:`, defaultProjectsToAdd.map(p => p.title));
-            data.projects = [...data.projects, ...defaultProjectsToAdd];
-            updated = true;
-          }
-          
-          // Migrate existing projects: update descriptions and features for projects that match titles in DEFAULT_DATA
-          DEFAULT_DATA.projects.forEach(defaultProject => {
-            const existingProjectIndex = data.projects.findIndex(p => p.title === defaultProject.title);
-            if (existingProjectIndex !== -1) {
-              const existingProject = data.projects[existingProjectIndex];
-              // Update description and features if they don't match or if force update is needed
-              const oldDesc = existingProject.description || '';
-              const oldShortDesc = existingProject.shortDesc || '';
-              const newDesc = defaultProject.description || '';
-              const newShortDesc = defaultProject.shortDesc || '';
-              
-              // Check if description needs updating (compare with old generic description or if it's different)
-              const needsUpdate = shouldForceUpdate ||
-                                  oldDesc.includes('Application web moderne et responsive') || 
-                                  oldDesc.includes('Application web moderne développée') ||
-                                  oldDesc.includes('démontre les compétences en développement frontend') ||
-                                  oldDesc.includes('met en avant les compétences en développement web') ||
-                                  oldDesc !== newDesc ||
-                                  oldShortDesc !== newShortDesc ||
-                                  JSON.stringify(existingProject.features || []) !== JSON.stringify(defaultProject.features || []);
-              
-              // Also update type if it changed (e.g., PFE Master 1 → PFA for Supfile)
-              const typeNeedsUpdate = existingProject.type !== defaultProject.type;
-              
-              if (needsUpdate || typeNeedsUpdate) {
-                console.log(`🔄 Mise à jour du projet "${defaultProject.title}" avec la nouvelle description${typeNeedsUpdate ? ' et type' : ''}`);
-                // Preserve user data (like public status, but update descriptions and type)
-                data.projects[existingProjectIndex] = {
-                  ...existingProject,
-                  type: defaultProject.type, // Update type
-                  description: defaultProject.description,
-                  shortDesc: defaultProject.shortDesc,
-                  features: defaultProject.features,
-                  tags: defaultProject.tags
-                };
-                updated = true;
-              }
-            }
-          });
-          
-          // Also migrate Supfile type from "PFE Master 1" to "PFA" for existing projects
-          data.projects.forEach((project, index) => {
-            if (project.title && project.title.includes('Supfile') && project.type === 'PFE Master 1') {
-              console.log(`🔄 Migration du type Supfile: PFE Master 1 → PFA`);
-              project.type = 'PFA';
-              // Update tags if they contain "PFE Master 1"
-              if (project.tags && Array.isArray(project.tags)) {
-                project.tags = project.tags.map(tag => 
-                  tag === 'PFE Master 1' ? 'PFA' : tag
-                );
-                // Add "Projet de Fin d'Année" if not already present
-                if (!project.tags.includes('Projet de Fin d\'Année')) {
-                  project.tags.push('Projet de Fin d\'Année');
-                }
-              }
-              updated = true;
-            }
-          });
         }
         
         // Migrate timeline: remove "2023 - 2024" date from entries and update Master 1 date
