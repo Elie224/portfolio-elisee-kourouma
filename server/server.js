@@ -34,8 +34,8 @@ const corsOptions = {
     if (isAllowed) {
       callback(null, true);
     } else {
-      // En développement, on peut être plus permissif
-      callback(null, true); // Autoriser toutes les origines pour le moment
+      console.warn('🚫 CORS: Origine non autorisée:', origin);
+      callback(new Error('Origine non autorisée par la politique CORS'), false);
     }
   },
   credentials: true,

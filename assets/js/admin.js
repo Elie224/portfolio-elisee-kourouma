@@ -1,7 +1,7 @@
 // Admin Authentication and Portfolio Management System
 document.addEventListener('DOMContentLoaded', () => {
   const ADMIN_EMAIL = 'kouroumaelisee@gmail.com';
-  const ADMIN_PASSWORD = 'admin123';
+  // Password removed for security - use API authentication only
   
   // Configuration API
   const API_BASE_URL = window.location.hostname === 'localhost' 
@@ -780,9 +780,8 @@ document.addEventListener('DOMContentLoaded', () => {
           // Si on a une session mais pas de token, essayer de se reconnecter à l'API
           if (!apiToken) {
             console.log('🔄 Session locale trouvée mais pas de token API, reconnexion...');
-            loginAdmin(ADMIN_EMAIL, ADMIN_PASSWORD).catch(err => {
-              console.log('⚠️ Reconnexion API échouée, mais session locale valide');
-            });
+            // Auto-login removed for security - user must enter password manually
+            console.log('🔒 Auto-reconnexion désactivée - utilisateur doit se reconnecter manuellement');
           }
           showDashboard(sessionData.email);
           return true;
@@ -865,12 +864,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      if (password !== ADMIN_PASSWORD) {
-        showError('Mot de passe incorrect. Accès refusé.');
-        return;
-      }
-
-      // Se connecter à l'API pour obtenir le token JWT
+      // Se connecter à l'API pour obtenir le token JWT (authentification sécurisée)
       const apiLoginSuccess = await loginAdmin(email, password);
       
       if (!apiLoginSuccess) {

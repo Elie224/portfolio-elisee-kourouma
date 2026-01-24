@@ -2,50 +2,50 @@ const mongoose = require('mongoose');
 
 const portfolioSchema = new mongoose.Schema({
   personal: {
-    fullName: String,
-    email: String,
-    phone: String,
-    photo: String,
-    currentEducation: String,
-    previousEducation: String,
-    additionalInfo: [String]
+    fullName: { type: String, required: true, trim: true, maxlength: 100 },
+    email: { type: String, required: true, trim: true, lowercase: true, match: /^\S+@\S+\.\S+$/ },
+    phone: { type: String, trim: true, maxlength: 20 },
+    photo: { type: String, trim: true },
+    currentEducation: { type: String, trim: true, maxlength: 200 },
+    previousEducation: { type: String, trim: true, maxlength: 200 },
+    additionalInfo: [{ type: String, trim: true, maxlength: 500 }]
   },
   projects: [{
-    title: String,
-    type: String,
-    category: String,
-    shortDesc: String,
-    description: String,
-    features: [String],
-    tags: [String],
-    link: String,
-    demoLink: String,
-    emailSubject: String,
-    featured: Boolean,
-    public: Boolean
+    title: { type: String, required: true, trim: true, maxlength: 100 },
+    type: { type: String, trim: true, maxlength: 50 },
+    category: { type: String, trim: true, maxlength: 50 },
+    shortDesc: { type: String, trim: true, maxlength: 200 },
+    description: { type: String, trim: true, maxlength: 1000 },
+    features: [{ type: String, trim: true, maxlength: 100 }],
+    tags: [{ type: String, trim: true, maxlength: 50 }],
+    link: { type: String, trim: true, match: /^https?:\/\/.+/ },
+    demoLink: { type: String, trim: true, match: /^https?:\/\/.+/ },
+    emailSubject: { type: String, trim: true, maxlength: 100 },
+    featured: { type: Boolean, default: false },
+    public: { type: Boolean, default: true }
   }],
   skills: [{
-    icon: String,
-    name: String,
-    skills: [String]
+    icon: { type: String, trim: true, maxlength: 50 },
+    name: { type: String, required: true, trim: true, maxlength: 50 },
+    skills: [{ type: String, trim: true, maxlength: 100 }]
   }],
   links: {
-    cv: String,
-    cvFile: String,
-    cvFileName: String,
-    cvFileSize: Number,
+    cv: { type: String, trim: true },
+    cvFile: { type: String },
+    cvFileName: { type: String, trim: true, maxlength: 100 },
+    cvFileSize: { type: Number, min: 0, max: 10000000 }, // Max 10MB
     social: [{
-      name: String,
-      url: String
+      name: { type: String, required: true, trim: true, maxlength: 50 },
+      url: { type: String, required: true, trim: true, match: /^https?:\/\/.+/ }
     }]
   },
   about: {
-    heroDescription: String,
-    aboutDescription: String,
+    heroDescription: { type: String, trim: true, maxlength: 200 },
+    aboutDescription: { type: String, trim: true, maxlength: 1000 },
     stats: {
-      projects: Number,
-      experience: Number,
-      technologies: Number
+      projects: { type: Number, min: 0, default: 0 },
+      experience: { type: Number, min: 0, default: 0 },
+      technologies: { type: Number, min: 0, default: 0 }
     }
   },
   timeline: [{

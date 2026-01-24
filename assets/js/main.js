@@ -400,6 +400,48 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Load and display portfolio data on page load
+  // Fonction pour afficher les erreurs à l'utilisateur
+  function showUserError(message, isTemporary = true) {
+    // Créer ou réutiliser un container d'erreur
+    let errorContainer = document.getElementById('user-error-notification');
+    if (!errorContainer) {
+      errorContainer = document.createElement('div');
+      errorContainer.id = 'user-error-notification';
+      errorContainer.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #ff4444;
+        color: white;
+        padding: 15px;
+        border-radius: 5px;
+        z-index: 10000;
+        max-width: 300px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        font-family: Arial, sans-serif;
+      `;
+      document.body.appendChild(errorContainer);
+    }
+    
+    errorContainer.innerHTML = `
+      <strong>⚠️ Erreur</strong><br>
+      ${message}
+      <br><br>
+      <button onclick="this.parentElement.remove()" style="background: white; color: #ff4444; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">
+        Fermer
+      </button>
+    `;
+    
+    // Auto-fermer après 10 secondes si temporaire
+    if (isTemporary) {
+      setTimeout(() => {
+        if (errorContainer.parentElement) {
+          errorContainer.remove();
+        }
+      }, 10000);
+    }
+  }
+
   async function loadAndDisplayData() {
     try {
       const data = await loadPortfolioFromAPI();
@@ -413,11 +455,41 @@ document.addEventListener('DOMContentLoaded', () => {
           loadHomepageProjects();
           loadHomepageSkills();
         }, 100);
+      } else {
+        // Aucune donnée chargée - afficher message d'info à l'utilisateur
+        showUserError('Impossible de charger les données du portfolio. Le contenu affiché peut être incomplet.', true);
       }
     } catch (error) {
       console.error('❌ Error loading portfolio:', error);
+      showUserError('Erreur de connexion au serveur. Veuillez vérifier votre connexion internet et rafraîchir la page.', false);
     }
   }
+
+  // Share portfolio function (called from HTML buttons)
+  window.sharePortfolio = function(platform) {
+    const url = window.location.href;
+    const title = document.title;
+    let shareUrl = '';
+    
+    switch(platform) {
+      case 'linkedin':
+        shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+        break;
+      case 'twitter':
+        shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`;
+        break;
+      case 'email':
+        shareUrl = `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent('Découvrez le portfolio de Nema Elisée Kourouma : ' + url)}`;
+        break;
+      default:
+        console.warn('Plateforme de partage inconnue:', platform);
+        return;
+    }
+    
+    if (shareUrl) {
+      window.open(shareUrl, '_blank', 'width=600,height=400,scrollbars=yes,resizable=yes');
+    }
+  };
 
   // Initialize on page load
   loadAndDisplayData();
