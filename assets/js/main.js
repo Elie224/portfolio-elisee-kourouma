@@ -412,8 +412,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Initialize default data on page load (for first-time visitors)
-  initDefaultData();
+  // Portfolio VIDE maintenant valide - pas d'initialisation automatique
+  // initDefaultData() supprimé pour éviter conflits avec portfolio volontairement vide
   
   // Try to load from API after initialization
   // Si l'API a des données valides, elles remplaceront les données par défaut
@@ -2205,18 +2205,11 @@ document.addEventListener('DOMContentLoaded', () => {
       let data;
       let projects = [];
       
-      // Si pas de données, initialiser
+      // Si vraiment pas de données du tout, attendre que l'API charge
       if (!portfolioData) {
-        console.log('⚠️ Aucune donnée portfolio trouvée dans localStorage, initialisation...');
-        initDefaultData();
-        // Attendre un peu pour que l'initialisation soit complète
-        await new Promise(resolve => setTimeout(resolve, 200));
-        portfolioData = localStorage.getItem('portfolioData');
-        if (!portfolioData) {
-          console.error('❌ Impossible d\'initialiser les données');
-          if (projectsLoadingEl) projectsLoadingEl.style.display = 'none';
-          return;
-        }
+        console.log('📥 localStorage vide - l\'API va charger les données');
+        if (projectsLoadingEl) projectsLoadingEl.style.display = 'none';
+        return; // Laisser l'API gérer le chargement des données
       }
       
       // Parser les données
@@ -2235,28 +2228,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
       
-      // Si pas de projets, essayer d'initialiser
+      // Portfolio VIDE est maintenant VALIDE - ne pas forcer l'initialisation
       if (!projects || projects.length === 0) {
-        console.warn('⚠️ Aucun projet trouvé dans localStorage, initialisation des données par défaut...');
-        initDefaultData();
-        // Attendre un peu puis réessayer
-        await new Promise(resolve => setTimeout(resolve, 200));
-        const updatedData = localStorage.getItem('portfolioData');
-        if (updatedData) {
-          try {
-            data = JSON.parse(updatedData);
-            projects = data.projects || [];
-            console.log(`✅ ${projects.length} projet(s) chargé(s) après initialisation`);
-          } catch (e) {
-            console.error('❌ Erreur lors du rechargement des données:', e);
-            if (projectsLoadingEl) projectsLoadingEl.style.display = 'none';
-            return;
-          }
-        } else {
-          console.error('❌ Impossible d\'initialiser les données');
-          if (projectsLoadingEl) projectsLoadingEl.style.display = 'none';
-          return;
-        }
+        console.log('📝 Portfolio vide détecté - c\'est normal maintenant (ajout manuel via admin)');
+        projects = []; // Portfolio intentionnellement vide, pas d'erreur
       }
       
       // Debug: Log all projects with their public status
@@ -2556,15 +2531,30 @@ document.addEventListener('DOMContentLoaded', () => {
         })));
         
         if (projectsHash !== lastProjectsHash) {
+          // Éviter les boucles infinies si portfolio vide stable
+          if (projects.length === 0 && lastProjectsHash === '[]') {
+            console.log('📝 Portfolio vide stable - pas de rechargement nécessaire');
+            lastProjectsHash = projectsHash;
+            return;
+          }
+          
           console.log('🔄 Changements détectés dans les projets - rechargement...');
           lastProjectsHash = projectsHash;
-          loadProjects();
-          // Also trigger filter update if it exists
-          setTimeout(() => {
-            if (typeof window.triggerFilterProjects === 'function') {
-              window.triggerFilterProjects();
-            }
-          }, 200);
+          
+          // Éviter rechargements trop fréquents avec debounce
+          if (window.projectReloadTimeout) {
+            clearTimeout(window.projectReloadTimeout);
+          }
+          
+          window.projectReloadTimeout = setTimeout(() => {
+            loadProjects();
+            // Also trigger filter update if it exists
+            setTimeout(() => {
+              if (typeof window.triggerFilterProjects === 'function') {
+                window.triggerFilterProjects();
+              }
+            }, 200);
+          }, 500); // Délai pour éviter les rechargements en cascade
         }
       } catch (e) {
         console.error('Erreur lors de la vérification des projets:', e);
