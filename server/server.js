@@ -1,47 +1,129 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware CORS - Configuration complète pour gérer les preflight requests
+// Configuration de sécurité avec Helmet
+app.use(helmet({
+  crossOriginEmbedderPolicy: false, // Pour permettre les images externes
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:", "blob:"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      connectSrc: ["'self'", "https:"],
+    }
+  }
+}));
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limite de 100 requêtes par IP par fenêtre
+  message: {
+    error: 'Trop de requêtes, veuillez réessayer plus tard.',
+    retryAfter: '15 minutes'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    console.log(`🚫 Rate limit atteint pour IP: ${req.ip}`);
+    res.status(429).json({
+      error: 'Trop de requêtes',
+      message: 'Veuillez réessayer dans 15 minutes'
+    });
+  }
+});
+
+// Rate limiting spécial pour les routes d'authentification
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Maximum 5 tentatives de connexion par IP
+  message: {
+    error: 'Trop de tentatives de connexion, veuillez réessayer plus tard.',
+    retryAfter: '15 minutes'
+  },
+  skipSuccessfulRequests: true, // Ne pas compter les connexions réussies
+  handler: (req, res) => {
+    console.log(`🚫 Trop de tentatives de connexion pour IP: ${req.ip}`);
+    res.status(429).json({
+      error: 'Trop de tentatives de connexion',
+      message: 'Veuillez réessayer dans 15 minutes'
+    });
+  }
+});
+
+// Appliquer le rate limiting général
+app.use(limiter);
+
+// Rate limiting pour les routes d'auth (plus strict)
+app.use('/api/portfolio/login', authLimiter);
+
+// Configuration CORS sécurisée
 const corsOptions = {
   origin: function (origin, callback) {
-    // Autoriser les requêtes sans origin (mobile apps, Postman, etc.)
-    if (!origin) return callback(null, true);
+    // En développement, autoriser localhost
+    if (process.env.NODE_ENV === 'development') {
+      const allowedLocalOrigins = [
+        'http://localhost:8000',
+        'http://localhost:3000',
+        'http://127.0.0.1:8000',
+        'http://127.0.0.1:3000'
+      ];
+      
+      if (!origin || allowedLocalOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+    }
     
-    // Liste des origines autorisées
+    // En production, liste stricte des origines autorisées
     const allowedOrigins = [
-      'http://localhost:8000',
-      'http://localhost:3000',
       'https://mon-portfolio-sdlk.onrender.com',
-      'https://portfolio-sdlk.onrender.com',
-      /^https:\/\/.*\.onrender\.com$/, // Tous les sous-domaines Render
+      'https://portfolio-sdlk.onrender.com'
     ];
     
-    // Vérifier si l'origine est autorisée
-    const isAllowed = allowedOrigins.some(allowed => {
-      if (typeof allowed === 'string') {
-        return origin === allowed;
-      } else if (allowed instanceof RegExp) {
-        return allowed.test(origin);
-      }
-      return false;
-    });
+    // Ajouter les origines depuis les variables d'environnement si définies
+    if (process.env.ALLOWED_ORIGINS) {
+      const envOrigins = process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim());
+      allowedOrigins.push(...envOrigins);
+    }
     
-    if (isAllowed) {
+    // Vérification stricte des origines
+    if (!origin) {
+      // Autoriser les requêtes sans origin en développement uniquement
+      if (process.env.NODE_ENV === 'development') {
+        return callback(null, true);
+      } else {
+        console.warn('🚫 CORS: Requête sans origin bloquée en production');
+        return callback(new Error('Origine requise en production'), false);
+      }
+    }
+    
+    if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       console.warn('🚫 CORS: Origine non autorisée:', origin);
+      console.warn('🔍 Origines autorisées:', allowedOrigins);
       callback(new Error('Origine non autorisée par la politique CORS'), false);
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token'],
-  exposedHeaders: ['x-auth-token']
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'x-auth-token',
+    'X-Requested-With'
+  ],
+  exposedHeaders: ['x-auth-token'],
+  maxAge: 86400, // Cache preflight pour 24h
+  optionsSuccessStatus: 200 // Pour IE11
 };
 
 app.use(cors(corsOptions));
@@ -60,60 +142,59 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', message: 'Serveur actif' });
 });
 
+// Validation des variables d'environnement obligatoires
+const requiredEnvVars = ['MONGODB_URI', 'JWT_SECRET', 'ADMIN_EMAIL', 'ADMIN_PASSWORD_HASH'];
+const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+if (missingVars.length > 0) {
+  console.error('❌ Variables d\'environnement manquantes:', missingVars.join(', '));
+  console.error('💡 Vérifiez votre fichier .env');
+  process.exit(1);
+}
+
 // Connexion à MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/portfolio')
+mongoose.connect(process.env.MONGODB_URI)
 .then(async () => {
   console.log('✅ Connecté à MongoDB');
   
-  // Nettoyer COMPLETEMENT la base de données MongoDB au démarrage
+  // Initialiser les données par défaut uniquement si la collection est vide
   try {
     const Portfolio = require('./models/Portfolio');
-    console.log('🧹 NETTOYAGE COMPLET de la base MongoDB...');
+    const existingPortfolio = await Portfolio.findOne();
     
-    // 1. Supprimer tous les documents
-    const deleteResult = await Portfolio.deleteMany({});
-    console.log(`🗑️ ${deleteResult.deletedCount} document(s) supprimé(s)`);
-    
-    // 2. Supprimer complètement la collection
-    try {
-      await Portfolio.collection.drop();
-      console.log('💥 Collection Portfolio supprimée complètement');
-    } catch (dropError) {
-      console.log('ℹ️ Collection déjà vide ou inexistante');
+    if (!existingPortfolio) {
+      console.log('📋 Collection vide, création des données par défaut...');
+      const defaultData = {
+        personal: {
+          fullName: "Nema Elisée Kourouma",
+          email: process.env.ADMIN_EMAIL,
+          phone: "",
+          photo: "assets/photo.jpeg",
+          currentEducation: "Master 1 en Intelligence Artificielle à l'École Supérieure d'Informatique de Paris",
+          previousEducation: "Licence en mathématiques et informatique (USMBA Fès)",
+          additionalInfo: []
+        },
+        projects: [],
+        skills: [],
+        links: { cv: "assets/CV.pdf", social: [] },
+        about: { 
+          heroDescription: "Master 1 en Intelligence Artificielle",
+          stats: { projects: 0, experience: 2, technologies: 10 }
+        },
+        timeline: [],
+        services: [],
+        certifications: [],
+        contactMessages: [],
+        faq: []
+      };
+      
+      await Portfolio.create(defaultData);
+      console.log('✅ Données par défaut créées');
+    } else {
+      console.log('📋 Données existantes trouvées, aucune initialisation nécessaire');
     }
-    
-    // 3. Recréer la collection avec des données propres
-    console.log('🔧 Création de nouvelles données propres...');
-    const cleanData = {
-      personal: {
-        fullName: "Nema Elisée Kourouma",
-        email: "kouroumaelisee@gmail.com",
-        phone: "",
-        photo: "assets/photo.jpeg",
-        currentEducation: "Master 1 en Intelligence Artificielle à l'École Supérieure d'Informatique de Paris",
-        previousEducation: "Licence en mathématiques et informatique (USMBA Fès)",
-        additionalInfo: []
-      },
-      projects: [],  // Vide pour éviter tout problème
-      skills: [],    // Vide pour éviter tout problème  
-      links: { cv: "assets/CV.pdf", social: [] },
-      about: { 
-        heroDescription: "Master 1 en Intelligence Artificielle",
-        stats: { projects: 0, experience: 2, technologies: 10 }
-      },
-      timeline: [],
-      services: [],
-      certifications: [],
-      contactMessages: [],
-      faq: []
-    };
-    
-    const newPortfolio = await Portfolio.create(cleanData);
-    console.log('✅ Portfolio minimal créé avec succès:', newPortfolio._id);
-    
-    console.log('🎉 NETTOYAGE COMPLET terminé - Base MongoDB réinitialisée');
-  } catch (cleanupError) {
-    console.error('⚠️ Erreur lors du nettoyage complet:', cleanupError.message);
+  } catch (initError) {
+    console.error('⚠️ Erreur lors de l\'initialisation:', initError.message);
   }
   
   // Démarrer le serveur

@@ -2,6 +2,12 @@ const express = require('express');
 const router = express.Router();
 const Portfolio = require('../models/Portfolio');
 const { authenticateAdmin } = require('../middleware/auth');
+const { 
+  validatePortfolioData, 
+  validateLoginData, 
+  sanitizeData, 
+  limitDataSize 
+} = require('../middleware/validation');
 
 // GET /api/portfolio - Récupérer les données du portfolio (public)
 router.get('/', async (req, res) => {
@@ -48,67 +54,16 @@ router.get('/', async (req, res) => {
 });
 
 // POST /api/portfolio - Mettre à jour les données (admin seulement)
-router.post('/', authenticateAdmin, async (req, res) => {
+router.post('/', 
+  limitDataSize,
+  sanitizeData,
+  authenticateAdmin, 
+  validatePortfolioData,
+  async (req, res) => {
   try {
-    console.log('📥 Requête de mise à jour reçue');
+    console.log('📥 Requête de mise à jour reçue de:', req.admin.email);
     
-    // VALIDATION ULTRA-STRICTE : Détecter et rejeter immédiatement le code JavaScript
-    const bodyString = JSON.stringify(req.body);
-    console.log('🔍 DEBUT BODY STRING (200 chars):', bodyString.substring(0, 200));
-    
-    // VALIDATION DIRECTE DU CONTENU
-    if (req.body.projects && Array.isArray(req.body.projects)) {
-      console.log('📋 PROJECTS REÇUS:', {
-        count: req.body.projects.length,
-        firstType: typeof req.body.projects[0],
-        firstContent: req.body.projects[0] && JSON.stringify(req.body.projects[0]).substring(0, 100)
-      });
-      
-      // Vérifier si le premier projet est une chaîne JavaScript
-      const firstProject = req.body.projects[0];
-      if (typeof firstProject === 'string' && firstProject.includes('title:')) {
-        console.error('🚨 PREMIER PROJET EST UNE CHAÎNE JAVASCRIPT!');
-        console.error('📋 Contenu:', firstProject.substring(0, 300));
-      }
-    }
-    
-    const hasJavaScriptCode = bodyString.includes('"[\\n\' +') ||      // Pattern exact des logs
-                             bodyString.includes("'\\n' +") ||       // Double échappé  
-                             bodyString.includes('"\\n\' +') ||      // Double échappé alternatif
-                             bodyString.includes('`') ||             // Backticks
-                             bodyString.includes("\\n' +") ||        // Simple échappé  
-                             bodyString.includes('+ \'') ||          // Concaténation
-                             bodyString.includes('\n  \'') ||        // Newline + indent
-                             bodyString.includes('title:') && bodyString.includes('\\n\' +') ||  // Combo titre + newline
-                             /\[\\n['"]/.test(bodyString);           // Regex: [ + \n + quote
-    
-    if (hasJavaScriptCode) {
-      console.error('🚨 CODE JAVASCRIPT DÉTECTÉ dans la requête! Rejet immédiat.');
-      console.error('📋 Aperçu corrompu:', bodyString.substring(0, 200) + '...');
-      
-      // Réinitialiser la base avec des données minimales
-      await Portfolio.deleteMany({});
-      const minimalPortfolio = await Portfolio.create({
-        personal: { fullName: "Nema Elisée Kourouma", email: "kouroumaelisee@gmail.com", photo: "assets/photo.jpeg" },
-        projects: [],
-        skills: [],
-        links: { cv: "assets/CV.pdf" },
-        about: { heroDescription: "Master en Intelligence Artificielle" },
-        timeline: [],
-        services: [],
-        certifications: [],
-        contactMessages: [],
-        faq: []
-      });
-      
-      return res.status(400).json({
-        error: 'Données JavaScript corrompues détectées',
-        message: 'Portfolio réinitialisé avec données minimales. Veuillez vider votre localStorage.',
-        action_required: 'Videz votre localStorage et rechargez la page'
-      });
-    }
-    
-    // Validation simple : s'assurer que les données de base existent
+    // Préparation des données (la validation a déjà été faite par les middlewares)
     const updateData = {
       personal: req.body.personal || {},
       projects: Array.isArray(req.body.projects) ? req.body.projects : [],
@@ -122,12 +77,13 @@ router.post('/', authenticateAdmin, async (req, res) => {
       faq: Array.isArray(req.body.faq) ? req.body.faq : []
     };
 
-    console.log('📦 Données à sauvegarder:', {
+    console.log('📦 Données validées à sauvegarder:', {
       projects: updateData.projects.length,
       skills: updateData.skills.length,
       timeline: updateData.timeline.length,
       hasPersonal: !!updateData.personal,
-      hasAbout: !!updateData.about
+      hasAbout: !!updateData.about,
+      admin: req.admin.email
     });
     
     // Mettre à jour directement avec findOneAndUpdate
@@ -165,81 +121,94 @@ router.post('/', authenticateAdmin, async (req, res) => {
     console.error('Type:', error.name);
     console.error('Stack:', error.stack);
     
-    // Si c'est une erreur de cast, essayer avec des données minimales
-    if (error.message.includes('Cast') || error.name === 'ValidationError') {
-      try {
-        console.log('🔄 Tentative de réinitialisation avec données par défaut...');
-        
-        // Supprimer tous les documents et recréer avec les données par défaut
-        await Portfolio.deleteMany({});
-        
-        // Créer un nouveau document avec les données par défaut
-        const defaultData = JSON.parse(JSON.stringify({
-          personal: { fullName: "Nema Elisée Kourouma", email: "kouroumaelisee@gmail.com", photo: "assets/photo.jpeg" },
-          projects: [],
-          skills: [],
-          links: {},
-          about: {},
-          timeline: [],
-          services: [],
-          certifications: [],
-          contactMessages: [],
-          faq: []
-        }));
-        
-        const newPortfolio = await Portfolio.create(defaultData);
-        
-        res.json({
-          success: true,
-          message: 'Portfolio réinitialisé avec succès après erreur',
-          portfolio: newPortfolio.toObject()
-        });
-        
-      } catch (resetError) {
-        console.error('❌ Erreur lors de la réinitialisation:', resetError);
-        res.status(500).json({
-          error: 'Erreur critique lors de la mise à jour',
-          message: 'Impossible de sauvegarder les données'
-        });
-      }
+    // Gestion d'erreurs spécifiques
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        error: 'Erreur de validation des données',
+        message: 'Les données fournies ne respectent pas le schéma requis',
+        details: error.errors,
+        code: 'VALIDATION_ERROR'
+      });
+    } else if (error.name === 'CastError') {
+      return res.status(400).json({
+        error: 'Erreur de format des données',
+        message: 'Un ou plusieurs champs ont un format incorrect',
+        field: error.path,
+        code: 'CAST_ERROR'
+      });
+    } else if (error.name === 'MongoServerError' && error.code === 11000) {
+      return res.status(409).json({
+        error: 'Conflit de données',
+        message: 'Une entrée avec ces données existe déjà',
+        code: 'DUPLICATE_ERROR'
+      });
     } else {
-      res.status(500).json({
-        error: 'Erreur lors de la mise à jour',
-        message: error.message
+      return res.status(500).json({
+        error: 'Erreur serveur lors de la mise à jour',
+        message: 'Une erreur inattendue s\'est produite',
+        code: 'SERVER_ERROR'
       });
     }
   }
 });
 
-// POST /api/portfolio/login - Authentification admin
-router.post('/login', async (req, res) => {
+// POST /api/portfolio/login - Authentification admin sécurisée
+router.post('/login', validateLoginData, async (req, res) => {
   try {
     const { email, password } = req.body;
     
-    // Vérification simple (vous pouvez améliorer avec bcrypt)
-    if (email === process.env.ADMIN_EMAIL) {
-      // Pour l'instant, on accepte n'importe quel mot de passe
-      // Vous devriez stocker un hash bcrypt du mot de passe
-      const jwt = require('jsonwebtoken');
-      const token = jwt.sign(
-        { email: email },
-        process.env.JWT_SECRET,
-        { expiresIn: '24h' }
-      );
-      
-      console.log('✅ Connexion admin réussie:', email);
-      res.json({ 
-        success: true, 
-        token,
-        expiresIn: '24h'
+    // Validation des champs obligatoires
+    if (!email || !password) {
+      console.log('❌ Email ou mot de passe manquant');
+      return res.status(400).json({ 
+        error: 'Email et mot de passe requis' 
       });
-    } else {
-      console.log('❌ Tentative de connexion avec email invalide:', email);
-      res.status(401).json({ error: 'Email invalide' });
     }
+    
+    // Vérification de l'email admin
+    if (email !== process.env.ADMIN_EMAIL) {
+      console.log('❌ Tentative de connexion avec email invalide:', email);
+      return res.status(401).json({ 
+        error: 'Identifiants invalides' 
+      });
+    }
+    
+    // Vérification du mot de passe avec bcrypt
+    const bcrypt = require('bcryptjs');
+    const isValidPassword = await bcrypt.compare(password, process.env.ADMIN_PASSWORD_HASH);
+    
+    if (!isValidPassword) {
+      console.log('❌ Mot de passe incorrect pour:', email);
+      return res.status(401).json({ 
+        error: 'Identifiants invalides' 
+      });
+    }
+    
+    // Génération du token JWT
+    const jwt = require('jsonwebtoken');
+    const token = jwt.sign(
+      { 
+        email: email,
+        role: 'admin',
+        iat: Math.floor(Date.now() / 1000)
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+    
+    console.log('✅ Connexion admin réussie:', email);
+    res.json({ 
+      success: true, 
+      token,
+      expiresIn: '24h',
+      user: { email, role: 'admin' }
+    });
+    
   } catch (error) {
-    console.error('Erreur lors de la connexion:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    console.error('Erreur lors de la connexion:', error.message);
+    res.status(500).json({ 
+      error: 'Erreur serveur lors de l\'authentification' 
+    });
   }
 });
 
