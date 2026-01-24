@@ -331,13 +331,36 @@ router.post('/', authenticateAdmin, async (req, res) => {
   } catch (error) {
     console.error('❌ Erreur lors de la mise à jour du portfolio:', error);
     console.error('Détails de l\'erreur:', error.message);
+    console.error('Type d\'erreur:', error.name);
     if (error.stack) {
       console.error('Stack trace:', error.stack);
     }
-    res.status(500).json({ 
+    
+    // Log des données reçues pour debug (premiers 500 caractères)
+    try {
+      const bodyPreview = JSON.stringify(req.body).substring(0, 500);
+      console.error('📋 Données reçues (preview):', bodyPreview);
+    } catch (e) {
+      console.error('⚠️ Impossible de logger les données reçues');
+    }
+    
+    // Retourner plus de détails en développement
+    const errorResponse = {
       error: 'Erreur lors de la mise à jour',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+      message: error.message,
+      name: error.name
+    };
+    
+    if (process.env.NODE_ENV === 'development') {
+      errorResponse.stack = error.stack;
+      errorResponse.receivedData = {
+        projectsType: typeof req.body.projects,
+        projectsIsArray: Array.isArray(req.body.projects),
+        projectsCount: Array.isArray(req.body.projects) ? req.body.projects.length : 'N/A'
+      };
+    }
+    
+    res.status(500).json(errorResponse);
   }
 });
 
