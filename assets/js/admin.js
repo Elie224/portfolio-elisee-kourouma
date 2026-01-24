@@ -98,11 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
         public: true
       }
     ],
-    skills: [
-      { icon: 'W', name: 'Web', skills: ['HTML', 'CSS', 'JS'] },
-      { icon: 'B', name: 'Backend', skills: ['Python', 'Node'] },
-      { icon: 'I', name: 'IA', skills: ['MongoDB', 'OpenAI'] }
-    ],
+    skills: [],
     links: {
       cv: 'assets/CV.pdf',
       cvFile: null, // Base64 encoded PDF file
