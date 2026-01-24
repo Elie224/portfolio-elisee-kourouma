@@ -52,6 +52,40 @@ router.post('/', authenticateAdmin, async (req, res) => {
   try {
     console.log('📥 Requête de mise à jour reçue');
     
+    // VALIDATION ULTRA-STRICTE : Détecter et rejeter immédiatement le code JavaScript
+    const bodyString = JSON.stringify(req.body);
+    const hasJavaScriptCode = bodyString.includes("'\\n' +") || 
+                             bodyString.includes('`') || 
+                             bodyString.includes("\\n' +") ||
+                             bodyString.includes('+ \'') ||
+                             bodyString.includes('\n  \'');
+    
+    if (hasJavaScriptCode) {
+      console.error('🚨 CODE JAVASCRIPT DÉTECTÉ dans la requête! Rejet immédiat.');
+      console.error('📋 Aperçu corrompu:', bodyString.substring(0, 200) + '...');
+      
+      // Réinitialiser la base avec des données minimales
+      await Portfolio.deleteMany({});
+      const minimalPortfolio = await Portfolio.create({
+        personal: { fullName: "Nema Elisée Kourouma", email: "kouroumaelisee@gmail.com", photo: "assets/photo.jpeg" },
+        projects: [],
+        skills: [],
+        links: { cv: "assets/CV.pdf" },
+        about: { heroDescription: "Master en Intelligence Artificielle" },
+        timeline: [],
+        services: [],
+        certifications: [],
+        contactMessages: [],
+        faq: []
+      });
+      
+      return res.status(400).json({
+        error: 'Données JavaScript corrompues détectées',
+        message: 'Portfolio réinitialisé avec données minimales. Veuillez vider votre localStorage.',
+        action_required: 'Videz votre localStorage et rechargez la page'
+      });
+    }
+    
     // Validation simple : s'assurer que les données de base existent
     const updateData = {
       personal: req.body.personal || {},

@@ -8,6 +8,25 @@ document.addEventListener('DOMContentLoaded', () => {
     ? 'http://localhost:3000/api' 
     : 'https://portfolio-backend-x47u.onrender.com/api';
   
+  // NETTOYAGE COMPLET DU LOCALSTORAGE AU DÉMARRAGE
+  function forceCleanLocalStorage() {
+    console.log('🧹 NETTOYAGE COMPLET du localStorage...');
+    
+    // Supprimer toutes les données potentiellement corrompues
+    const keysToClean = ['portfolioData', 'projects', 'skills', 'timeline', 'personal', 'about', 'links'];
+    keysToClean.forEach(key => {
+      if (localStorage.getItem(key)) {
+        console.log(`🗑️ Suppression de ${key} corrompu`);
+        localStorage.removeItem(key);
+      }
+    });
+    
+    console.log('✅ localStorage nettoyé complètement');
+  }
+  
+  // Nettoyer au démarrage
+  forceCleanLocalStorage();
+  
   let apiToken = localStorage.getItem('apiToken') || null;
   
   // Initialize default data structure
@@ -404,6 +423,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Get portfolio data (from localStorage or API)
   function getPortfolioData() {
+    // VALIDATION EXTREME : Vérifier d'abord si localStorage contient du code JavaScript
+    const rawData = localStorage.getItem('portfolioData');
+    if (rawData && (rawData.includes("'\\n' +") || rawData.includes('`') || rawData.includes("\\n' +"))) {
+      console.error('🚨 localStorage contient du CODE JAVASCRIPT! Suppression immédiate...');
+      localStorage.removeItem('portfolioData');
+      localStorage.removeItem('projects');  
+      localStorage.removeItem('skills');
+      localStorage.removeItem('timeline');
+      console.log('✅ localStorage corrompu supprimé, utilisation données par défaut');
+      return DEFAULT_DATA;
+    }
+    
     // Pour l'instant, utiliser localStorage (l'API sera chargée au démarrage)
     const data = localStorage.getItem('portfolioData');
     if (!data) {
@@ -495,6 +526,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Save portfolio data to API and localStorage
   async function savePortfolioData(data) {
+    // VALIDATION ULTRA-STRICTE : Détecter et rejeter les données JavaScript corrompues
+    function isJavaScriptCorrupted(value) {
+      const str = JSON.stringify(value);
+      // Patterns JavaScript dangereux
+      const jsPatterns = [
+        /\[\s*\n\s*'\s*\+/,  // "[\n' +"
+        /`.*?`/,             // backticks
+        /'\s*\+\s*'/,        // concaténations avec quotes
+        /\\".*?\\\"/,        // doubles échappements
+        /\\n'\s*\+/          // newlines avec concat
+      ];
+      
+      return jsPatterns.some(pattern => pattern.test(str));
+    }
+    
+    // Détecter corruption avant traitement
+    if (isJavaScriptCorrupted(data)) {
+      console.error('❌ DONNÉES CORROMPUES DÉTECTÉES! Vidage du localStorage...');
+      
+      // Supprimer complètement les données corrompues
+      localStorage.removeItem('portfolioData');
+      localStorage.removeItem('projects');
+      localStorage.removeItem('skills');
+      localStorage.removeItem('timeline');
+      
+      // Recharger la page pour repartir sur des bases saines
+      alert('Données corrompues détectées. La page va se recharger pour réinitialiser.');
+      window.location.reload();
+      return;
+    }
+    
     // Fonction pour nettoyer une chaîne de code JavaScript en chaîne normale
     const cleanString = (str) => {
       if (typeof str !== 'string') return str;
@@ -713,13 +775,48 @@ document.addEventListener('DOMContentLoaded', () => {
           projectsIsArray: Array.isArray(cleanData.projects)
         });
         
+        // VALIDATION FINALE AVANT ENVOI - Créer des données ULTRA-PROPRES
+        const ultraCleanData = {
+          personal: {
+            fullName: cleanData.personal?.fullName || "Nema Elisée Kourouma",
+            email: cleanData.personal?.email || "kouroumaelisee@gmail.com",  
+            phone: cleanData.personal?.phone || "",
+            photo: cleanData.personal?.photo || "assets/photo.jpeg",
+            currentEducation: cleanData.personal?.currentEducation || "Master 1 en Intelligence Artificielle",
+            previousEducation: cleanData.personal?.previousEducation || "Licence en mathématiques et informatique",
+            additionalInfo: []
+          },
+          projects: Array.isArray(cleanData.projects) ? cleanData.projects.filter(p => {
+            // Ne garder que les vrais objets avec des propriétés valides
+            return p && typeof p === 'object' && p.title && typeof p.title === 'string' && !p.title.includes('`');
+          }) : [],
+          skills: Array.isArray(cleanData.skills) ? cleanData.skills.filter(s => {
+            return s && typeof s === 'object' && s.name && typeof s.name === 'string' && !s.name.includes('`');
+          }) : [],
+          links: cleanData.links || {},
+          about: cleanData.about || {},
+          timeline: Array.isArray(cleanData.timeline) ? cleanData.timeline : [],
+          services: Array.isArray(cleanData.services) ? cleanData.services : [],
+          certifications: Array.isArray(cleanData.certifications) ? cleanData.certifications : [],
+          contactMessages: Array.isArray(cleanData.contactMessages) ? cleanData.contactMessages : [],
+          faq: Array.isArray(cleanData.faq) ? cleanData.faq : []
+        };
+        
+        // LOG DÉTAILLÉ de ce qui va être envoyé
+        console.log('🔍 DONNÉES FINALES A ENVOYER:', {
+          projectsCount: ultraCleanData.projects.length,
+          firstProjectTitle: ultraCleanData.projects[0]?.title || 'N/A',
+          projectsPreview: ultraCleanData.projects.map(p => ({ title: p.title, type: typeof p })),
+          bodySize: JSON.stringify(ultraCleanData).length
+        });
+        
         const response = await fetch(`${API_BASE_URL}/portfolio`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${apiToken}`
           },
-          body: JSON.stringify(cleanData)
+          body: JSON.stringify(ultraCleanData)
         });
         
         if (response.ok) {

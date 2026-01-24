@@ -2,6 +2,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const yearEl = document.querySelector('[data-year]');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
+  // NETTOYAGE PRÉVENTIF DU LOCALSTORAGE POUR MAIN.JS
+  function preventiveCleanLocalStorage() {
+    const portfolioData = localStorage.getItem('portfolioData');
+    if (portfolioData && (portfolioData.includes("'\\n' +") || portfolioData.includes('`') || portfolioData.includes("+ '"))) {
+      console.log('🧹 localStorage contient du code JavaScript, suppression préventive...');
+      localStorage.removeItem('portfolioData');
+      localStorage.removeItem('projects');
+      localStorage.removeItem('skills');
+      localStorage.removeItem('timeline');
+      console.log('✅ localStorage nettoyé côté main.js');
+    }
+  }
+  
+  // Nettoyer au démarrage
+  preventiveCleanLocalStorage();
+
   // Configuration API
   const API_BASE_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:3000/api' 
