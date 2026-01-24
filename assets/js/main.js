@@ -18,6 +18,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // Nettoyer au démarrage
   preventiveCleanLocalStorage();
 
+  // INITIALISATION IMMÉDIATE DES DONNÉES PAR DÉFAUT SI NÉCESSAIRE
+  const existingData = localStorage.getItem('portfolioData');
+  if (!existingData) {
+    console.log('📦 Aucune donnée trouvée, initialisation des données par défaut...');
+    initDefaultData();
+    console.log('✅ Données par défaut initialisées');
+  }
+
   // Configuration API
   const API_BASE_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:3000/api' 
@@ -687,16 +695,11 @@ document.addEventListener('DOMContentLoaded', () => {
   loadAndDisplayData();
 
   // Force reload data after a short delay to ensure DOM is ready
+  // CHARGEMENT IMMÉDIAT APRÈS INITIALISATION
   setTimeout(() => {
-    console.log('🔄 Forcing data reload...');
-    const data = JSON.parse(localStorage.getItem('portfolioData') || '{}');
-    if (data.projects || data.skills || data.timeline) {
-      loadProjects();
-      loadAboutPageContent();
-      loadHomepageProjects();
-      loadHomepageSkills();
-      console.log('✅ Data reloaded successfully');
-    }
-  }, 500);
+    console.log('🔄 Chargement des données...');
+    reloadAllData();
+    console.log('✅ Données chargées');
+  }, 100);
 
 }); // End of DOMContentLoaded
