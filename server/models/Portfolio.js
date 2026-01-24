@@ -84,112 +84,31 @@ const portfolioSchema = new mongoose.Schema({
 });
 
 // Données par défaut pour initialiser le portfolio
-// ULTRA-SIMPLIFICATION pour éliminer DÉFINITIVEMENT le CastError
+// SOLUTION ULTIME : Données statiques HARDCODÉES (pas de fonction dynamique)
+const MINIMAL_PORTFOLIO_DATA = {
+  personal: {
+    fullName: "Nema Elisée Kourouma",
+    email: "kouroumaelisee@gmail.com",
+    phone: "",
+    photo: "assets/photo.jpeg",
+    currentEducation: "Master IA",
+    previousEducation: "Licence",
+    additionalInfo: []
+  },
+  projects: [],
+  skills: [],
+  links: { cv: "assets/CV.pdf", social: [] },
+  about: { heroDescription: "Master IA", stats: { projects: 0, experience: 2, technologies: 10 } },
+  timeline: [],
+  services: [],
+  certifications: [],
+  contactMessages: [],
+  faq: []
+};
+
+// FONCTION WRAPPER simple qui retourne les données statiques
 function getDefaultPortfolioData() {
-  return {
-    personal: {
-      fullName: "Nema Elisée Kourouma",
-      email: "kouroumaelisee@gmail.com",
-      phone: "",
-      photo: "assets/photo.jpeg",
-      currentEducation: "Master 1 en Intelligence Artificielle",
-      previousEducation: "Licence en mathématiques et informatique",
-      additionalInfo: []
-    },
-    projects: [
-      {
-        title: "Analyse de sentiments des tweets",
-        type: "PFE",
-        category: "IA",
-        shortDesc: "Analyse de sentiments avec ChatGPT et MongoDB",
-        description: "Projet analyse sentiments tweets avec IA",
-        features: ["Python", "ChatGPT", "MongoDB"],
-        tags: ["Python", "IA", "ChatGPT"],
-        link: "",
-        demoLink: "",
-        emailSubject: "Infos: Tweets",
-        featured: true,
-        public: true
-      },
-      {
-        title: "Kairos",
-        type: "Web",
-        category: "App",
-        shortDesc: "App apprentissage avec IA",
-        description: "Application web apprentissage",
-        features: ["Web", "IA", "Cours"],
-        tags: ["Web", "IA"],
-        link: "https://kairos-frontend-hjg9.onrender.com",
-        demoLink: "",
-        emailSubject: "Infos: Kairos",
-        featured: true,
-        public: true
-      },
-      {
-        title: "Fylor",
-        type: "Web",
-        category: "Cloud",
-        shortDesc: "Stockage cloud 20Go",
-        description: "Plateforme stockage cloud",
-        features: ["Cloud", "Upload", "Download"],
-        tags: ["Web", "Cloud"],
-        link: "https://fylor-frontend.onrender.com/",
-        demoLink: "",
-        emailSubject: "Infos: Fylor",
-        featured: true,
-        public: true
-      },
-      {
-        title: "Supfile",
-        type: "PFA",
-        category: "Cloud",
-        shortDesc: "Stockage cloud 30Go",
-        description: "Plateforme stockage cloud",
-        features: ["Cloud", "Upload", "Download"],
-        tags: ["Web", "Cloud"],
-        link: "https://supfile-frontend.onrender.com/",
-        demoLink: "",
-        emailSubject: "Infos: Supfile",
-        featured: true,
-        public: true
-      }
-    ],
-    skills: [
-      { icon: "W", name: "Web", skills: ["HTML", "CSS", "JS"] },
-      { icon: "B", name: "Backend", skills: ["Python", "Node"] },
-      { icon: "I", name: "IA", skills: ["MongoDB", "OpenAI"] }
-    ],
-    links: {
-      cv: "assets/CV.pdf",
-      cvFile: null,
-      cvFileName: null,
-      cvFileSize: null,
-      social: [
-        { name: "WhatsApp", url: "https://wa.me/33689306432" },
-        { name: "GitHub", url: "https://github.com/" }
-      ]
-    },
-    about: {
-      heroDescription: "Master 1 en Intelligence Artificielle",
-      aboutDescription: "Master 1 en Intelligence Artificielle",
-      stats: {
-        projects: 4,
-        experience: 2,
-        technologies: 15
-      }
-    },
-    timeline: [
-      { date: "2025", title: "Master IA", subtitle: "SUPINFO", description: "Master IA" },
-      { date: "2021-2024", title: "Licence", subtitle: "Universite Fes", description: "Licence maths info" }
-    ],
-    services: [
-      { icon: "W", title: "Web", description: "Dev web", features: ["HTML", "CSS"] },
-      { icon: "I", title: "IA", description: "Intelligence artificielle", features: ["Python", "ML"] }
-    ],
-    certifications: [],
-    contactMessages: [],
-    faq: []
-  };
+  return JSON.parse(JSON.stringify(MINIMAL_PORTFOLIO_DATA));
 }
 
 // Il n'y aura qu'un seul document portfolio
