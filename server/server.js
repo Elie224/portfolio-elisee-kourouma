@@ -62,8 +62,22 @@ app.get('/health', (req, res) => {
 
 // Connexion à MongoDB
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/portfolio')
-.then(() => {
+.then(async () => {
   console.log('✅ Connecté à MongoDB');
+  
+  // Nettoyer les documents corrompus au démarrage
+  try {
+    const Portfolio = require('./models/Portfolio');
+    console.log('🧹 Nettoyage des documents corrompus...');
+    
+    // Supprimer tous les documents existants pour repartir à zéro
+    const deleteResult = await Portfolio.deleteMany({});
+    console.log(`🗑️ ${deleteResult.deletedCount} document(s) supprimé(s)`);
+    
+    console.log('✅ Nettoyage terminé - Le prochain appel API créera des données propres');
+  } catch (cleanupError) {
+    console.error('⚠️ Erreur lors du nettoyage:', cleanupError.message);
+  }
   
   // Démarrer le serveur
   app.listen(PORT, () => {

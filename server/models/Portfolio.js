@@ -84,237 +84,232 @@ const portfolioSchema = new mongoose.Schema({
 });
 
 // Données par défaut pour initialiser le portfolio
-const DEFAULT_PORTFOLIO_DATA = {
-  personal: {
-    fullName: 'Nema Elisée Kourouma',
-    email: 'kouroumaelisee@gmail.com',
-    phone: '',
-    photo: 'assets/photo.jpeg',
-    currentEducation: 'Master 1 en Intelligence Artificielle à l\'École Supérieure d\'Informatique de Paris',
-    previousEducation: 'Licence en mathématiques et informatique (USMBA Fès)',
-    additionalInfo: []
-  },
-  projects: [
-    {
-      title: 'Analyse de sentiments des tweets en temps réel',
-      type: 'PFE Licence',
-      category: 'Intelligence Artificielle',
-      shortDesc: 'Projet de fin d\'étude (PFE) de Licence · Analyse des sentiments des tweets en temps réel avec ChatGPT et MongoDB',
-      description: 'Ce projet vise à intégrer Chat GPT, une intelligence artificielle avancée, avec MongoDB, une base de données NoSQL, pour analyser les sentiments des tweets en temps réel.',
-      features: [
-        'Extraction temps réel de tweets avec Selenium',
-        'Analyse de sentiments avec OpenAI (ChatGPT)',
-        'Classification en catégories : positif, neutre, négatif',
-        'Stockage et indexation dans MongoDB',
-        'API REST avec Flask pour l\'accès aux données'
-      ],
-      tags: ['Python', 'Flask', 'MongoDB', 'OpenAI', 'ChatGPT', 'Selenium', 'NLP'],
-      link: '',
-      demoLink: '',
-      emailSubject: 'Demande d\'infos: Analyse de sentiments des tweets',
-      featured: true,
-      public: true
+function getDefaultPortfolioData() {
+  return {
+    personal: {
+      fullName: "Nema Elisée Kourouma",
+      email: "kouroumaelisee@gmail.com",
+      phone: "",
+      photo: "assets/photo.jpeg",
+      currentEducation: "Master 1 en Intelligence Artificielle à l'École Supérieure d'Informatique de Paris",
+      previousEducation: "Licence en mathématiques et informatique (USMBA Fès)",
+      additionalInfo: []
     },
-    {
-      title: 'Kairos - Application Web',
-      type: 'Projet Personnel',
-      category: 'Application Web',
-      shortDesc: 'Application d\'apprentissage immersive avec support de cours, TD, TP, examens, quiz et IA conversationnelle',
-      description: 'Kairos est une application web d\'apprentissage immersive développée comme projet personnel.',
-      features: [
-        'Plateforme d\'apprentissage immersive complète',
-        'Intelligence artificielle conversationnelle intégrée',
-        'Support pédagogique personnalisé et en temps réel'
-      ],
-      tags: ['Web', 'Frontend', 'Application Web', 'IA', 'Intelligence Artificielle'],
-      link: 'https://kairos-frontend-hjg9.onrender.com',
-      demoLink: '',
-      emailSubject: 'Demande d\'infos: Application Kairos',
-      featured: true,
-      public: true
+    projects: [
+      {
+        title: "Analyse de sentiments des tweets en temps réel",
+        type: "PFE Licence",
+        category: "Intelligence Artificielle",
+        shortDesc: "Projet de fin d'étude (PFE) de Licence · Analyse des sentiments des tweets en temps réel avec ChatGPT et MongoDB",
+        description: "Ce projet vise à intégrer Chat GPT, une intelligence artificielle avancée, avec MongoDB, une base de données NoSQL, pour analyser les sentiments des tweets en temps réel.",
+        features: [
+          "Extraction temps réel de tweets avec Selenium",
+          "Analyse de sentiments avec OpenAI (ChatGPT)",
+          "Classification en catégories : positif, neutre, négatif",
+          "Stockage et indexation dans MongoDB",
+          "API REST avec Flask pour l'accès aux données"
+        ],
+        tags: ["Python", "Flask", "MongoDB", "OpenAI", "ChatGPT", "Selenium", "NLP"],
+        link: "",
+        demoLink: "",
+        emailSubject: "Demande d'infos: Analyse de sentiments des tweets",
+        featured: true,
+        public: true
+      },
+      {
+        title: "Kairos - Application Web",
+        type: "Projet Personnel",
+        category: "Application Web",
+        shortDesc: "Application d'apprentissage immersive avec support de cours, TD, TP, examens, quiz et IA conversationnelle",
+        description: "Kairos est une application web d'apprentissage immersive développée comme projet personnel.",
+        features: [
+          "Plateforme d'apprentissage immersive complète",
+          "Intelligence artificielle conversationnelle intégrée",
+          "Support pédagogique personnalisé et en temps réel"
+        ],
+        tags: ["Web", "Frontend", "Application Web", "IA", "Intelligence Artificielle"],
+        link: "https://kairos-frontend-hjg9.onrender.com",
+        demoLink: "",
+        emailSubject: "Demande d'infos: Application Kairos",
+        featured: true,
+        public: true
+      },
+      {
+        title: "Fylor - Application Web",
+        type: "Projet Personnel",
+        category: "Application Web",
+        shortDesc: "Plateforme de stockage cloud avec 20 Go d'espace · Application web et mobile complète",
+        description: "Fylor est une plateforme de stockage cloud développée comme projet personnel.",
+        features: [
+          "Gestionnaire de fichiers complet",
+          "Connexion standard et OAuth2",
+          "Quota généreux de 20 Go par utilisateur"
+        ],
+        tags: ["Web", "Mobile", "Application Web", "Cloud Storage", "API REST", "Docker"],
+        link: "https://fylor-frontend.onrender.com/",
+        demoLink: "",
+        emailSubject: "Demande d'infos: Application Fylor",
+        featured: true,
+        public: true
+      },
+      {
+        title: "Supfile - Application Web",
+        type: "PFA",
+        category: "Application Web",
+        shortDesc: "Projet de fin d'année à SUPINFO · Plateforme de stockage cloud concurrente de Dropbox et Google Drive",
+        description: "SUPFile est un projet de fin d'année développé dans le cadre du Master 1 en Intelligence Artificielle.",
+        features: [
+          "Gestionnaire de fichiers complet",
+          "Connexion standard et OAuth2",
+          "Quota de 30 Go par utilisateur"
+        ],
+        tags: ["Web", "Mobile", "Application Web", "Cloud Storage", "API REST", "Docker", "SUPINFO", "PFA"],
+        link: "https://supfile-frontend.onrender.com/",
+        demoLink: "",
+        emailSubject: "Demande d'infos: Application Supfile",
+        featured: true,
+        public: true
+      }
+    ],
+    skills: [
+      { 
+        icon: "🌐", 
+        name: "Développement Web", 
+        skills: ["HTML5", "CSS3", "JavaScript", "React", "Responsive"] 
+      },
+      { 
+        icon: "🐍", 
+        name: "Backend & DevOps", 
+        skills: ["Python", "Node.js", "Django", "Flask", "API REST", "Docker"] 
+      },
+      { 
+        icon: "🤖", 
+        name: "IA & Données", 
+        skills: ["MongoDB", "NLP", "OpenAI", "Selenium", "Analyse Exploratoire de Données"] 
+      }
+    ],
+    links: {
+      cv: "assets/CV.pdf",
+      cvFile: null,
+      cvFileName: null,
+      cvFileSize: null,
+      social: [
+        { name: "WhatsApp", url: "https://wa.me/33689306432" },
+        { name: "Facebook", url: "https://www.facebook.com/share/17xGVe29cL/" },
+        { name: "LinkedIn", url: "https://www.linkedin.com/" },
+        { name: "GitHub", url: "https://github.com/" }
+      ]
     },
-    {
-      title: 'Fylor - Application Web',
-      type: 'Projet Personnel',
-      category: 'Application Web',
-      shortDesc: 'Plateforme de stockage cloud avec 20 Go d\'espace · Application web et mobile complète',
-      description: 'Fylor est une plateforme de stockage cloud développée comme projet personnel.',
-      features: [
-        'Gestionnaire de fichiers complet',
-        'Connexion standard et OAuth2',
-        'Quota généreux de 20 Go par utilisateur'
-      ],
-      tags: ['Web', 'Mobile', 'Application Web', 'Cloud Storage', 'API REST', 'Docker'],
-      link: 'https://fylor-frontend.onrender.com/',
-      demoLink: '',
-      emailSubject: 'Demande d\'infos: Application Fylor',
-      featured: true,
-      public: true
+    about: {
+      heroDescription: "Master 1 en Intelligence Artificielle à l'École Supérieure d'Informatique de Paris. Titulaire d'une licence en mathématiques et informatique (USMBA Fès).",
+      aboutDescription: "Master 1 en Intelligence Artificielle à l'École Supérieure d'Informatique de Paris. Titulaire d'une licence en mathématiques et informatique (USMBA Fès).",
+      stats: {
+        projects: 4,
+        experience: 2,
+        technologies: 15
+      }
     },
-    {
-      title: 'Supfile - Application Web',
-      type: 'PFA',
-      category: 'Application Web',
-      shortDesc: 'Projet de fin d\'année à SUPINFO · Plateforme de stockage cloud concurrente de Dropbox et Google Drive',
-      description: 'SUPFile est un projet de fin d\'année développé dans le cadre du Master 1 en Intelligence Artificielle.',
-      features: [
-        'Gestionnaire de fichiers complet',
-        'Connexion standard et OAuth2',
-        'Quota de 30 Go par utilisateur'
-      ],
-      tags: ['Web', 'Mobile', 'Application Web', 'Cloud Storage', 'API REST', 'Docker', 'SUPINFO', 'PFA'],
-      link: 'https://supfile-frontend.onrender.com/',
-      demoLink: '',
-      emailSubject: 'Demande d\'infos: Application Supfile',
-      featured: true,
-      public: true
-    }
-  ],
-  skills: [
-    { icon: '🌐', name: 'Développement Web', skills: ['HTML5', 'CSS3', 'JavaScript', 'React', 'Responsive'] },
-    { icon: '🐍', name: 'Backend & DevOps', skills: ['Python', 'Node.js', 'Django', 'Flask', 'API REST', 'Docker'] },
-    { icon: '🤖', name: 'IA & Données', skills: ['MongoDB', 'NLP', 'OpenAI', 'Selenium', 'Analyse Exploratoire de Données'] }
-  ],
-  links: {
-    cv: 'assets/CV.pdf',
-    cvFile: null,
-    cvFileName: null,
-    cvFileSize: null,
-    social: [
-      { name: 'WhatsApp', url: 'https://wa.me/33689306432' },
-      { name: 'Facebook', url: 'https://www.facebook.com/share/17xGVe29cL/' },
-      { name: 'LinkedIn', url: 'https://www.linkedin.com/' },
-      { name: 'GitHub', url: 'https://github.com/' }
-    ]
-  },
-  about: {
-    heroDescription: 'Master 1 en Intelligence Artificielle à l\'École Supérieure d\'Informatique de Paris. Titulaire d\'une licence en mathématiques et informatique (USMBA Fès).',
-    aboutDescription: 'Master 1 en Intelligence Artificielle à l\'École Supérieure d\'Informatique de Paris. Titulaire d\'une licence en mathématiques et informatique (USMBA Fès).',
-    stats: {
-      projects: 4,
-      experience: 2,
-      technologies: 15
-    }
-  },
-  timeline: [
-    {
-      date: '2025 - Présent',
-      title: 'Master 1 en Intelligence Artificielle',
-      subtitle: 'École Supérieure d\'Informatique de Paris (SUPINFO)',
-      description: 'Spécialisation en IA, Machine Learning et traitement du langage naturel. Réalisation de projets majeurs incluant SUPFile (plateforme cloud) et Kairos (assistant pédagogique IA).'
-    },
-    {
-      date: '2021 - 2024',
-      title: 'Licence en Mathématiques et Informatique',
-      subtitle: 'Université Sidi Mohamed Ben Abdellah, Fès',
-      description: 'Formation solide en mathématiques appliquées et informatique fondamentale. Acquisition de compétences en algorithmique, structures de données et développement logiciel.'
-    }
-  ],
-  services: [
-    {
-      icon: '💻',
-      title: 'Développement Web',
-      description: 'Création d\'applications web modernes et responsives avec les dernières technologies.',
-      features: ['Applications React/Vue.js', 'APIs REST & GraphQL', 'Architecture microservices']
-    },
-    {
-      icon: '🤖',
-      title: 'Intelligence Artificielle',
-      description: 'Solutions IA personnalisées pour automatiser et optimiser vos processus.',
-      features: ['Machine Learning', 'NLP & Chatbots', 'Analyse de données']
-    },
-    {
-      icon: '☁️',
-      title: 'Cloud & DevOps',
-      description: 'Déploiement et gestion d\'infrastructures cloud scalables et sécurisées.',
-      features: ['Docker & Kubernetes', 'CI/CD Pipelines', 'Cloud Architecture']
-    }
-  ],
-  certifications: [],
-  contactMessages: [],
-  faq: []
-};
+    timeline: [
+      {
+        date: "2025 - Présent",
+        title: "Master 1 en Intelligence Artificielle",
+        subtitle: "École Supérieure d'Informatique de Paris (SUPINFO)",
+        description: "Spécialisation en IA, Machine Learning et traitement du langage naturel. Réalisation de projets majeurs incluant SUPFile (plateforme cloud) et Kairos (assistant pédagogique IA)."
+      },
+      {
+        date: "2021 - 2024",
+        title: "Licence en Mathématiques et Informatique",
+        subtitle: "Université Sidi Mohamed Ben Abdellah, Fès",
+        description: "Formation solide en mathématiques appliquées et informatique fondamentale. Acquisition de compétences en algorithmique, structures de données et développement logiciel."
+      }
+    ],
+    services: [
+      {
+        icon: "💻",
+        title: "Développement Web",
+        description: "Création d'applications web modernes et responsives avec les dernières technologies.",
+        features: ["Applications React/Vue.js", "APIs REST & GraphQL", "Architecture microservices"]
+      },
+      {
+        icon: "🤖",
+        title: "Intelligence Artificielle",
+        description: "Solutions IA personnalisées pour automatiser et optimiser vos processus.",
+        features: ["Machine Learning", "NLP & Chatbots", "Analyse de données"]
+      },
+      {
+        icon: "☁️",
+        title: "Cloud & DevOps",
+        description: "Déploiement et gestion d'infrastructures cloud scalables et sécurisées.",
+        features: ["Docker & Kubernetes", "CI/CD Pipelines", "Cloud Architecture"]
+      }
+    ],
+    certifications: [],
+    contactMessages: [],
+    faq: []
+  };
+}
 
 // Il n'y aura qu'un seul document portfolio
 portfolioSchema.statics.getPortfolio = async function() {
   try {
+    console.log('📥 GET Portfolio - Recherche du document existant...');
     let portfolio = await this.findOne();
     
     if (!portfolio) {
-      // Créer un document avec les données par défaut si aucun n'existe
       console.log('📦 Aucun document trouvé, création avec les données par défaut');
-      try {
-        // Utiliser create() au lieu de findOneAndUpdate pour éviter les problèmes de casting
-        portfolio = await this.create(DEFAULT_PORTFOLIO_DATA);
-        console.log('✅ Portfolio créé avec les données par défaut');
-      } catch (createError) {
-        console.error('❌ Erreur lors de la création du portfolio:', createError);
-        console.error('Détails:', createError.message);
-        // En cas d'erreur, retourner les données par défaut directement
-        return DEFAULT_PORTFOLIO_DATA;
-      }
+      // Utiliser la fonction pour éviter tout problème avec les références
+      const dataToCreate = getDefaultPortfolioData();
+      portfolio = await this.create(dataToCreate);
+      console.log('✅ Portfolio créé avec succès:', {
+        projects: portfolio.projects?.length || 0,
+        skills: portfolio.skills?.length || 0,
+        timeline: portfolio.timeline?.length || 0
+      });
     } else {
-      // Vérifier si le document est vide et l'initialiser si nécessaire
-      const projectsCount = portfolio.projects && Array.isArray(portfolio.projects) ? portfolio.projects.length : 0;
-      const skillsCount = portfolio.skills && Array.isArray(portfolio.skills) ? portfolio.skills.length : 0;
-      const timelineCount = portfolio.timeline && Array.isArray(portfolio.timeline) ? portfolio.timeline.length : 0;
-      const hasPhoto = !!(portfolio.personal && portfolio.personal.photo);
+      // Vérifier si le document a des données utiles
+      const projectsCount = Array.isArray(portfolio.projects) ? portfolio.projects.length : 0;
+      const skillsCount = Array.isArray(portfolio.skills) ? portfolio.skills.length : 0;
+      const timelineCount = Array.isArray(portfolio.timeline) ? portfolio.timeline.length : 0;
       
-      // Le document est considéré comme vide si TOUS les tableaux sont vides (même si la photo existe)
-      const hasData = projectsCount > 0 || skillsCount > 0 || timelineCount > 0;
-      
-      console.log('🔍 Vérification du portfolio existant:', {
-        hasData,
+      console.log('🔍 Portfolio existant trouvé:', {
         projects: projectsCount,
         skills: skillsCount,
         timeline: timelineCount,
-        hasPhoto: hasPhoto
+        hasPhoto: !!portfolio.personal?.photo
       });
       
-      if (!hasData) {
-        console.log('📦 Portfolio vide détecté (tableaux vides), suppression et recréation avec les données par défaut');
-        try {
-          // Supprimer le document vide et en créer un nouveau avec create()
-          await this.deleteOne({ _id: portfolio._id });
-          portfolio = await this.create(DEFAULT_PORTFOLIO_DATA);
-          console.log('✅ Portfolio réinitialisé avec les données par défaut:', {
-            projects: portfolio.projects?.length || 0,
-            skills: portfolio.skills?.length || 0,
-            timeline: portfolio.timeline?.length || 0
-          });
-        } catch (updateError) {
-          console.error('❌ Erreur lors de la réinitialisation du portfolio:', updateError);
-          console.error('Détails:', updateError.message);
-          // En cas d'erreur, retourner les données par défaut directement
-          return DEFAULT_PORTFOLIO_DATA;
-        }
+      // Si toutes les données importantes sont vides, réinitialiser
+      if (projectsCount === 0 && skillsCount === 0 && timelineCount === 0) {
+        console.log('📦 Portfolio vide détecté, réinitialisation...');
+        await this.deleteOne({ _id: portfolio._id });
+        const dataToCreate = getDefaultPortfolioData();
+        portfolio = await this.create(dataToCreate);
+        console.log('✅ Portfolio réinitialisé avec succès');
       }
     }
     
-    // Convertir en objet JavaScript simple et supprimer les champs MongoDB
+    // Convertir en objet propre
     const portfolioObj = portfolio.toObject();
     delete portfolioObj._id;
     delete portfolioObj.__v;
     delete portfolioObj.createdAt;
     delete portfolioObj.updatedAt;
     
-    // Log final pour vérification
-    const finalProjects = portfolioObj.projects?.length || 0;
-    const finalSkills = portfolioObj.skills?.length || 0;
-    const finalTimeline = portfolioObj.timeline?.length || 0;
-    console.log('📤 Retour du portfolio:', {
-      projects: finalProjects,
-      skills: finalSkills,
-      timeline: finalTimeline,
-      responseSize: JSON.stringify(portfolioObj).length
+    console.log('📤 Portfolio renvoyé avec succès:', {
+      projects: portfolioObj.projects?.length || 0,
+      skills: portfolioObj.skills?.length || 0,
+      timeline: portfolioObj.timeline?.length || 0,
+      size: JSON.stringify(portfolioObj).length
     });
     
     return portfolioObj;
+    
   } catch (error) {
-    console.error('❌ Erreur critique dans getPortfolio:', error);
-    console.error('Stack trace:', error.stack);
-    // En cas d'erreur critique, retourner les données par défaut
-    return DEFAULT_PORTFOLIO_DATA;
+    console.error('❌ Erreur critique dans getPortfolio:', error.message);
+    console.error('Stack:', error.stack);
+    
+    // En cas d'erreur critique, retourner une copie propre des données par défaut
+    return getDefaultPortfolioData();
   }
 };
 
