@@ -6,6 +6,7 @@ const { authenticateAdmin } = require('../middleware/auth');
 // GET /api/portfolio - Récupérer les données du portfolio (public)
 router.get('/', async (req, res) => {
   try {
+    console.log('📥 GET /api/portfolio - Début de la requête');
     const portfolio = await Portfolio.getPortfolio();
     
     // Log pour debug
@@ -25,8 +26,24 @@ router.get('/', async (req, res) => {
     
     res.json(portfolio);
   } catch (error) {
-    console.error('Erreur lors de la récupération du portfolio:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    console.error('❌ Erreur lors de la récupération du portfolio:', error);
+    console.error('Stack trace:', error.stack);
+    
+    // En cas d'erreur, retourner un objet vide plutôt qu'une erreur 500
+    // pour éviter que le frontend écrase localStorage avec une erreur
+    console.log('⚠️ Retour d\'un objet vide en cas d\'erreur pour éviter l\'écrasement du localStorage');
+    res.json({
+      personal: {},
+      projects: [],
+      skills: [],
+      links: {},
+      about: {},
+      timeline: [],
+      services: [],
+      certifications: [],
+      contactMessages: [],
+      faq: []
+    });
   }
 });
 
