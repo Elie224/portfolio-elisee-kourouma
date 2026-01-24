@@ -168,93 +168,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initialize default data if localStorage is empty (for first-time visitors on Render)
   function initDefaultData() {
-    // Définir DEFAULT_DATA structure au début de la fonction pour qu'elle soit accessible partout
+    // PORTFOLIO COMPLÈTEMENT VIDE - Cohérent avec admin.js et Portfolio.js 
     const DEFAULT_DATA = {
-          personal: {
-            fullName: 'Nema Elisée Kourouma',
-            email: 'kouroumaelisee@gmail.com',
-            phone: '',
-            photo: 'assets/photo.jpeg',
-            currentEducation: 'Master 1 en Intelligence Artificielle à l\'École Supérieure d\'Informatique de Paris',
-            previousEducation: 'Licence en mathématiques et informatique (USMBA Fès)',
-            additionalInfo: []
-          },
-          projects: [
-            {
-              title: 'Analyse de sentiments des tweets en temps réel',
-              type: 'PFE Licence',
-              category: 'Intelligence Artificielle',
-              shortDesc: 'Projet de fin d\'étude (PFE) de Licence · Analyse des sentiments des tweets en temps réel avec ChatGPT et MongoDB',
-              description: 'Ce projet vise à intégrer Chat GPT, une intelligence artificielle avancée, avec MongoDB, une base de données NoSQL, pour analyser les sentiments des tweets en temps réel. Dans un contexte où les données générées quotidiennement sont massives, l\'analyse des sentiments devient cruciale pour comprendre les émotions humaines à grande échelle.\n\nLes réseaux sociaux, en particulier Twitter, offrent une source riche d\'informations en temps réel. Cependant, la collecte et l\'analyse de ces données posent des défis en raison de leur volume et de leur nature dynamique. Les tweets contiennent souvent des langages informels, des abréviations, des emojis et des références contextuelles.\n\nLes objectifs spécifiques du projet incluent l\'utilisation de Chat GPT pour analyser et classifier les sentiments des tweets en catégories positives, neutres et négatives, la configuration de MongoDB pour stocker efficacement les tweets et les résultats des analyses, et la création d\'un système robuste capable de traiter des flux de données continus et de fournir des insights en temps réel.',
-              features: [
-                'Extraction temps réel de tweets avec Selenium',
-                'Analyse de sentiments avec OpenAI (ChatGPT)',
-                'Classification en catégories : positif, neutre, négatif',
-                'Stockage et indexation dans MongoDB',
-                'API REST avec Flask pour l\'accès aux données',
-                'Visualisation des tendances et filtres dynamiques',
-                'Traitement de flux de données continus',
-                'Interface utilisateur interactive pour la visualisation'
-              ],
-              tags: ['Python', 'Flask', 'MongoDB', 'OpenAI', 'ChatGPT', 'Selenium', 'NLP', 'Analyse de sentiments', 'Traitement du langage naturel', 'Temps réel'],
-              link: '',
-              demoLink: '',
-              emailSubject: 'Demande d\'infos: Analyse de sentiments des tweets',
-              featured: true,
-              public: true
-            },
-            {
-              title: 'Kairos - Application Web',
-              type: 'Projet Personnel',
-              category: 'Application Web',
-              shortDesc: 'Application d\'apprentissage immersive avec support de cours, TD, TP, examens, quiz et IA conversationnelle',
-              description: 'Kairos est une application web d\'apprentissage immersive développée comme projet personnel.\n\nL\'application offre un support complet pour tous les types de contenus pédagogiques : cours, travaux dirigés (TD), travaux pratiques (TP), examens et quiz. Chaque format est pris en charge de manière optimale, permettant aux étudiants d\'accéder facilement à leurs ressources éducatives.\n\nKairos intègre une intelligence artificielle conversationnelle avancée qui permet aux utilisateurs d\'échanger directement avec l\'application. Cette IA est incorporée au cœur de la plateforme et offre une interaction naturelle, répondant aux questions, fournissant des explications détaillées sur les cours et les exercices, et proposant un support pédagogique personnalisé en temps réel.\n\nL\'application est hébergée sur Render et démontre l\'intégration réussie de technologies modernes d\'intelligence artificielle dans une plateforme éducative, créant une expérience d\'apprentissage véritablement immersive.',
-              features: [
-                'Plateforme d\'apprentissage immersive complète',
-                'Gestion et organisation des cours magistraux',
-                'Support dédié pour les travaux dirigés (TD)',
-                'Support dédié pour les travaux pratiques (TP)',
-                'Système d\'examens interactifs',
-                'Création et gestion de quiz personnalisés',
-                'Intelligence artificielle conversationnelle intégrée',
-                'Échange interactif avec l\'utilisateur via IA',
-                'Support pédagogique personnalisé et en temps réel',
-                'Interface utilisateur moderne et intuitive',
-                'Navigation structurée des contenus pédagogiques',
-                'Déploiement professionnel sur Render',
-                'Expérience utilisateur optimisée pour l\'apprentissage'
-              ],
-              tags: ['Web', 'Frontend', 'Application Web', 'IA', 'Intelligence Artificielle', 'Apprentissage', 'Éducation', 'IA Conversationnelle', 'Cours', 'TD', 'TP', 'Examens', 'Quiz', 'Render', 'Responsive', 'Déploiement'],
-              link: 'https://kairos-frontend-hjg9.onrender.com',
-              demoLink: '',
-              emailSubject: 'Demande d\'infos: Application Kairos',
-              featured: true,
-              public: true
-            },
-            {
-              title: 'Fylor - Application Web',
-              type: 'Projet Personnel',
-              category: 'Application Web',
-              shortDesc: 'Plateforme de stockage cloud avec 20 Go d\'espace · Application web et mobile complète',
-              description: 'Fylor est une plateforme de stockage cloud développée comme projet personnel, similaire à Supfile. Cette application permet aux utilisateurs de stocker, sécuriser et partager leurs fichiers personnels dans le cloud, avec un quota de 20 Go par utilisateur (contrairement à Supfile qui offre 30 Go).\n\nLe projet comprend le développement d\'une application web complète et d\'une application mobile, avec une architecture basée sur une API REST, des clients distincts et une base de données pour les métadonnées. L\'application offre les mêmes fonctionnalités avancées que Supfile, avec un espace de stockage de 20 Go.\n\nL\'accent est mis sur la gestion performante des flux de données (upload/download), la navigation fluide dans une arborescence de dossiers, l\'ergonomie, la prévisualisation instantanée des fichiers et la synchronisation entre les clients web et mobile.',
-              features: [
-                'Gestionnaire de fichiers complet avec navigation intuitive',
-                'Connexion standard et OAuth2 (Google, GitHub, Microsoft)',
-                'Upload/Download avec barre de progression et drag & drop',
-                'Prévisualisation instantanée (PDF, images, audio, vidéo)',
-                'Partage sécurisé avec liens uniques, expiration et mot de passe',
-                'Recherche et filtres avancés par type et date',
-                'Dashboard avec visualisation de l\'utilisation du stockage',
-                'Gestion des dossiers (création, renommage, déplacement, suppression)',
-                'Corbeille avec restauration possible',
-                'Téléchargement de dossiers complets en archive ZIP',
-                'Paramètres utilisateurs (avatar, email, mot de passe, thème)',
-                'Architecture microservices avec API Gateway',
-                'Containérisation Docker avec docker-compose',
-                'Base de données pour les métadonnées',
-                'Quota généreux de 20 Go par utilisateur',
-                'Sécurité : JWT, hachage des mots de passe, gestion des secrets'
-              ],
+      personal: {
+        fullName: 'Nema Elisée Kourouma',
+        email: 'kouroumaelisee@gmail.com',
+        phone: '',
+        photo: 'assets/photo.jpeg',
+        currentEducation: 'Master IA',
+        previousEducation: 'Licence',
+        additionalInfo: []
+      },
+      projects: [],
+      skills: [],
+      links: { cv: 'assets/CV.pdf', social: [] },
+      about: { heroDescription: 'Master IA', stats: { projects: 0, experience: 2, technologies: 10 } },
+      timeline: [],
+      services: [],
+      certifications: [],
+      contactMessages: [],
+      faq: []
+    };
+
+    try {
+      console.log('📦 Initialisation portfolio VIDE...');
+      localStorage.setItem('portfolioData', JSON.stringify(DEFAULT_DATA));
+      localStorage.setItem('portfolioLastUpdate', new Date().toISOString());
+      console.log('✅ Portfolio vide initialisé !');
+      return true;
+    } catch (error) {
+      console.error('❌ Erreur initialisation:', error);
+      return false;
+    }
+  }
+
+  // Portfolio VIDE maintenant valide - pas d'initialisation automatique
+
+  // Mobile Menu Toggle
+  const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+  const navLinks = document.getElementById('nav-links');
+  const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
               tags: ['Web', 'Mobile', 'Application Web', 'Cloud Storage', 'API REST', 'Docker', 'OAuth2', 'JWT', '20 Go', 'Stockage Cloud', 'Déploiement'],
               link: 'https://fylor-frontend.onrender.com/',
               demoLink: '',
@@ -293,11 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
               public: true
             }
           ],
-          skills: [
-            { icon: '🌐', name: 'Développement Web', skills: ['HTML5', 'CSS3', 'JavaScript', 'React', 'Responsive'] },
-            { icon: '🐍', name: 'Backend & DevOps', skills: ['Python', 'Node.js', 'Django', 'Flask', 'API REST', 'Docker'] },
-            { icon: '🤖', name: 'IA & Données', skills: ['MongoDB', 'NLP', 'OpenAI', 'Selenium', 'Analyse Exploratoire de Données', 'Apprentissage automatique supervisé', 'Apprentissage automatique non supervisé'] }
-          ],
+          skills: [],
           links: {
             cv: 'assets/CV.pdf',
             cvFile: null,
