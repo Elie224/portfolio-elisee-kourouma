@@ -3,9 +3,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const ADMIN_EMAIL = 'kouroumaelisee@gmail.com';
   // Password removed for security - use API authentication only
   
-  // Configuration API - DÉSACTIVÉE EN MODE LOCAL
+  // Configuration API
   const API_BASE_URL = window.location.hostname === 'localhost' 
-    ? null // Pas d'API en local
+    ? 'http://localhost:3000/api' 
     : 'https://portfolio-backend-x47u.onrender.com/api';
   
   // NETTOYAGE COMPLET DU LOCALSTORAGE AU DÉMARRAGE
@@ -542,7 +542,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Sauvegarder via API si token disponible ET pas en mode local
-    if (apiToken && API_BASE_URL) {
+    if (apiToken && window.location.hostname !== 'localhost') {
       try {
         console.log('📤 Envoi des données au serveur...', {
           projects: cleanData.projects?.length || 0,
@@ -658,10 +658,10 @@ document.addEventListener('DOMContentLoaded', () => {
     return !hasProjects && !hasSkills && !hasTimeline && !hasPersonal;
   }
 
-  // Load portfolio data from API - DÉSACTIVÉ EN MODE LOCAL
+  // Load portfolio data from API
   async function loadPortfolioFromAPI() {
-    // MODE LOCAL : PAS D'APPEL API
-    if (!API_BASE_URL) {
+    // MODE LOCAL : CHARGEMENT DIRECT DEPUIS LOCALSTORAGE
+    if (window.location.hostname === 'localhost') {
       console.log('🏠 Mode local : chargement depuis localStorage uniquement');
       const localData = localStorage.getItem('portfolioData');
       if (localData) {
@@ -831,19 +831,20 @@ document.addEventListener('DOMContentLoaded', () => {
     initPhotoUpload();
   }
 
-  // Login function to get JWT token from API - DÉSACTIVÉ EN MODE LOCAL
+  // Login function to get JWT token from API
   async function loginAdmin(email, password) {
     // MODE LOCAL : LOGIN SIMULÉ
-    if (!API_BASE_URL) {
+    if (window.location.hostname === 'localhost') {
       console.log('🏠 Mode local : login simulé');
       if (email === ADMIN_EMAIL) {
         // Simulation d'un login réussi
         apiToken = 'local-token-' + Date.now();
         localStorage.setItem('apiToken', apiToken);
-        showDashboard(email);
+        console.log('✅ Login simulé réussi');
         return true;
       } else {
-        throw new Error('Email incorrect pour le mode local');
+        console.error('❌ Email incorrect pour le mode local');
+        return false;
       }
     }
 
