@@ -28,26 +28,28 @@
         </button>
         <div class="mobile-menu-overlay" id="mobile-menu-overlay"></div>
         <div class="links" id="nav-links">
-          <a href="/">Accueil</a>
+          <a href="index.html">Accueil</a>
           <a href="about.html">À propos</a>
           <a href="projects.html">Projets</a>
           <a href="contact.html">Contact</a>
-          <a href="assets/CV.pdf" target="_blank" rel="noopener" data-cv-link="true">CV</a>
+          <a href="assets/CV.pdf" target="_blank">CV</a>
           <a href="admin.html" class="admin-nav-link" style="display: none;">
             <span>🔐</span> <span class="admin-text">Admin</span>
           </a>
         </div>
       </nav>
     </header>
+
     <main class="container">
       <section class="hero" data-animate>
         <h1 class="gradient">Nema Elisée Kourouma</h1>
         <p>
-          Master 1 en Intelligence Artificielle à l'École Supérieure d'Informatique de Paris. Titulaire
-          d'une licence en mathématiques et informatique (USMBA Fès).
+          Master 1 en Intelligence Artificielle à l'École Supérieure d'Informatique de Paris. 
+          Titulaire d'une licence en mathématiques et informatique (USMBA Fès).
         </p>
         <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-          <img class="avatar" src="assets/photo.jpeg" alt="Photo de Nema Elisée Kourouma" loading="lazy" style="width:140px;height:140px;object-fit:cover;border-radius:50%;border:1px solid #e5e7eb;" />
+          <img class="avatar" src="assets/photo.jpeg" alt="Photo de Nema Elisée Kourouma" 
+               loading="lazy" style="width:140px;height:140px;object-fit:cover;border-radius:50%;border:1px solid #e5e7eb;" />
           <a href="assets/CV.pdf" target="_blank" rel="noopener" class="btn" data-cv-link="true">Voir mon CV</a>
         </div>
         <p style="margin-top:12px;">
@@ -59,8 +61,8 @@
       <section data-animate>
         <h2>À propos</h2>
         <p>
-          Master 1 en Intelligence Artificielle à l'École Supérieure d'Informatique de Paris. Titulaire
-          d'une licence en mathématiques et informatique (USMBA Fès).
+          Master 1 en Intelligence Artificielle à l'École Supérieure d'Informatique de Paris. 
+          Titulaire d'une licence en mathématiques et informatique (USMBA Fès).
         </p>
       </section>
 
@@ -76,55 +78,24 @@
               <span class="tech-tag">CSS</span>
               <span class="tech-tag">JavaScript</span>
               <span class="tech-tag">Node.js</span>
-              <section data-animate>
-  <h2>Projets récents</h2>
-  <div class="grid cols-2" id="homepage-projects">
-    <!-- Recent projects will be loaded dynamically -->
-    <div class="card project-card" data-scroll-reveal="bottom">
-      <h3>Portfolio Personnel</h3>
-      <p class="muted">Site web portfolio avec interface d'administration</p>
-      <div class="tech-tags">
-        <span class="tech-tag">HTML</span>
-        <span class="tech-tag">CSS</span>
-        <span class="tech-tag">JavaScript</span>
-        <span class="tech-tag">Node.js</span>
-        <span class="tech-tag">MongoDB</span>
-      <section data-animate>
-  <h2>Mes compétences</h2>
-  <div class="grid cols-3" id="homepage-skills">
-    <!-- Skills will be loaded dynamically -->
-    <div class="card skill-card">
-      <div class="skill-icon">🌐</div>
-      <h3>Développement Web</h3>
-      <div class="skill-tags">
-        <span class="skill-tag">HTML5</span>
-        <span class="skill-tag">CSS3</span>
-        <span class="skill-tag">JavaScript</span>
-        <span class="skill-tag">React</span>
-      </div>
-    </div>
-    <div class="card skill-card">
-      <div class="skill-icon">🐍</div>
-      <h3>Backend & DevOps</h3>
-      <div class="skill-tags">
-        <span class="skill-tag">Python</span>
-        <span class="skill-tag">Node.js</span>
-        <span class="skill-tag">Django</span>
-        <span class="skill-tag">API REST</span>
-      </div>
-    </div>
-    <div class="card skill-card">
-      <div class="skill-icon">🤖</div>
-      <h3>IA & Données</h3>
-      <div class="skill-tags">
-        <span class="skill-tag">MongoDB</span>
-        <span class="skill-tag">Machine Learning</span>
-        <span class="skill-tag">NLP</span>
-        <span class="skill-tag">OpenAI</span>
-      </div>
-    </div>
-  </div>
-</section>
+              <span class="tech-tag">MongoDB</span>
+            </div>
+          </div>
+
+          <div class="card project-card" data-scroll-reveal="bottom">
+            <h3>Application IA</h3>
+            <p class="muted">Système intelligent de traitement de données</p>
+            <div class="tech-tags">
+              <span class="tech-tag">Python</span>
+              <span class="tech-tag">TensorFlow</span>
+              <span class="tech-tag">API REST</span>
+              <span class="tech-tag">Machine Learning</span>
+            </div>
+          </div>
+        </div>
+        <div style="text-align: center; margin-top: 24px;">
+          <a href="projects.html" class="btn">Voir tous les projets</a>
+        </div>
       </section>
 
       <section data-animate>
@@ -134,154 +105,94 @@
           <div class="card skill-card">
             <div class="skill-icon">🌐</div>
             <h3>Développement Web</h3>
-            <div class="skill-tags">
-              <span class="skill-tag">HTML5</span>
-              <span class="skill-tag">CSS3</span>
-              <span class="skill-tag">JavaScript</span>
-              <span class="skill-tag">React</span>
+            <div class="skill-list">
+              <span class="tech-tag">HTML5</span>
+              <span class="tech-tag">CSS3</span>
+              <span class="tech-tag">JavaScript</span>
+              <span class="tech-tag">React</span>
+              <span class="tech-tag">Vue.js</span>
             </div>
           </div>
+
           <div class="card skill-card">
-            <div class="skill-icon">🐍</div>
+            <div class="skill-icon">⚙️</div>
             <h3>Backend & DevOps</h3>
-            <div class="skill-tags">
-              <span class="skill-tag">Python</span>
-              <span class="skill-tag">Node.js</span>
-              <span class="skill-tag">Django</span>
-              <span class="skill-tag">API REST</span>
+            <div class="skill-list">
+              <span class="tech-tag">Python</span>
+              <span class="tech-tag">Node.js</span>
+              <span class="tech-tag">Django</span>
+              <span class="tech-tag">API REST</span>
+              <span class="tech-tag">Docker</span>
             </div>
           </div>
+
           <div class="card skill-card">
             <div class="skill-icon">🤖</div>
             <h3>IA & Données</h3>
-            <div class="skill-tags">
-              <span class="skill-tag">MongoDB</span>
-              <span class="skill-tag">Machine Learning</span>
-              <span class="skill-tag">NLP</span>
-              <span class="skill-tag">OpenAI</span>
+            <div class="skill-list">
+              <span class="tech-tag">MongoDB</span>
+              <span class="tech-tag">Machine Learning</span>
+              <span class="tech-tag">NLP</span>
+              <span class="tech-tag">OpenAI</span>
+              <span class="tech-tag">TensorFlow</span>
             </div>
           </div>
         </div>
+        <div style="text-align: center; margin-top: 24px;">
+          <a href="about.html" class="btn secondary">Voir toutes mes compétences</a>
+        </div>
       </section>
 
-
       <section data-animate>
-        <h2>En quelques chiffres</h2>
-        <div class="grid cols-3 stats-grid">
+        <h2>Statistiques</h2>
+        <div class="grid cols-3 stats-grid" id="stats-grid">
           <div class="card stat-card">
-            <div class="stat-number" data-count="7">0</div>
-            <div class="stat-label">Projets réalisés</div>
+            <div class="stat-number" id="stat-projects">0</div>
+            <div class="stat-label">Projets</div>
           </div>
           <div class="card stat-card">
-            <div class="stat-number" data-count="2">0</div>
+            <div class="stat-number" id="stat-experience">2+</div>
             <div class="stat-label">Années d'expérience</div>
           </div>
           <div class="card stat-card">
-            <div class="stat-number" data-count="15">0</div>
-            <div class="stat-label">Technologies maîtrisées</div>
-          </div>
-        </div>
-      </section>
-
-      <section data-animate id="services-section">
-        <h2>Services</h2>
-        <div class="grid cols-3">
-          <div class="card service-card">
-            <span class="service-icon">💻</span>
-            <h3>Développement Web</h3>
-            <p class="muted">Création d'applications web modernes et responsives avec les dernières technologies.</p>
-            <ul style="text-align: left; margin-top: 16px; font-size: 14px;">
-              <li>Applications React/Vue.js</li>
-              <li>APIs REST & GraphQL</li>
-              <li>Architecture microservices</li>
-            </ul>
-          </div>
-          <div class="card service-card">
-            <span class="service-icon">🤖</span>
-            <h3>Intelligence Artificielle</h3>
-            <p class="muted">Solutions IA personnalisées pour automatiser et optimiser vos processus.</p>
-            <ul style="text-align: left; margin-top: 16px; font-size: 14px;">
-              <li>Machine Learning</li>
-              <li>NLP & Chatbots</li>
-              <li>Analyse de données</li>
-            </ul>
-          </div>
-          <div class="card service-card">
-            <span class="service-icon">☁️</span>
-            <h3>Cloud & DevOps</h3>
-            <p class="muted">Déploiement et gestion d'infrastructures cloud scalables et sécurisées.</p>
-            <ul style="text-align: left; margin-top: 16px; font-size: 14px;">
-              <li>Docker & Kubernetes</li>
-              <li>CI/CD Pipelines</li>
-              <li>Cloud Architecture</li>
-            </ul>
+            <div class="stat-number" id="stat-technologies">10+</div>
+            <div class="stat-label">Technologies</div>
           </div>
         </div>
       </section>
 
       <section data-animate>
-        <h2>Parcours</h2>
-        <div class="timeline-container">
-          <div class="timeline-item">
-            <div class="timeline-date">2024 - Présent</div>
-            <h3>Master 1 en Intelligence Artificielle</h3>
-            <p class="muted">École Supérieure d'Informatique de Paris (SUPINFO)</p>
-            <p>Spécialisation en IA, Machine Learning et traitement du langage naturel.</p>
-          </div>
-          <div class="timeline-item">
-            <div class="timeline-date">2021 - 2024</div>
-            <h3>Licence en Mathématiques et Informatique</h3>
-            <p class="muted">Université Sidi Mohamed Ben Abdellah, Fès</p>
-            <p>Formation solide en mathématiques appliquées et informatique fondamentale. Acquisition de compétences en algorithmique, structures de données et développement logiciel.</p>
-          </div>
+        <h2>Contact</h2>
+        <p>Intéressé par une collaboration ? N'hésitez pas à me contacter !</p>
+        <div style="margin-top:16px;">
+          <a href="contact.html" class="btn">Me contacter</a>
+          <a href="mailto:kouroumaelisee@gmail.com" class="btn secondary">Envoyer un email</a>
         </div>
       </section>
 
-      <section data-animate id="certifications-section">
-        <h2>🏆 Certifications</h2>
-        <div class="grid cols-3" id="certifications-container">
-          <!-- Les certifications seront chargées dynamiquement depuis l'admin -->
-        </div>
-        <p class="muted" style="text-align: center; margin-top: 16px; font-size: 14px; display: none;" id="certifications-empty">
-          Aucune certification ajoutée pour le moment.
-        </p>
-      </section>
-
-      <section data-animate id="testimonials-section">
-        <h2>💬 Témoignages</h2>
-        <div class="grid cols-2" id="testimonials-container">
-          <!-- Les témoignages seront chargés dynamiquement depuis l'admin -->
-        </div>
-      </section>
-
-      <section data-animate id="faq-section">
-        <h2>❓ Questions fréquentes</h2>
-        <div id="faq-container" style="max-width: 800px; margin: 0 auto;">
-          <!-- FAQ sera chargée dynamiquement -->
-        </div>
-      </section>
-
-      <section data-animate>
-        <h2>Partager mon portfolio</h2>
-        <p class="muted" style="margin-bottom: 16px;">Vous connaissez quelqu'un qui pourrait être intéressé ? Partagez mon portfolio !</p>
+      <!-- Social Share Section -->
+      <section data-animate style="text-align: center;">
+        <h2>Partager ce portfolio</h2>
         <div class="share-buttons">
-          <a href="#" onclick="sharePortfolio('linkedin'); return false;" class="share-btn linkedin">
+          <button onclick="sharePortfolio('linkedin')" class="share-btn linkedin">
             <span>💼</span> LinkedIn
-          </a>
-          <a href="#" onclick="sharePortfolio('twitter'); return false;" class="share-btn twitter">
+          </button>
+          <button onclick="sharePortfolio('twitter')" class="share-btn twitter">
             <span>🐦</span> Twitter
-          </a>
-          <a href="#" onclick="sharePortfolio('email'); return false;" class="share-btn">
+          </button>
+          <button onclick="sharePortfolio('email')" class="share-btn">
             <span>📧</span> Email
-          </a>
+          </button>
         </div>
       </section>
     </main>
+
+    <div class="noise"></div>
+    <div class="progress" id="scroll-progress"></div>
     <button id="scroll-top" class="scroll-top" aria-label="Retour en haut" title="Retour en haut">
       ↑
     </button>
     <footer class="container footer">© Mon Portfolio · <span data-year></span></footer>
     <script src="assets/js/main.js"></script>
   </body>
-  </html>
-
+</html>
