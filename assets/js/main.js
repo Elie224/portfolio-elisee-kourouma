@@ -108,65 +108,33 @@ document.addEventListener('DOMContentLoaded', () => {
           faq: data.faq || []
         };
         
-        // Vérifier que les données de l'API sont vraiment valides avant de les sauvegarder
-        const hasValidAPIData = (cleanData.projects?.length > 0) || 
-                               (cleanData.skills?.length > 0) || 
-                               (cleanData.timeline?.length > 0) ||
-                               (cleanData.personal?.photo);
+        // TOUJOURS accepter et sauvegarder les données de l'API
+        // Cela permet la synchronisation admin → public même avec des données partielles
+        console.log('🔄 Mise à jour localStorage avec données API (même si partielles)');
         
-        if (!hasValidAPIData) {
-          console.warn('⚠️ API retourne des données vides, ne pas écraser localStorage');
-          // Ne pas écraser localStorage avec des données vides
+        // Vérifier quand même si on a au moins des données de base
+        const hasMinimalData = cleanData.personal?.fullName || 
+                              cleanData.personal?.email ||
+                              cleanData.projects?.length >= 0 || // 0 est valide (portfolio vide)
+                              cleanData.skills?.length >= 0;    // 0 est valide (compétences vides)
+        
+        if (!hasMinimalData) {
+          console.warn('⚠️ API retourne vraiment rien, fallback localStorage');
           const existingDataStr = localStorage.getItem('portfolioData');
           if (existingDataStr) {
             try {
-              const existingData = JSON.parse(existingDataStr);
-              const hasValidLocalData = (existingData.projects?.length > 0) || 
-                                     (existingData.skills?.length > 0) || 
-                                     (existingData.timeline?.length > 0);
-              if (hasValidLocalData) {
-                console.log('✅ Utilisation des données locales valides (API vide)');
-                return existingData; // Retourner les données locales au lieu de null
-              }
+              return JSON.parse(existingDataStr);
             } catch (e) {
-              // Ignorer
+              console.log('🔧 localStorage corrompu, initialisation défaut');
+              initDefaultData();
+              return null;
             }
           }
-          // Si pas de données locales valides, initialiser
-          console.log('⚠️ Pas de données locales valides, initialisation...');
-          initDefaultData();
-          return null;
         }
         
-        // Vérification finale AVANT de sauvegarder : s'assurer que les données sont vraiment valides
-        const finalCheck = (cleanData.projects?.length > 0) || 
-                          (cleanData.skills?.length > 0) || 
-                          (cleanData.timeline?.length > 0) ||
-                          (cleanData.personal?.photo);
-        
-        if (!finalCheck) {
-          console.warn('⚠️ Vérification finale échouée : API retourne des données vides, ne pas écraser localStorage');
-          // Ne pas écraser localStorage avec des données vides
-          const existingDataStr = localStorage.getItem('portfolioData');
-          if (existingDataStr) {
-            try {
-              const existingData = JSON.parse(existingDataStr);
-              const hasValidLocalData = (existingData.projects?.length > 0) || 
-                                     (existingData.skills?.length > 0) || 
-                                     (existingData.timeline?.length > 0);
-              if (hasValidLocalData) {
-                console.log('✅ Préservation des données locales valides (vérification finale échouée)');
-                return existingData; // Retourner les données locales au lieu de null
-              }
-            } catch (e) {
-              // Ignorer
-            }
-          }
-          // Si pas de données locales valides, initialiser
-          console.log('⚠️ Pas de données locales valides, initialisation...');
-          initDefaultData();
-          return null;
-        }
+        // SYNCHRONISATION FORCÉE : Toujours sauvegarder les données API dans localStorage
+        // Cela permet aux compétences ajoutées via admin d'être visibles publiquement
+        console.log('💾 Synchronisation forcée API → localStorage pour affichage public');
         
         // Sauvegarder dans localStorage comme cache seulement si les données sont valides
         localStorage.setItem('portfolioData', JSON.stringify(cleanData));
