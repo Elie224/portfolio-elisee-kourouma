@@ -568,9 +568,9 @@ window.clearAllData = function() {
 // Autres fonctions demandées par l'HTML
 window.showProjectForm = function() { /* Formulaire projet à implémenter */ };
 window.hideProjectForm = function() { /* Fermeture formulaire projet */ };
-window.editProject = function(id) { /* Édition projet: ${id} */ };
-window.deleteProject = function(id) { /* Suppression projet: ${id} */ };
-window.deleteSkill = function(id) { /* Suppression compétence: ${id} */ };
+window.editProject = function(id) { /* Édition projet: id */ };
+window.deleteProject = function(id) { /* Suppression projet: id */ };
+window.deleteSkill = function(id) { /* Suppression compétence: id */ };
 window.applyChangesToPortfolio = function() { 
   /* Application des modifications... */
 };
@@ -589,6 +589,6 @@ const adminFunctions = [
 
 adminFunctions.forEach(funcName => {
   window[funcName] = function() {
-    // Fonction ${funcName}() appelée - à implémenter si nécessaire
+    // Fonction appelée - à implémenter si nécessaire
   };
 });
