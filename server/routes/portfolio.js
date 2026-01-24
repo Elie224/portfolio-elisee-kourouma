@@ -65,43 +65,74 @@ router.post('/', authenticateAdmin, async (req, res) => {
     // Nettoyer et valider les données reçues
     // Helper function pour parser les chaînes JSON si nécessaire
     const parseIfString = (value, defaultValue = []) => {
+      // Si c'est déjà un tableau valide, le retourner tel quel
       if (Array.isArray(value)) {
-        // Vérifier que tous les éléments sont des objets, pas des chaînes
-        return value.map(item => {
+        // Vérifier que tous les éléments sont des objets valides, pas des chaînes
+        const cleaned = value.map(item => {
           if (typeof item === 'string') {
+            // Si c'est une chaîne qui ressemble à du code JavaScript, l'ignorer
+            if (item.includes('`') || item.includes(' + ') || (item.trim().startsWith('[') && item.includes('title:'))) {
+              console.warn('⚠️ Élément suspect détecté (code JS), ignoré');
+              return null;
+            }
             try {
-              return JSON.parse(item);
+              const parsed = JSON.parse(item);
+              // S'assurer que le résultat est un objet, pas une chaîne
+              if (typeof parsed === 'object' && !Array.isArray(parsed)) {
+                return parsed;
+              }
+              return null;
             } catch (e) {
-              console.error('Erreur parsing élément du tableau:', e);
+              console.warn('⚠️ Impossible de parser l\'élément, ignoré');
               return null;
             }
           }
-          return item;
+          // Si c'est un objet valide, le retourner
+          if (item && typeof item === 'object' && !Array.isArray(item)) {
+            return item;
+          }
+          return null;
         }).filter(item => item !== null);
+        return cleaned;
       }
+      
+      // Si c'est une chaîne, essayer de la parser
       if (typeof value === 'string') {
+        // Si ça ressemble à du code JavaScript, retourner un tableau vide
+        if (value.includes('`') || value.includes(' + ') || (value.trim().startsWith('[') && value.includes('title:'))) {
+          console.warn('⚠️ Chaîne suspecte détectée (code JS), retour tableau vide');
+          return defaultValue;
+        }
         try {
           const parsed = JSON.parse(value);
           if (Array.isArray(parsed)) {
             return parsed.map(item => {
               if (typeof item === 'string') {
                 try {
-                  return JSON.parse(item);
+                  const itemParsed = JSON.parse(item);
+                  if (typeof itemParsed === 'object' && !Array.isArray(itemParsed)) {
+                    return itemParsed;
+                  }
+                  return null;
                 } catch (e) {
                   return null;
                 }
               }
-              return item;
+              if (item && typeof item === 'object' && !Array.isArray(item)) {
+                return item;
+              }
+              return null;
             }).filter(item => item !== null);
           }
           return defaultValue;
         } catch (e) {
           // Si le parsing JSON échoue, c'est peut-être du code JavaScript
-          // Dans ce cas, on retourne un tableau vide pour éviter l'erreur
-          console.error('Erreur parsing JSON (peut-être du code JS):', value.substring(0, 100));
+          console.warn('⚠️ Erreur parsing JSON (peut-être du code JS), retour tableau vide');
           return defaultValue;
         }
       }
+      
+      // Par défaut, retourner un tableau vide
       return defaultValue;
     };
     
