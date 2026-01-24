@@ -280,24 +280,19 @@ portfolioSchema.statics.getPortfolio = async function() {
       });
       
       if (!hasData) {
-        console.log('📦 Portfolio vide détecté (tableaux vides), mise à jour avec les données par défaut');
+        console.log('📦 Portfolio vide détecté (tableaux vides), suppression et recréation avec les données par défaut');
         try {
-          // Utiliser findOneAndUpdate pour mettre à jour le document vide
-          portfolio = await this.findOneAndUpdate(
-            { _id: portfolio._id },
-            { $set: DEFAULT_PORTFOLIO_DATA },
-            { 
-              new: true, 
-              runValidators: false
-            }
-          );
+          // Supprimer le document vide et en créer un nouveau avec create()
+          await this.deleteOne({ _id: portfolio._id });
+          portfolio = await this.create(DEFAULT_PORTFOLIO_DATA);
           console.log('✅ Portfolio réinitialisé avec les données par défaut:', {
             projects: portfolio.projects?.length || 0,
             skills: portfolio.skills?.length || 0,
             timeline: portfolio.timeline?.length || 0
           });
         } catch (updateError) {
-          console.error('❌ Erreur lors de la mise à jour du portfolio:', updateError);
+          console.error('❌ Erreur lors de la réinitialisation du portfolio:', updateError);
+          console.error('Détails:', updateError.message);
           // En cas d'erreur, retourner les données par défaut directement
           return DEFAULT_PORTFOLIO_DATA;
         }
