@@ -242,8 +242,8 @@ portfolioSchema.statics.getPortfolio = async function() {
   if (!portfolio) {
     // Créer un document avec les données par défaut si aucun n'existe
     console.log('📦 Aucun document trouvé, création avec les données par défaut');
-    portfolio = new this(DEFAULT_PORTFOLIO_DATA);
-    await portfolio.save();
+    // Utiliser create() au lieu de new this() pour éviter les problèmes de validation
+    portfolio = await this.create(DEFAULT_PORTFOLIO_DATA);
     console.log('✅ Portfolio créé avec les données par défaut');
   } else {
     // Vérifier si le document est vide et l'initialiser si nécessaire
@@ -267,8 +267,8 @@ portfolioSchema.statics.getPortfolio = async function() {
       console.log('📦 Portfolio vide détecté (tableaux vides), suppression et recréation avec les données par défaut');
       // Supprimer le document vide et en créer un nouveau
       await this.deleteOne({ _id: portfolio._id });
-      portfolio = new this(DEFAULT_PORTFOLIO_DATA);
-      await portfolio.save();
+      // Utiliser create() au lieu de new this() pour éviter les problèmes de validation
+      portfolio = await this.create(DEFAULT_PORTFOLIO_DATA);
       console.log('✅ Portfolio réinitialisé avec les données par défaut:', {
         projects: portfolio.projects.length,
         skills: portfolio.skills.length,
