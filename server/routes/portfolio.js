@@ -58,7 +58,8 @@ router.post('/', authenticateAdmin, async (req, res) => {
       projectsStringLength: typeof req.body.projects === 'string' ? req.body.projects.length : 0,
       projectsCount: Array.isArray(req.body.projects) ? req.body.projects.length : 'N/A',
       skillsCount: Array.isArray(req.body.skills) ? req.body.skills.length : 'N/A',
-      bodyKeys: Object.keys(req.body)
+      bodyKeys: Object.keys(req.body),
+      bodySize: JSON.stringify(req.body).length
     });
     
     // Nettoyer et valider les données reçues
