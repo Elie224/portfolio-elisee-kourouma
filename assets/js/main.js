@@ -686,4 +686,17 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize on page load
   loadAndDisplayData();
 
+  // Force reload data after a short delay to ensure DOM is ready
+  setTimeout(() => {
+    console.log('🔄 Forcing data reload...');
+    const data = JSON.parse(localStorage.getItem('portfolioData') || '{}');
+    if (data.projects || data.skills || data.timeline) {
+      loadProjects();
+      loadAboutPageContent();
+      loadHomepageProjects();
+      loadHomepageSkills();
+      console.log('✅ Data reloaded successfully');
+    }
+  }, 500);
+
 }); // End of DOMContentLoaded
