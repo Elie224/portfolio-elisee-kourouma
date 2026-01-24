@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Administration - Portfolio</title>
+    <meta name="robots" content="noindex,nofollow" />
+    
     <link rel="stylesheet" href="assets/css/styles.css" />
     <style>
       .admin-container {
@@ -81,11 +83,11 @@
         margin: 8px 0;
       }
       .btn-danger {
-        background: #ef4444;
+        background: var(--error);
         color: white;
       }
       .btn-danger:hover {
-        background: #dc2626;
+        background: var(--error);
       }
       .logout-btn {
         background: transparent;
@@ -217,7 +219,7 @@
       .success-message {
         background: rgba(16, 185, 129, 0.1);
         border: 1px solid rgba(16, 185, 129, 0.3);
-        color: #065f46;
+        color: var(--success);
         padding: 12px;
         border-radius: 8px;
         margin-bottom: 16px;
@@ -359,15 +361,15 @@
   <body id="top" class="dark">
     <header class="container">
       <nav class="nav">
-        <a class="brand" href="/">Mon Portfolio</a>
-        <button id="mobile-menu-toggle" class="mobile-menu-toggle" aria-label="Menu" aria-expanded="false">
+        <a class="brand" href="index.html">Mon Portfolio</a>
+        <button id="mobile-menu-toggle" class="menu-mobile-toggle" aria-label="Menu" aria-expanded="false">
           <span></span>
           <span></span>
           <span></span>
         </button>
-        <div class="mobile-menu-overlay" id="mobile-menu-overlay"></div>
-        <div class="links" id="nav-links">
-          <a href="/">Accueil</a>
+        <div class="menu-mobile-overlay" id="mobile-menu-overlay"></div>
+        <div class="nav-links" id="nav-links">
+          <a href="index.html">Accueil</a>
           <a href="about.html">À propos</a>
           <a href="projects.html">Projets</a>
           <a href="contact.html">Contact</a>
@@ -481,9 +483,9 @@
           <div class="admin-section">
             <h2>🔗 Liens rapides</h2>
             <div style="display: flex; flex-wrap: wrap; gap: 12px;">
-              <a href="/" class="btn secondary" target="_blank">Voir le portfolio</a>
-              <a href="projects.html" class="btn secondary" target="_blank">Voir les projets</a>
-              <a href="contact.html" class="btn secondary" target="_blank">Voir les contacts</a>
+              <a href="/" class="btn secondary" target="_blank" rel="noopener noreferrer">Voir le portfolio</a>
+              <a href="projects.html" class="btn secondary" target="_blank" rel="noopener noreferrer">Voir les projets</a>
+              <a href="contact.html" class="btn secondary" target="_blank" rel="noopener noreferrer">Voir les contacts</a>
             </div>
           </div>
 
@@ -872,7 +874,7 @@
                   <p id="cv-file-name" style="margin: 0 0 8px; color: var(--muted);"></p>
                   <p id="cv-file-size" style="margin: 0 0 12px; font-size: 12px; color: var(--muted);"></p>
                   <div style="display: flex; gap: 8px;">
-                    <a id="cv-preview-link" href="#" target="_blank" class="btn secondary" style="font-size: 14px;">👁️ Prévisualiser le CV</a>
+                    <a id="cv-preview-link" href="#" target="_blank" rel="noopener noreferrer" class="btn secondary" style="font-size: 14px;">👁️ Prévisualiser le CV</a>
                     <button type="button" onclick="clearCVUpload()" class="btn btn-danger" style="font-size: 14px;">🗑️ Supprimer le CV</button>
                   </div>
                 </div>
@@ -1261,7 +1263,7 @@
     </button>
     <footer class="container footer">© Mon Portfolio · <span data-year></span></footer>
     
-    <script src="assets/js/main.js"></script>
+    <script src="assets/js/portfolio.js"></script>
     <script src="assets/js/admin.js"></script>
   </body>
 </html>

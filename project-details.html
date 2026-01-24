@@ -3,26 +3,29 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Détails du projet - Portfolio</title>
+    <title>Détails du projet - Portfolio Nema Kourouma</title>
+    <meta name="description" content="Détails complets du projet avec technologies utilisées, fonctionnalités et liens vers le code source." />
+    <meta name="robots" content="index,follow" />
+    
     <link rel="stylesheet" href="assets/css/styles.css" />
   </head>
   <body id="top" class="dark">
     <header class="container">
       <nav class="nav">
-        <a class="brand" href="/">Mon Portfolio</a>
-        <button id="mobile-menu-toggle" class="mobile-menu-toggle" aria-label="Menu" aria-expanded="false">
+        <a class="brand" href="index.html">Mon Portfolio</a>
+        <button id="mobile-menu-toggle" class="menu-mobile-toggle" aria-label="Menu" aria-expanded="false">
           <span></span>
           <span></span>
           <span></span>
         </button>
-        <div class="mobile-menu-overlay" id="mobile-menu-overlay"></div>
-        <div class="links" id="nav-links">
-          <a href="/">Accueil</a>
+        <div class="menu-mobile-overlay" id="mobile-menu-overlay"></div>
+        <div class="nav-links" id="nav-links">
+          <a href="index.html">Accueil</a>
           <a href="about.html">À propos</a>
           <a href="projects.html">Projets</a>
           <a href="contact.html">Contact</a>
-          <a href="assets/CV.pdf" target="_blank" rel="noopener" data-cv-link="true">CV</a>
-          <a href="admin.html" class="admin-nav-link" style="display: none;">
+          <a href="assets/CV.pdf" target="_blank" rel="noopener noreferrer" data-cv-link="true">CV</a>
+          <a href="admin.html" class="admin-nav-link admin-nav-hidden">
             <span>🔐</span> <span class="admin-text">Admin</span>
           </a>
         </div>
@@ -43,7 +46,7 @@
       ↑
     </button>
     <footer class="container footer">© Mon Portfolio · <span data-year></span></footer>
-    <script src="assets/js/main.js"></script>
+    <script src="assets/js/portfolio.js"></script>
     <script>
       // Load project details
       document.addEventListener('DOMContentLoaded', () => {
@@ -162,13 +165,13 @@
           if (liveUrl || demoLink || emailSubject) {
             linksHTML = '<div style="margin: 32px 0; padding-top: 24px; border-top: 1px solid var(--line);"><h3 style="margin-bottom: 16px;">Liens</h3><div style="display: flex; gap: 12px; flex-wrap: wrap;">';
             if (liveUrl) {
-              linksHTML += `<a class="btn" href="${liveUrl}" target="_blank" rel="noopener">🌐 Voir l'application</a>`;
+              linksHTML += `<a class="btn" href="${liveUrl}" target="_blank" rel="noopener noreferrer">🌐 Voir l'application</a>`;
             }
             if (demoLink) {
-              linksHTML += `<a class="btn secondary" href="${demoLink}" target="_blank" rel="noopener">💻 Code source</a>`;
+              linksHTML += `<a class="btn secondary" href="${demoLink}" target="_blank" rel="noopener noreferrer">💻 Code source</a>`;
             }
             if (emailSubject) {
-              linksHTML += `<a class="btn secondary" href="mailto:kouroumaelisee@gmail.com?subject=${encodeURIComponent(emailSubject)}" target="_blank" rel="noopener">📧 Plus d'infos</a>`;
+              linksHTML += `<a class="btn secondary" href="#" data-project-inquiry="${project.title}" rel="noopener">📧 Plus d'infos</a>`;
             }
             linksHTML += '</div></div>';
           }

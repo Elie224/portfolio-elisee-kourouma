@@ -3,27 +3,44 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>À propos - Portfolio</title>
+    <title>À propos - Nema Elisée Kourouma | Développeur Full-Stack IA</title>
+    <meta name="description" content="Découvrez mon parcours : Master IA à l'ESGI Paris, expert Python/React/MongoDB. Passionné par l'Intelligence Artificielle et le développement web." />
+    <meta name="robots" content="index,follow" />
+    <link rel="canonical" href="https://portfolio.nemakourouma.com/about.html" />
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="À propos - Nema Elisée Kourouma | Développeur Full-Stack IA" />
+    <meta property="og:description" content="Découvrez mon parcours : Master IA à l'ESGI Paris, expert Python/React/MongoDB." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://portfolio.nemakourouma.com/about.html" />
+    <meta property="og:image" content="https://portfolio.nemakourouma.com/assets/photo.jpeg" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="À propos - Nema Elisée Kourouma" />
+    <meta name="twitter:description" content="Développeur Full-Stack IA - Master ESGI Paris" />
+    <meta name="twitter:image" content="https://portfolio.nemakourouma.com/assets/photo.jpeg" />
+    
     <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💼</text></svg>" />
     <link rel="stylesheet" href="assets/css/styles.css" />
   </head>
   <body id="top" class="dark">
     <header class="container">
       <nav class="nav">
-        <a class="brand" href="/">Mon Portfolio</a>
-        <button id="mobile-menu-toggle" class="mobile-menu-toggle" aria-label="Menu" aria-expanded="false">
+        <a class="brand" href="index.html">Mon Portfolio</a>
+        <button id="mobile-menu-toggle" class="menu-mobile-toggle" aria-label="Menu" aria-expanded="false">
           <span></span>
           <span></span>
           <span></span>
         </button>
-        <div class="mobile-menu-overlay" id="mobile-menu-overlay"></div>
-        <div class="links" id="nav-links">
-          <a href="/">Accueil</a>
-          <a href="about.html">À propos</a>
+        <div class="menu-mobile-overlay" id="mobile-menu-overlay"></div>
+        <div class="nav-links" id="nav-links">
+          <a href="index.html">Accueil</a>
+          <a href="about.html" aria-current="page">À propos</a>
           <a href="projects.html">Projets</a>
           <a href="contact.html">Contact</a>
-          <a href="assets/CV.pdf" target="_blank" rel="noopener" data-cv-link="true">CV</a>
-          <a href="admin.html" class="admin-nav-link" style="display: none;">
+          <a href="assets/CV.pdf" target="_blank" rel="noopener noreferrer" data-cv-link="true">CV</a>
+          <a href="admin.html" class="admin-nav-link admin-nav-hidden">
             <span>🔐</span> <span class="admin-text">Admin</span>
           </a>
         </div>
@@ -37,11 +54,11 @@
           Master 1 en Intelligence Artificielle à l'École Supérieure d'Informatique de Paris. Titulaire d'une licence en mathématiques et informatique (USMBA Fès).
         </p>
         <div style="display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap;margin-top:32px;">
-          <img src="assets/photo.jpeg" alt="Photo de Nema Elisée Kourouma" class="avatar" loading="lazy" style="width:180px;height:180px;object-fit:cover;border-radius:50%;border:3px solid var(--accent);box-shadow: 0 10px 30px rgba(91, 124, 250, 0.3);" data-scroll-reveal="bottom" />
+          <img src="assets/photo.jpeg" alt="Photo de Nema Elisée Kourouma" class="about-avatar" width="180" height="180" loading="lazy" data-scroll-reveal="bottom" />
           <div style="text-align: left;" data-scroll-reveal="left">
             <h2 style="margin-bottom: 8px;" id="about-name">Nema Elisée Kourouma</h2>
             <p class="muted" style="margin-bottom: 16px;" id="about-title">Développeur Full-Stack & IA</p>
-            <a href="assets/CV.pdf" target="_blank" rel="noopener" class="btn" data-cv-link="true" style="display: inline-flex; align-items: center; gap: 8px;">
+            <a href="assets/CV.pdf" target="_blank" rel="noopener noreferrer" class="btn about-cv-link" data-cv-link="true">
               <span>📄</span> Télécharger mon CV
             </a>
           </div>
@@ -51,7 +68,7 @@
       <!-- Stats Section -->
       <section data-animate style="margin: 48px 0;">
         <h2 style="text-align: center; margin-bottom: 32px;" data-shimmer>En quelques chiffres</h2>
-        <div class="grid cols-3 stats-grid">
+        <div class="grid grid-3 stats-grid">
           <div class="card stat-card" data-scroll-reveal="bottom">
             <div class="stat-number" data-count="4">0</div>
             <div class="stat-label">Projets réalisés</div>
@@ -96,7 +113,7 @@
       <!-- Skills Section -->
       <section data-animate style="margin: 48px 0;" id="about-skills-section">
         <h2 style="text-align: center; margin-bottom: 32px;" data-shimmer>Mes compétences</h2>
-        <div class="grid cols-3" id="about-skills">
+        <div class="grid grid-3" id="about-skills">
           <!-- Skills will be loaded dynamically -->
         </div>
       </section>
@@ -104,7 +121,7 @@
       <!-- Values Section -->
       <section data-animate style="margin: 48px 0;">
         <h2 style="text-align: center; margin-bottom: 32px;" data-shimmer>Mes valeurs</h2>
-        <div class="grid cols-2" style="max-width: 900px; margin: 0 auto; gap: 24px;">
+        <div class="grid grid-2" style="max-width: 900px; margin: 0 auto; gap: 24px;">
           <div class="card" data-scroll-reveal="left" style="text-align: center; padding: 32px; transition: all 0.3s ease;">
             <div style="font-size: 48px; margin-bottom: 16px;">💡</div>
             <h3>Innovation</h3>
@@ -156,7 +173,7 @@
       ↑
     </button>
     <footer class="container footer">© Mon Portfolio · <span data-year></span></footer>
-    <script src="assets/js/main.js"></script>
+    <script src="assets/js/portfolio.js"></script>
   </body>
   </html>
 

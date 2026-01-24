@@ -3,27 +3,44 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Projets - Portfolio</title>
+    <title>Mes Projets - Nema Elisée Kourouma | IA, Python, React</title>
+    <meta name="description" content="Découvrez mes projets en Intelligence Artificielle et développement web : Python, React, MongoDB, APIs. Projets étudiants et personnels." />
+    <meta name="robots" content="index,follow" />
+    <link rel="canonical" href="https://portfolio.nemakourouma.com/projects.html" />
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Mes Projets - Nema Elisée Kourouma | IA, Python, React" />
+    <meta property="og:description" content="Projets en Intelligence Artificielle et développement web : Python, React, MongoDB, APIs." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://portfolio.nemakourouma.com/projects.html" />
+    <meta property="og:image" content="https://portfolio.nemakourouma.com/assets/photo.jpeg" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Mes Projets - Nema Elisée Kourouma" />
+    <meta name="twitter:description" content="Projets IA et développement web" />
+    <meta name="twitter:image" content="https://portfolio.nemakourouma.com/assets/photo.jpeg" />
+    
     <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💼</text></svg>" />
     <link rel="stylesheet" href="assets/css/styles.css" />
   </head>
   <body id="top" class="dark">
     <header class="container">
       <nav class="nav">
-        <a class="brand" href="/">Mon Portfolio</a>
-        <button id="mobile-menu-toggle" class="mobile-menu-toggle" aria-label="Menu" aria-expanded="false">
+        <a class="brand" href="index.html">Mon Portfolio</a>
+        <button id="mobile-menu-toggle" class="menu-mobile-toggle" aria-label="Menu" aria-expanded="false">
           <span></span>
           <span></span>
           <span></span>
         </button>
-        <div class="mobile-menu-overlay" id="mobile-menu-overlay"></div>
-        <div class="links" id="nav-links">
-          <a href="/">Accueil</a>
+        <div class="menu-mobile-overlay" id="mobile-menu-overlay"></div>
+        <div class="nav-links" id="nav-links">
+          <a href="index.html">Accueil</a>
           <a href="about.html">À propos</a>
-          <a href="projects.html">Projets</a>
+          <a href="projects.html" aria-current="page">Projets</a>
           <a href="contact.html">Contact</a>
-          <a href="assets/CV.pdf" target="_blank" rel="noopener" data-cv-link="true">CV</a>
-          <a href="admin.html" class="admin-nav-link" style="display: none;">
+          <a href="assets/CV.pdf" target="_blank" rel="noopener noreferrer" data-cv-link="true">CV</a>
+          <a href="admin.html" class="admin-nav-link admin-nav-hidden">
             <span>🔐</span> <span class="admin-text">Admin</span>
           </a>
         </div>
@@ -40,7 +57,7 @@
 
       <!-- Stats Section -->
       <section data-animate style="margin: 32px 0 48px;">
-        <div class="grid cols-3 stats-grid">
+        <div class="grid grid-3 stats-grid">
           <div class="card stat-card" data-scroll-reveal="bottom">
             <div class="stat-number" id="total-projects-count" data-count="4">0</div>
             <div class="stat-label">Projets au total</div>
@@ -120,7 +137,7 @@
 
       <!-- Projects Grid -->
       <section data-animate>
-        <div class="grid cols-2" id="projects-grid" style="position: relative; z-index: auto; gap: 24px;">
+        <div class="grid grid-2" id="projects-grid" style="position: relative; z-index: auto; gap: 24px;">
           <!-- Les projets seront chargés dynamiquement depuis localStorage -->
         </div>
 
@@ -145,7 +162,7 @@
       ↑
     </button>
     <footer class="container footer">© Mon Portfolio · <span data-year></span></footer>
-    <script src="assets/js/main.js"></script>
+    <script src="assets/js/portfolio.js"></script>
   </body>
   </html>
 
