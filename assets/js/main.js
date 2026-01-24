@@ -26,9 +26,9 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('✅ Données par défaut initialisées');
   }
 
-  // Configuration API
+  // Configuration API - DÉSACTIVÉE EN MODE LOCAL
   const API_BASE_URL = window.location.hostname === 'localhost' 
-    ? 'http://localhost:3000/api' 
+    ? null // Pas d'API en local
     : 'https://portfolio-backend-x47u.onrender.com/api';
   
   // Vérifier si les données sont vraiment vides (pas juste un objet avec des tableaux vides)
@@ -60,8 +60,28 @@ document.addEventListener('DOMContentLoaded', () => {
     return isEmpty;
   }
 
-  // Load portfolio data from API
+  // Load portfolio data - SIMPLIFIÉ POUR MODE LOCAL
   async function loadPortfolioFromAPI() {
+    // EN MODE LOCAL : PAS D'APPEL API, UTILISER DIRECTEMENT LOCALSTORAGE
+    if (window.location.hostname === 'localhost') {
+      console.log('🏠 Mode local détecté - utilisation directe de localStorage');
+      const existingData = localStorage.getItem('portfolioData');
+      if (existingData) {
+        try {
+          return JSON.parse(existingData);
+        } catch (e) {
+          console.log('📦 Erreur parsing localStorage, utilisation des données par défaut');
+          initDefaultData();
+          return null;
+        }
+      } else {
+        console.log('📦 localStorage vide, initialisation des données par défaut');
+        initDefaultData();
+        return null;
+      }
+    }
+    
+    // MODE PRODUCTION : API normale
     try {
       const response = await fetch(`${API_BASE_URL}/portfolio`);
       if (response.ok) {
@@ -617,6 +637,36 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function loadAndDisplayData() {
+    // MODE LOCAL : PAS D'APPEL API, CHARGEMENT DIRECT
+    if (window.location.hostname === 'localhost') {
+      console.log('🏠 Mode local : chargement direct des données...');
+      
+      // Vérifier/initialiser les données par défaut
+      const existingData = localStorage.getItem('portfolioData');
+      if (!existingData) {
+        console.log('📦 Initialisation des données par défaut...');
+        initDefaultData();
+      }
+      
+      // Charger et afficher immédiatement
+      setTimeout(() => {
+        loadProjects();
+        loadAboutPageContent();
+        loadHomepageProjects();
+        loadHomepageSkills();
+        
+        const checkData = JSON.parse(localStorage.getItem('portfolioData') || '{}');
+        console.log('✅ Données chargées:', {
+          projects: checkData.projects?.length || 0,
+          skills: checkData.skills?.length || 0,
+          timeline: checkData.timeline?.length || 0
+        });
+      }, 50);
+      
+      return;
+    }
+    
+    // MODE PRODUCTION : API normale
     try {
       const data = await loadPortfolioFromAPI();
 

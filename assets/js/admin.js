@@ -3,9 +3,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const ADMIN_EMAIL = 'kouroumaelisee@gmail.com';
   // Password removed for security - use API authentication only
   
-  // Configuration API
+  // Configuration API - DÉSACTIVÉE EN MODE LOCAL
   const API_BASE_URL = window.location.hostname === 'localhost' 
-    ? 'http://localhost:3000/api' 
+    ? null // Pas d'API en local
     : 'https://portfolio-backend-x47u.onrender.com/api';
   
   // NETTOYAGE COMPLET DU LOCALSTORAGE AU DÉMARRAGE
@@ -541,8 +541,8 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     
-    // Sauvegarder via API si token disponible
-    if (apiToken) {
+    // Sauvegarder via API si token disponible ET pas en mode local
+    if (apiToken && API_BASE_URL) {
       try {
         console.log('📤 Envoi des données au serveur...', {
           projects: cleanData.projects?.length || 0,
@@ -658,8 +658,24 @@ document.addEventListener('DOMContentLoaded', () => {
     return !hasProjects && !hasSkills && !hasTimeline && !hasPersonal;
   }
 
-  // Load portfolio data from API
+  // Load portfolio data from API - DÉSACTIVÉ EN MODE LOCAL
   async function loadPortfolioFromAPI() {
+    // MODE LOCAL : PAS D'APPEL API
+    if (!API_BASE_URL) {
+      console.log('🏠 Mode local : chargement depuis localStorage uniquement');
+      const localData = localStorage.getItem('portfolioData');
+      if (localData) {
+        try {
+          return JSON.parse(localData);
+        } catch (e) {
+          console.log('📦 Erreur parsing localStorage, utilisation des données par défaut');
+          return DEFAULT_DATA;
+        }
+      }
+      return DEFAULT_DATA;
+    }
+
+    // MODE PRODUCTION : API normale
     try {
       const response = await fetch(`${API_BASE_URL}/portfolio`);
       if (response.ok) {
@@ -815,8 +831,23 @@ document.addEventListener('DOMContentLoaded', () => {
     initPhotoUpload();
   }
 
-  // Login function to get JWT token from API
+  // Login function to get JWT token from API - DÉSACTIVÉ EN MODE LOCAL
   async function loginAdmin(email, password) {
+    // MODE LOCAL : LOGIN SIMULÉ
+    if (!API_BASE_URL) {
+      console.log('🏠 Mode local : login simulé');
+      if (email === ADMIN_EMAIL) {
+        // Simulation d'un login réussi
+        apiToken = 'local-token-' + Date.now();
+        localStorage.setItem('apiToken', apiToken);
+        showDashboard(email);
+        return true;
+      } else {
+        throw new Error('Email incorrect pour le mode local');
+      }
+    }
+
+    // MODE PRODUCTION : API normale
     try {
       const response = await fetch(`${API_BASE_URL}/portfolio/login`, {
         method: 'POST',
