@@ -54,11 +54,33 @@ router.post('/', authenticateAdmin, async (req, res) => {
     
     // VALIDATION ULTRA-STRICTE : Détecter et rejeter immédiatement le code JavaScript
     const bodyString = JSON.stringify(req.body);
-    const hasJavaScriptCode = bodyString.includes("'\\n' +") || 
-                             bodyString.includes('`') || 
-                             bodyString.includes("\\n' +") ||
-                             bodyString.includes('+ \'') ||
-                             bodyString.includes('\n  \'');
+    console.log('🔍 DEBUT BODY STRING (200 chars):', bodyString.substring(0, 200));
+    
+    // VALIDATION DIRECTE DU CONTENU
+    if (req.body.projects && Array.isArray(req.body.projects)) {
+      console.log('📋 PROJECTS REÇUS:', {
+        count: req.body.projects.length,
+        firstType: typeof req.body.projects[0],
+        firstContent: req.body.projects[0] && JSON.stringify(req.body.projects[0]).substring(0, 100)
+      });
+      
+      // Vérifier si le premier projet est une chaîne JavaScript
+      const firstProject = req.body.projects[0];
+      if (typeof firstProject === 'string' && firstProject.includes('title:')) {
+        console.error('🚨 PREMIER PROJET EST UNE CHAÎNE JAVASCRIPT!');
+        console.error('📋 Contenu:', firstProject.substring(0, 300));
+      }
+    }
+    
+    const hasJavaScriptCode = bodyString.includes('"[\\n\' +') ||      // Pattern exact des logs
+                             bodyString.includes("'\\n' +") ||       // Double échappé  
+                             bodyString.includes('"\\n\' +') ||      // Double échappé alternatif
+                             bodyString.includes('`') ||             // Backticks
+                             bodyString.includes("\\n' +") ||        // Simple échappé  
+                             bodyString.includes('+ \'') ||          // Concaténation
+                             bodyString.includes('\n  \'') ||        // Newline + indent
+                             bodyString.includes('title:') && bodyString.includes('\\n\' +') ||  // Combo titre + newline
+                             /\[\\n['"]/.test(bodyString);           // Regex: [ + \n + quote
     
     if (hasJavaScriptCode) {
       console.error('🚨 CODE JAVASCRIPT DÉTECTÉ dans la requête! Rejet immédiat.');
