@@ -235,12 +235,110 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // FONCTIONS D'AFFICHAGE RESTAURÉES
+  
+  // Load projects into projects grid
+  function loadProjects() {
+    const data = JSON.parse(localStorage.getItem('portfolioData') || '{}');
+    const projects = data.projects || [];
+    
+    const projectsGrid = document.getElementById('projects-grid');
+    if (projectsGrid) {
+      if (projects.length === 0) {
+        projectsGrid.innerHTML = '<div class="card" style="text-align: center; padding: 32px; grid-column: 1/-1;"><h3>Aucun projet pour le moment</h3><p class="muted">Les projets ajoutés via l\'admin apparaîtront ici.</p></div>';
+      } else {
+        projectsGrid.innerHTML = projects.map(project => `
+          <div class="card project-card" data-scroll-reveal="bottom">
+            <h3>${project.title}</h3>
+            <p class="muted">${project.shortDesc || project.description}</p>
+            <div class="tech-tags">
+              ${(project.tags || []).map(tag => `<span class="tech-tag">${tag}</span>`).join('')}
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+    
+    // Update project stats
+    document.getElementById('total-projects-count')?.setAttribute('data-count', projects.length);
+    document.getElementById('featured-projects-count')?.setAttribute('data-count', projects.filter(p => p.featured).length);
+    document.getElementById('visible-projects-count')?.setAttribute('data-count', projects.filter(p => p.public !== false).length);
+  }
+
+  // Load skills into about page
+  function loadSkills() {
+    const data = JSON.parse(localStorage.getItem('portfolioData') || '{}');
+    const skills = data.skills || [];
+    
+    const skillsContainer = document.getElementById('about-skills');
+    if (skillsContainer) {
+      if (skills.length === 0) {
+        skillsContainer.innerHTML = '<div class="card" style="text-align: center; padding: 32px; grid-column: 1/-1;"><h3>Aucune compétence ajoutée</h3><p class="muted">Les compétences ajoutées via l\'admin apparaîtront ici.</p></div>';
+      } else {
+        skillsContainer.innerHTML = skills.map(skill => `
+          <div class="card skill-card" data-scroll-reveal="bottom">
+            <div style="text-align: center; font-size: 48px; margin-bottom: 16px;">${skill.icon || '💻'}</div>
+            <h3 style="text-align: center; margin-bottom: 12px;">${skill.name}</h3>
+            <div class="skill-list">
+              ${(skill.skills || []).map(s => `<span class="tech-tag">${s}</span>`).join('')}
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+  }
+
+  // Load timeline into about page
+  function loadTimeline() {
+    const data = JSON.parse(localStorage.getItem('portfolioData') || '{}');
+    const timeline = data.timeline || [];
+    
+    const timelineContainer = document.getElementById('about-timeline');
+    if (timelineContainer) {
+      if (timeline.length === 0) {
+        timelineContainer.innerHTML = '<div class="card" style="text-align: center; padding: 32px;"><h3>Aucun élément de parcours</h3><p class="muted">Le parcours ajouté via l\'admin apparaîtra ici.</p></div>';
+      } else {
+        timelineContainer.innerHTML = timeline.map((item, index) => `
+          <div class="timeline-item" data-scroll-reveal="left" style="animation-delay: ${index * 0.1}s">
+            <div class="timeline-content">
+              <div class="timeline-date">${item.date}</div>
+              <h3>${item.title}</h3>
+              <h4 class="muted">${item.subtitle}</h4>
+              <p>${item.description}</p>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+  }
+
+  // Load about page content
+  function loadAboutPageContent() {
+    const data = JSON.parse(localStorage.getItem('portfolioData') || '{}');
+    
+    // Update about description
+    const aboutDesc = document.getElementById('about-description-content');
+    if (aboutDesc && data.about?.aboutDescription) {
+      aboutDesc.innerHTML = `<p>${data.about.aboutDescription}</p>`;
+    }
+    
+    // Load skills and timeline
+    loadSkills();
+    loadTimeline();
+  }
+
   // Load and display portfolio data on page load
   async function loadAndDisplayData() {
     try {
       const data = await loadPortfolioFromAPI();
       if (data) {
         console.log('✅ Portfolio data loaded successfully');
+        
+        // Immediately update displays after loading data
+        setTimeout(() => {
+          loadProjects();
+          loadAboutPageContent();
+        }, 100);
       }
     } catch (error) {
       console.error('❌ Error loading portfolio:', error);
