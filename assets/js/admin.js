@@ -89,15 +89,14 @@ document.addEventListener('DOMContentLoaded', () => {
         category: 'Cloud',
         shortDesc: 'Stockage cloud 30Go',
         description: 'Plateforme stockage cloud',
-        features: ['Cloud', 'Upload', 'Download']
-        ],
+        features: ['Cloud', 'Upload', 'Download'],
         tags: ['Web', 'Cloud'],
         link: 'https://supfile-frontend.onrender.com/',
         demoLink: '',
         emailSubject: 'Infos: Supfile',
-            featured: true,
-            public: true
-          }
+        featured: true,
+        public: true
+      }
     ],
     skills: [
       { icon: 'W', name: 'Web', skills: ['HTML', 'CSS', 'JS'] },
