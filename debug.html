@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Portfolio</title>
+</head>
+<body>
+    <h1>🔍 Debug Portfolio Data</h1>
+    <div id="debug-output"></div>
+
+    <script>
+        const output = document.getElementById('debug-output');
+
+        function debugPortfolio() {
+            output.innerHTML = '<h2>Analysing portfolio data...</h2>';
+
+            // Check localStorage
+            const portfolioData = localStorage.getItem('portfolioData');
+            output.innerHTML += `<p><strong>localStorage 'portfolioData' exists:</strong> ${portfolioData ? '✅ YES' : '❌ NO'}</p>`;
+
+            if (portfolioData) {
+                try {
+                    const data = JSON.parse(portfolioData);
+                    output.innerHTML += `
+                        <h3>✅ Data parsed successfully</h3>
+                        <p><strong>Projects count:</strong> ${data.projects ? data.projects.length : 0}</p>
+                        <p><strong>Skills count:</strong> ${data.skills ? data.skills.length : 0}</p>
+                        <p><strong>Timeline count:</strong> ${data.timeline ? data.timeline.length : 0}</p>
+
+                        <h4>Projects:</h4>
+                        <ul>
+                            ${(data.projects || []).map(p => `<li>${p.title || 'No title'}</li>`).join('')}
+                        </ul>
+
+                        <h4>Skills:</h4>
+                        <ul>
+                            ${(data.skills || []).map(s => `<li>${s.name || 'No name'} (${(s.skills || []).length} skills)</li>`).join('')}
+                        </ul>
+                    `;
+                } catch (e) {
+                    output.innerHTML += `<p style="color: red;"><strong>❌ JSON Parse Error:</strong> ${e.message}</p>`;
+                    output.innerHTML += `<p><strong>Raw data:</strong> ${portfolioData.substring(0, 200)}...</p>`;
+                }
+            } else {
+                output.innerHTML += '<p style="color: red;">❌ No portfolio data in localStorage</p>';
+            }
+
+            // Test the initDefaultData function
+            output.innerHTML += '<h3>Testing initDefaultData function...</h3>';
+            try {
+                // Simulate the initDefaultData function
+                const DEFAULT_DATA = {
+                    personal: {
+                        fullName: 'Nema Elisée Kourouma',
+                        email: 'kouroumaelisee@gmail.com',
+                        phone: '',
+                        photo: 'assets/photo.jpeg',
+                        currentEducation: 'Master 1 en Intelligence Artificielle à l\'École Supérieure d\'Informatique de Paris',
+                        previousEducation: 'Licence en mathématiques et informatique (USMBA Fès)',
+                        additionalInfo: []
+                    },
+                    projects: [
+                        { title: 'Test Project 1', category: 'Test' },
+                        { title: 'Test Project 2', category: 'Test' }
+                    ],
+                    skills: [
+                        { name: 'Test Skill 1', skills: ['Skill A', 'Skill B'] }
+                    ],
+                    timeline: [
+                        { date: '2025', title: 'Test Event', subtitle: 'Test', description: 'Test' }
+                    ]
+                };
+
+                localStorage.setItem('portfolioData', JSON.stringify(DEFAULT_DATA));
+                output.innerHTML += '<p style="color: green;">✅ Test data saved to localStorage</p>';
+
+                // Reload and check
+                const testData = localStorage.getItem('portfolioData');
+                const parsed = JSON.parse(testData);
+                output.innerHTML += `<p><strong>Test data verification:</strong> ${parsed.projects.length} projects</p>`;
+
+            } catch (e) {
+                output.innerHTML += `<p style="color: red;">❌ Error in test: ${e.message}</p>`;
+            }
+        }
+
+        // Run debug on load
+        debugPortfolio();
+
+        // Add refresh button
+        document.body.innerHTML += '<br><br><button onclick="debugPortfolio()">🔄 Refresh Debug</button>';
+        document.body.innerHTML += '<br><br><a href="index.html">🏠 Back to Portfolio</a>';
+    </script>
+</body>
+</html>

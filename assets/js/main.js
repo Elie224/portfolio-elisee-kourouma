@@ -611,23 +611,49 @@ document.addEventListener('DOMContentLoaded', () => {
   async function loadAndDisplayData() {
     try {
       const data = await loadPortfolioFromAPI();
-      if (data) {
-        console.log('✅ Portfolio data loaded successfully');
-        
-        // Immediately update displays after loading data
-        setTimeout(() => {
-          loadProjects();
-          loadAboutPageContent();
-          loadHomepageProjects();
-          loadHomepageSkills();
-        }, 100);
-      } else {
-        // Aucune donnée chargée - afficher message d'info à l'utilisateur
-        showUserError('Impossible de charger les données du portfolio. Le contenu affiché peut être incomplet.', true);
+
+      // Vérifier si nous avons des données dans localStorage
+      const localData = localStorage.getItem('portfolioData');
+      if (!localData) {
+        console.log('📦 localStorage vide, initialisation des données par défaut...');
+        initDefaultData();
+      }
+
+      // Toujours charger et afficher les données, même si l'API ne fonctionne pas
+      // Les données seront soit de l'API, soit de localStorage, soit les données par défaut
+      console.log('✅ Chargement des données du portfolio...');
+
+      // Toujours mettre à jour les affichages après le chargement
+      setTimeout(() => {
+        loadProjects();
+        loadAboutPageContent();
+        loadHomepageProjects();
+        loadHomepageSkills();
+
+        // Vérifier que les données sont bien chargées
+        const checkData = JSON.parse(localStorage.getItem('portfolioData') || '{}');
+        console.log('📊 Données actuelles:', {
+          projects: checkData.projects?.length || 0,
+          skills: checkData.skills?.length || 0,
+          timeline: checkData.timeline?.length || 0
+        });
+      }, 100);
+
+      if (!data) {
+        // Aucune donnée de l'API - utiliser localStorage ou données par défaut
+        console.log('⚠️ Utilisation des données locales/localStorage');
       }
     } catch (error) {
       console.error('❌ Error loading portfolio:', error);
       showUserError('Erreur de connexion au serveur. Veuillez vérifier votre connexion internet et rafraîchir la page.', false);
+
+      // Même en cas d'erreur, essayer de charger depuis localStorage
+      setTimeout(() => {
+        loadProjects();
+        loadAboutPageContent();
+        loadHomepageProjects();
+        loadHomepageSkills();
+      }, 100);
     }
   }
 
