@@ -244,20 +244,12 @@ portfolioSchema.statics.getPortfolio = async function() {
       // Créer un document avec les données par défaut si aucun n'existe
       console.log('📦 Aucun document trouvé, création avec les données par défaut');
       try {
-        // Utiliser findOneAndUpdate avec upsert pour éviter les problèmes de validation
-        portfolio = await this.findOneAndUpdate(
-          {},
-          DEFAULT_PORTFOLIO_DATA,
-          { 
-            upsert: true, 
-            new: true, 
-            runValidators: false,
-            setDefaultsOnInsert: true
-          }
-        );
+        // Utiliser create() au lieu de findOneAndUpdate pour éviter les problèmes de casting
+        portfolio = await this.create(DEFAULT_PORTFOLIO_DATA);
         console.log('✅ Portfolio créé avec les données par défaut');
       } catch (createError) {
         console.error('❌ Erreur lors de la création du portfolio:', createError);
+        console.error('Détails:', createError.message);
         // En cas d'erreur, retourner les données par défaut directement
         return DEFAULT_PORTFOLIO_DATA;
       }
