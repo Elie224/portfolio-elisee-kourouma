@@ -1979,7 +1979,27 @@ document.addEventListener('DOMContentLoaded', function() {
       const resultat = await reponse.json();
       
       if (reponse.ok) {
-        afficherSucces('Mot de passe changé avec succès !');
+        // Afficher les instructions pour mettre à jour le .env
+        let message = '✅ Nouveau hash généré avec succès !\n\n';
+        message += '⚠️ IMPORTANT - Étapes à suivre :\n\n';
+        if (resultat.instructions) {
+          message += resultat.instructions.join('\n') + '\n\n';
+        }
+        message += '📋 Nouveau hash :\n';
+        message += resultat.newHash || 'Non disponible';
+        message += '\n\n';
+        message += '1. Copiez le hash ci-dessus\n';
+        message += '2. Mettez à jour ADMIN_PASSWORD_HASH dans votre fichier .env\n';
+        message += '3. Redémarrez le serveur\n';
+        message += '4. Connectez-vous avec votre nouveau mot de passe';
+        
+        // Afficher dans une alerte pour que l'utilisateur puisse copier le hash
+        alert(message);
+        
+        // Afficher aussi un message de succès
+        afficherSucces('Nouveau hash généré ! Consultez l\'alerte pour les instructions.');
+        
+        // Réinitialiser le formulaire
         document.getElementById('change-password-form').reset();
       } else {
         afficherErreur(null, resultat.error || resultat.message || 'Erreur lors du changement de mot de passe');
