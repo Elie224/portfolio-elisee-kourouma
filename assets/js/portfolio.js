@@ -224,6 +224,9 @@ document.addEventListener('DOMContentLoaded', function() {
         afficherAlternances(nouvellesDonnees.alternances || []);
         afficherEvenementsTech(nouvellesDonnees.techEvents || []);
         
+        // Vérifier le mode maintenance après mise à jour
+        verifierModeMaintenance(nouvellesDonnees);
+        
         // Mettre à jour les liens CV
         setTimeout(() => {
           mettreAJourLiensCV(nouvellesDonnees.links);
@@ -504,6 +507,9 @@ document.addEventListener('DOMContentLoaded', function() {
       afficherStages(mesDonnees.stages || []);
       afficherAlternances(mesDonnees.alternances || []);
       afficherEvenementsTech(mesDonnees.techEvents || []);
+      
+      // Vérifier le mode maintenance après affichage
+      verifierModeMaintenance(mesDonnees);
       
       // Réessayer d'afficher les projets après un délai pour s'assurer que le DOM est prêt
       setTimeout(() => {
@@ -2216,8 +2222,10 @@ document.addEventListener('DOMContentLoaded', function() {
       donneesActuelles = donnees;
       hashDonneesActuelles = calculerHash(donnees);
       
-      // Vérifier le mode maintenance au chargement initial
-      verifierModeMaintenance(donnees);
+      // Vérifier le mode maintenance au chargement initial (avec délai pour s'assurer que le DOM est prêt)
+      setTimeout(() => {
+        verifierModeMaintenance(donnees);
+      }, 200);
       
       // Démarrer la vérification automatique
       demarrerVerificationAutomatique();
@@ -2280,6 +2288,11 @@ document.addEventListener('DOMContentLoaded', function() {
     charger: chargerEtAfficherDonnees,
     obtenir: obtenirMesDonnees,
     actualiser: function() {
+      // Recharger les données et vérifier le mode maintenance
+      chargerEtAfficherDonnees().then(() => {
+        const donnees = obtenirMesDonnees();
+        verifierModeMaintenance(donnees);
+      });
       chargerDonneesServeur().then(function(donnees) {
         if (donnees) {
           localStorage.setItem('portfolioData', JSON.stringify(donnees));
@@ -2291,8 +2304,12 @@ document.addEventListener('DOMContentLoaded', function() {
           afficherMesDonnees(donnees);
           afficherCertifications(donnees.certifications || []);
           afficherStages(donnees.stages || []);
-      afficherAlternances(donnees.alternances || []);
+          afficherAlternances(donnees.alternances || []);
           afficherEvenementsTech(donnees.techEvents || []);
+          
+          // Vérifier le mode maintenance après actualisation
+          verifierModeMaintenance(donnees);
+          
           // Forcer la mise à jour des liens CV
           setTimeout(() => {
             mettreAJourLiensCV(donnees.links);
@@ -2308,6 +2325,9 @@ document.addEventListener('DOMContentLoaded', function() {
           donneesActuelles = donnees;
           afficherMesDonnees(donnees);
           mettreAJourLiensCV(donnees.links);
+          
+          // Vérifier le mode maintenance même en cas d'erreur
+          verifierModeMaintenance(donnees);
         }
       });
     },

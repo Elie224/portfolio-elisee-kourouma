@@ -1861,10 +1861,23 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       };
       
+      // Sauvegarder dans les données actuelles
+      mesDonneesActuelles.settings = settings;
+      
       // Sauvegarder dans localStorage
       const currentData = JSON.parse(localStorage.getItem('portfolioData') || '{}');
       currentData.settings = settings;
       localStorage.setItem('portfolioData', JSON.stringify(currentData));
+      
+      // Sauvegarder sur le serveur
+      await sauvegarderSurServeur();
+      
+      // Forcer la mise à jour du mode maintenance sur toutes les pages
+      if (window.portfolioAPI && window.portfolioAPI.actualiser) {
+        setTimeout(() => {
+          window.portfolioAPI.actualiser();
+        }, 500);
+      }
       
       afficherSucces('Paramètres du portfolio sauvegardés avec succès !');
     } catch (erreur) {
