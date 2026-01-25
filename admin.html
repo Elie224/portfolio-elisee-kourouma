@@ -1477,9 +1477,105 @@
         <!-- Settings Tab -->
         <div id="tab-settings" class="admin-tab-content">
           <div class="admin-section">
-            <h2>⚙️ Paramètres du portfolio</h2>
+            <h2>⚙️ Paramètres du compte</h2>
             
-            <h3 style="margin-top: 24px;">Mode maintenance</h3>
+            <!-- Section Informations personnelles -->
+            <h3 style="margin-top: 24px; margin-bottom: 16px; color: var(--accent);">👤 Informations personnelles</h3>
+            <form id="account-info-form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="settings-full-name">Nom complet *</label>
+                  <input type="text" id="settings-full-name" placeholder="Ex: Nema Elisée Kourouma" required />
+                </div>
+                <div class="form-group">
+                  <label for="settings-email">Email *</label>
+                  <input type="email" id="settings-email" placeholder="votre@email.com" required />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="settings-phone">Téléphone</label>
+                  <input type="tel" id="settings-phone" placeholder="Ex: +33689306432" />
+                </div>
+                <div class="form-group">
+                  <label for="settings-address">Adresse</label>
+                  <input type="text" id="settings-address" placeholder="Ex: Paris, France" />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="settings-city">Ville</label>
+                  <input type="text" id="settings-city" placeholder="Ex: Paris" />
+                </div>
+                <div class="form-group">
+                  <label for="settings-country">Pays</label>
+                  <input type="text" id="settings-country" placeholder="Ex: France" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="settings-bio">Biographie / À propos</label>
+                <textarea id="settings-bio" placeholder="Une courte description de vous..." style="min-height: 100px;"></textarea>
+              </div>
+              <button type="submit" class="btn" style="margin-top: 12px;">💾 Enregistrer les informations personnelles</button>
+            </form>
+
+            <!-- Section Sécurité - Changement de mot de passe -->
+            <h3 style="margin-top: 48px; margin-bottom: 16px; color: var(--accent);">🔐 Sécurité - Changement de mot de passe</h3>
+            <div class="admin-info" style="margin-bottom: 20px;">
+              <p><strong>⚠️ Important</strong></p>
+              <p style="margin: 4px 0; font-size: 14px;">Pour changer votre mot de passe, vous devez connaître votre mot de passe actuel. Le nouveau mot de passe doit contenir au minimum 8 caractères.</p>
+            </div>
+            <form id="change-password-form">
+              <div class="form-group">
+                <label for="current-password">Mot de passe actuel *</label>
+                <input type="password" id="current-password" placeholder="••••••••" required autocomplete="current-password" />
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="new-password">Nouveau mot de passe *</label>
+                  <input type="password" id="new-password" placeholder="Minimum 8 caractères" required autocomplete="new-password" minlength="8" />
+                  <div style="margin-top: 6px; font-size: 12px; color: #b4bcc8 !important;">
+                    💡 Le mot de passe doit contenir au minimum 8 caractères
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="confirm-password">Confirmer le nouveau mot de passe *</label>
+                  <input type="password" id="confirm-password" placeholder="Répétez le nouveau mot de passe" required autocomplete="new-password" minlength="8" />
+                </div>
+              </div>
+              <button type="submit" class="btn" style="margin-top: 12px;">🔐 Changer le mot de passe</button>
+            </form>
+
+            <!-- Section Autres informations -->
+            <h3 style="margin-top: 48px; margin-bottom: 16px; color: var(--accent);">📝 Autres informations</h3>
+            <form id="other-info-form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="settings-current-education">Formation actuelle</label>
+                  <input type="text" id="settings-current-education" placeholder="Ex: Master 1 IA - ESGI Paris" />
+                </div>
+                <div class="form-group">
+                  <label for="settings-previous-education">Formation précédente</label>
+                  <input type="text" id="settings-previous-education" placeholder="Ex: Licence Math-Info - USMBA Fès" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="settings-languages">Langues parlées (séparées par des virgules)</label>
+                <input type="text" id="settings-languages" placeholder="Ex: Français, Anglais, Arabe" />
+              </div>
+              <div class="form-group">
+                <label for="settings-interests">Centres d'intérêt (séparés par des virgules)</label>
+                <input type="text" id="settings-interests" placeholder="Ex: Intelligence Artificielle, Développement Web, Machine Learning" />
+              </div>
+              <button type="submit" class="btn" style="margin-top: 12px;">💾 Enregistrer les autres informations</button>
+            </form>
+
+            <hr style="margin: 48px 0; border: none; border-top: 1px solid var(--line);" />
+
+            <!-- Section Paramètres du portfolio -->
+            <h3 style="margin-top: 24px; margin-bottom: 16px; color: var(--accent);">🌐 Paramètres du portfolio</h3>
+            
+            <h4 style="margin-top: 24px; margin-bottom: 12px;">Mode maintenance</h4>
             <div class="featured-checkbox">
               <input type="checkbox" id="maintenance-mode" onchange="toggleMaintenanceModeDisplay()" />
               <label for="maintenance-mode">Activer le mode maintenance</label>
@@ -1489,7 +1585,7 @@
               <textarea id="maintenance-message" placeholder="Le site est actuellement en maintenance. Nous serons bientôt de retour !"></textarea>
             </div>
 
-            <h3 style="margin-top: 32px;">SEO & Métadonnées</h3>
+            <h4 style="margin-top: 32px; margin-bottom: 12px;">SEO & Métadonnées</h4>
             <div class="form-group">
               <label for="meta-title">Titre SEO (meta title)</label>
               <input type="text" id="meta-title" placeholder="Nema Elisée Kourouma - Portfolio" />
@@ -1503,13 +1599,13 @@
               <input type="text" id="meta-keywords" placeholder="développeur, IA, web, portfolio" />
             </div>
 
-            <h3 style="margin-top: 32px;">Analytics</h3>
+            <h4 style="margin-top: 32px; margin-bottom: 12px;">Analytics</h4>
             <div class="form-group">
               <label for="google-analytics">ID Google Analytics (optionnel)</label>
               <input type="text" id="google-analytics" placeholder="G-XXXXXXXXXX" />
             </div>
 
-            <button type="button" class="btn" onclick="saveSettings()" style="margin-top: 24px;">Enregistrer les paramètres</button>
+            <button type="button" class="btn" onclick="saveSettings()" style="margin-top: 24px;">💾 Enregistrer les paramètres du portfolio</button>
           </div>
         </div>
 

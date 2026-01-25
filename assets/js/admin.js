@@ -298,6 +298,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const onglets = document.querySelectorAll('.admin-tab');
     const contenus = document.querySelectorAll('.admin-tab-content');
     
+    // Charger les infos des paramètres quand l'onglet est ouvert
+    onglets.forEach(onglet => {
+      onglet.addEventListener('click', function() {
+        const tabName = this.getAttribute('data-tab');
+        if (tabName === 'settings') {
+          chargerInfosParametres();
+        }
+      });
+    });
+    
     onglets.forEach(onglet => {
       onglet.addEventListener('click', () => {
         const tabName = onglet.getAttribute('data-tab');
@@ -329,6 +339,7 @@ document.addEventListener('DOMContentLoaded', function() {
     afficherListeTimeline();
     afficherListeServices();
     afficherListeFAQ();
+    chargerInfosParametres();
     afficherInfosAbout();
     afficherLiens();
     mettreAJourStatsDashboard();
@@ -1834,8 +1845,214 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Paramètres
   window.saveSettings = async function() {
-    afficherSucces('Paramètres sauvegardés (fonctionnalité à venir)');
+    try {
+      const settings = {
+        maintenance: {
+          enabled: document.getElementById('maintenance-mode')?.checked || false,
+          message: document.getElementById('maintenance-message')?.value || ''
+        },
+        seo: {
+          title: document.getElementById('meta-title')?.value || '',
+          description: document.getElementById('meta-description')?.value || '',
+          keywords: document.getElementById('meta-keywords')?.value || ''
+        },
+        analytics: {
+          googleAnalytics: document.getElementById('google-analytics')?.value || ''
+        }
+      };
+      
+      // Sauvegarder dans localStorage
+      const currentData = JSON.parse(localStorage.getItem('portfolioData') || '{}');
+      currentData.settings = settings;
+      localStorage.setItem('portfolioData', JSON.stringify(currentData));
+      
+      afficherSucces('Paramètres du portfolio sauvegardés avec succès !');
+    } catch (erreur) {
+      afficherErreur(null, 'Erreur lors de la sauvegarde des paramètres');
+    }
   };
+  
+  // Sauvegarde les informations personnelles depuis l'onglet Paramètres
+  async function sauvegarderInfosCompte(e) {
+    e.preventDefault();
+    
+    try {
+      const infos = {
+        name: document.getElementById('settings-full-name').value.trim(),
+        email: document.getElementById('settings-email').value.trim(),
+        phone: document.getElementById('settings-phone').value.trim(),
+        address: document.getElementById('settings-address').value.trim(),
+        city: document.getElementById('settings-city').value.trim(),
+        country: document.getElementById('settings-country').value.trim(),
+        bio: document.getElementById('settings-bio').value.trim()
+      };
+      
+      if (!infos.name || !infos.email) {
+        afficherErreur(null, 'Le nom et l\'email sont obligatoires');
+        return;
+      }
+      
+      // Mettre à jour les données personnelles
+      mesDonneesActuelles.personal = {
+        ...mesDonneesActuelles.personal,
+        ...infos
+      };
+      
+      await sauvegarderSurServeur();
+      afficherSucces('Informations personnelles mises à jour avec succès !');
+      
+      // Mettre à jour aussi l'onglet Informations personnelles
+      afficherMesInfosPersonnelles();
+    } catch (erreur) {
+      afficherErreur(null, 'Erreur lors de la mise à jour des informations');
+    }
+  }
+  
+  // Sauvegarde les autres informations
+  async function sauvegarderAutresInfos(e) {
+    e.preventDefault();
+    
+    try {
+      const autresInfos = {
+        currentEducation: document.getElementById('settings-current-education').value.trim(),
+        previousEducation: document.getElementById('settings-previous-education').value.trim(),
+        languages: document.getElementById('settings-languages').value.split(',').map(l => l.trim()).filter(l => l),
+        interests: document.getElementById('settings-interests').value.split(',').map(i => i.trim()).filter(i => i)
+      };
+      
+      // Mettre à jour les données personnelles
+      mesDonneesActuelles.personal = {
+        ...mesDonneesActuelles.personal,
+        ...autresInfos
+      };
+      
+      await sauvegarderSurServeur();
+      afficherSucces('Autres informations mises à jour avec succès !');
+    } catch (erreur) {
+      afficherErreur(null, 'Erreur lors de la mise à jour des informations');
+    }
+  }
+  
+  // Change le mot de passe
+  async function changerMotDePasse(e) {
+    e.preventDefault();
+    
+    const currentPassword = document.getElementById('current-password').value;
+    const newPassword = document.getElementById('new-password').value;
+    const confirmPassword = document.getElementById('confirm-password').value;
+    
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      afficherErreur(null, 'Tous les champs sont obligatoires');
+      return;
+    }
+    
+    if (newPassword.length < 8) {
+      afficherErreur(null, 'Le nouveau mot de passe doit contenir au minimum 8 caractères');
+      return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+      afficherErreur(null, 'Les mots de passe ne correspondent pas');
+      return;
+    }
+    
+    try {
+      const token = obtenirToken();
+      if (!token) {
+        afficherErreur(null, 'Vous devez être connecté pour changer votre mot de passe');
+        return;
+      }
+      
+      // Appeler l'API pour changer le mot de passe
+      const reponse = await fetch(`${MON_SERVEUR}/auth/change-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword
+        })
+      });
+      
+      const resultat = await reponse.json();
+      
+      if (reponse.ok) {
+        afficherSucces('Mot de passe changé avec succès !');
+        document.getElementById('change-password-form').reset();
+      } else {
+        afficherErreur(null, resultat.error || resultat.message || 'Erreur lors du changement de mot de passe');
+      }
+    } catch (erreur) {
+      console.error('Erreur changement mot de passe:', erreur);
+      afficherErreur(null, 'Impossible de changer le mot de passe. Vérifiez votre connexion au serveur.');
+    }
+  }
+  
+  // Charge les informations dans le formulaire Paramètres
+  function chargerInfosParametres() {
+    const personal = mesDonneesActuelles.personal || {};
+    
+    // Informations personnelles
+    if (document.getElementById('settings-full-name')) {
+      document.getElementById('settings-full-name').value = personal.name || personal.fullName || '';
+    }
+    if (document.getElementById('settings-email')) {
+      document.getElementById('settings-email').value = personal.email || '';
+    }
+    if (document.getElementById('settings-phone')) {
+      document.getElementById('settings-phone').value = personal.phone || '';
+    }
+    if (document.getElementById('settings-address')) {
+      document.getElementById('settings-address').value = personal.address || '';
+    }
+    if (document.getElementById('settings-city')) {
+      document.getElementById('settings-city').value = personal.city || '';
+    }
+    if (document.getElementById('settings-country')) {
+      document.getElementById('settings-country').value = personal.country || '';
+    }
+    if (document.getElementById('settings-bio')) {
+      document.getElementById('settings-bio').value = personal.bio || personal.description || '';
+    }
+    
+    // Autres informations
+    if (document.getElementById('settings-current-education')) {
+      document.getElementById('settings-current-education').value = personal.currentEducation || '';
+    }
+    if (document.getElementById('settings-previous-education')) {
+      document.getElementById('settings-previous-education').value = personal.previousEducation || '';
+    }
+    if (document.getElementById('settings-languages')) {
+      document.getElementById('settings-languages').value = Array.isArray(personal.languages) ? personal.languages.join(', ') : (personal.languages || '');
+    }
+    if (document.getElementById('settings-interests')) {
+      document.getElementById('settings-interests').value = Array.isArray(personal.interests) ? personal.interests.join(', ') : (personal.interests || '');
+    }
+    
+    // Paramètres du portfolio
+    const settings = mesDonneesActuelles.settings || {};
+    if (document.getElementById('maintenance-mode')) {
+      document.getElementById('maintenance-mode').checked = settings.maintenance?.enabled || false;
+      toggleMaintenanceModeDisplay();
+    }
+    if (document.getElementById('maintenance-message')) {
+      document.getElementById('maintenance-message').value = settings.maintenance?.message || '';
+    }
+    if (document.getElementById('meta-title')) {
+      document.getElementById('meta-title').value = settings.seo?.title || '';
+    }
+    if (document.getElementById('meta-description')) {
+      document.getElementById('meta-description').value = settings.seo?.description || '';
+    }
+    if (document.getElementById('meta-keywords')) {
+      document.getElementById('meta-keywords').value = settings.seo?.keywords || '';
+    }
+    if (document.getElementById('google-analytics')) {
+      document.getElementById('google-analytics').value = settings.analytics?.googleAnalytics || '';
+    }
+  }
   
   window.toggleMaintenanceModeDisplay = function() {
     const group = document.getElementById('maintenance-message-group');
@@ -1940,6 +2157,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // Formulaire événement technologique
     const techEventForm = document.getElementById('tech-event-form');
     if (techEventForm) techEventForm.addEventListener('submit', sauvegarderTechEvent);
+    
+    // Formulaires Paramètres
+    const accountInfoForm = document.getElementById('account-info-form');
+    if (accountInfoForm) accountInfoForm.addEventListener('submit', sauvegarderInfosCompte);
+    
+    const changePasswordForm = document.getElementById('change-password-form');
+    if (changePasswordForm) changePasswordForm.addEventListener('submit', changerMotDePasse);
+    
+    const otherInfoForm = document.getElementById('other-info-form');
+    if (otherInfoForm) otherInfoForm.addEventListener('submit', sauvegarderAutresInfos);
     
     // Bouton déconnexion
     const logoutBtn = document.getElementById('logout-btn');
