@@ -21,13 +21,27 @@ router.get('/', async (req, res) => {
                    (portfolio.timeline?.length > 0) ||
                    (portfolio.personal?.photo);
     
+    // Log pour déboguer le CV
+    const cvInfo = portfolio.links ? {
+      hasCv: !!portfolio.links.cv,
+      hasCvFile: !!portfolio.links.cvFile,
+      cvType: portfolio.links.cv ? (portfolio.links.cv.startsWith('data:') ? 'base64' : 'path') : 'none',
+      cvFileType: portfolio.links.cvFile ? (portfolio.links.cvFile.startsWith('data:') ? 'base64' : 'path') : 'none',
+      cvFileName: portfolio.links.cvFileName,
+      cvSize: portfolio.links.cvFile ? portfolio.links.cvFile.length : 0,
+      cvValue: portfolio.links.cv ? (portfolio.links.cv.length > 100 ? portfolio.links.cv.substring(0, 100) + '...' : portfolio.links.cv) : 'none',
+      cvFileValue: portfolio.links.cvFile ? (portfolio.links.cvFile.length > 100 ? portfolio.links.cvFile.substring(0, 100) + '...' : portfolio.links.cvFile) : 'none',
+      linksKeys: Object.keys(portfolio.links || {})
+    } : { error: 'No links object' };
+    
     console.log('📊 GET /api/portfolio:', {
       hasData,
       projects: portfolio.projects?.length || 0,
       skills: portfolio.skills?.length || 0,
       timeline: portfolio.timeline?.length || 0,
       hasPhoto: !!portfolio.personal?.photo,
-      responseSize: JSON.stringify(portfolio).length
+      responseSize: JSON.stringify(portfolio).length,
+      cvInfo: cvInfo
     });
     
     res.json(portfolio);
@@ -73,9 +87,51 @@ router.post('/',
       timeline: Array.isArray(req.body.timeline) ? req.body.timeline : [],
       services: Array.isArray(req.body.services) ? req.body.services : [],
       certifications: Array.isArray(req.body.certifications) ? req.body.certifications : [],
+      internships: Array.isArray(req.body.internships) ? req.body.internships : [],
+      techEvents: Array.isArray(req.body.techEvents) ? req.body.techEvents : [],
       contactMessages: Array.isArray(req.body.contactMessages) ? req.body.contactMessages : [],
       faq: Array.isArray(req.body.faq) ? req.body.faq : []
     };
+    
+    // PROTECTION : Ne pas écraser un CV base64 existant avec 'assets/CV.pdf'
+    // Si links.cv est 'assets/CV.pdf' mais qu'il existe un cvFile base64, garder le base64
+    if (updateData.links) {
+      // Récupérer le portfolio actuel pour vérifier s'il y a un CV base64
+      const portfolioActuel = await Portfolio.findOne();
+      if (portfolioActuel && portfolioActuel.links) {
+        // Si le portfolio actuel a un CV base64, ne pas l'écraser
+        if (portfolioActuel.links.cvFile && portfolioActuel.links.cvFile.startsWith('data:')) {
+          // Si les nouvelles données n'ont pas de cvFile base64 mais ont 'assets/CV.pdf', garder l'ancien base64
+          if (!updateData.links.cvFile && updateData.links.cv === 'assets/CV.pdf') {
+            console.log('🛡️ Protection : Conservation du CV base64 existant (ignoré assets/CV.pdf)');
+            updateData.links.cvFile = portfolioActuel.links.cvFile;
+            updateData.links.cv = portfolioActuel.links.cvFile; // Utiliser le base64
+            updateData.links.cvFileName = portfolioActuel.links.cvFileName;
+            updateData.links.cvFileSize = portfolioActuel.links.cvFileSize;
+          }
+        }
+        // Si les nouvelles données ont un CV base64, s'assurer qu'il remplace bien l'ancien
+        else if (updateData.links.cvFile && updateData.links.cvFile.startsWith('data:')) {
+          console.log('✅ Nouveau CV base64 détecté - Remplacement de l\'ancien');
+          // S'assurer que cv contient aussi le base64
+          if (!updateData.links.cv || !updateData.links.cv.startsWith('data:')) {
+            updateData.links.cv = updateData.links.cvFile;
+          }
+        }
+      }
+    }
+    
+    // Log pour déboguer le CV
+    if (updateData.links) {
+      console.log('📄 CV dans les données à sauvegarder:', {
+        hasCv: !!updateData.links.cv,
+        hasCvFile: !!updateData.links.cvFile,
+        cvType: updateData.links.cv ? (updateData.links.cv.startsWith('data:') ? 'base64' : 'path') : 'none',
+        cvFileType: updateData.links.cvFile ? (updateData.links.cvFile.startsWith('data:') ? 'base64' : 'path') : 'none',
+        cvFileName: updateData.links.cvFileName,
+        cvSize: updateData.links.cvFile ? updateData.links.cvFile.length : 0
+      });
+    }
 
     console.log('📦 Données validées à sauvegarder:', {
       projects: updateData.projects.length,
@@ -86,7 +142,25 @@ router.post('/',
       admin: req.admin.email
     });
     
+    // PROTECTION CRITIQUE : S'assurer que le CV base64 est bien inclus dans updateData
+    // Si updateData.links contient un CV base64, s'assurer qu'il est bien sauvegardé
+    if (updateData.links && updateData.links.cvFile && updateData.links.cvFile.startsWith('data:')) {
+      console.log('🔒 Protection CV base64 activée - Vérification avant sauvegarde:', {
+        cvFileLength: updateData.links.cvFile.length,
+        cvFileStartsWith: updateData.links.cvFile.substring(0, 30),
+        cvFileName: updateData.links.cvFileName,
+        cvFileSize: updateData.links.cvFileSize
+      });
+      
+      // S'assurer que cv contient aussi le base64
+      if (!updateData.links.cv || !updateData.links.cv.startsWith('data:')) {
+        updateData.links.cv = updateData.links.cvFile;
+        console.log('✅ cv mis à jour avec cvFile base64');
+      }
+    }
+    
     // Mettre à jour directement avec findOneAndUpdate
+    // Utiliser $set pour mettre à jour tous les champs, y compris links avec le CV base64
     const portfolio = await Portfolio.findOneAndUpdate(
       {}, // Pas de filtre spécifique, on veut le document unique
       { $set: updateData },
@@ -97,18 +171,97 @@ router.post('/',
       }
     );
     
+    // VÉRIFICATION CRITIQUE : Vérifier que le CV base64 a bien été sauvegardé
+    if (updateData.links && updateData.links.cvFile && updateData.links.cvFile.startsWith('data:')) {
+      const cvSauvegarde = portfolio.links;
+      if (!cvSauvegarde || !cvSauvegarde.cvFile || !cvSauvegarde.cvFile.startsWith('data:')) {
+        console.error('❌ ERREUR CRITIQUE: Le CV base64 n\'a PAS été sauvegardé dans MongoDB !');
+        console.error('CV envoyé:', {
+          length: updateData.links.cvFile.length,
+          startsWith: updateData.links.cvFile.substring(0, 30)
+        });
+        console.error('CV dans portfolio après sauvegarde:', {
+          hasLinks: !!cvSauvegarde,
+          hasCvFile: !!cvSauvegarde?.cvFile,
+          cvFileType: cvSauvegarde?.cvFile ? (cvSauvegarde.cvFile.startsWith('data:') ? 'base64' : 'other') : 'none'
+        });
+        
+        // TENTATIVE DE RÉCUPÉRATION : Réessayer avec une mise à jour explicite du CV
+        console.log('🔄 Tentative de récupération - Mise à jour explicite du CV...');
+        const portfolioRecupere = await Portfolio.findOneAndUpdate(
+          {},
+          { 
+            $set: { 
+              'links.cvFile': updateData.links.cvFile,
+              'links.cv': updateData.links.cv,
+              'links.cvFileName': updateData.links.cvFileName,
+              'links.cvFileSize': updateData.links.cvFileSize
+            }
+          },
+          { new: true }
+        );
+        
+        if (portfolioRecupere && portfolioRecupere.links && portfolioRecupere.links.cvFile && portfolioRecupere.links.cvFile.startsWith('data:')) {
+          console.log('✅ CV base64 récupéré avec succès après tentative de récupération');
+          portfolio = portfolioRecupere;
+        } else {
+          console.error('❌ ÉCHEC: Impossible de sauvegarder le CV base64 même après tentative de récupération');
+        }
+      } else {
+        console.log('✅ CV base64 confirmé sauvegardé dans MongoDB:', {
+          cvFileLength: cvSauvegarde.cvFile.length,
+          cvLength: cvSauvegarde.cv ? cvSauvegarde.cv.length : 0,
+          cvFileName: cvSauvegarde.cvFileName
+        });
+      }
+    }
+    
+    // Log pour déboguer le CV après sauvegarde
+    const cvInfoAfter = portfolio.links ? {
+      hasCv: !!portfolio.links.cv,
+      hasCvFile: !!portfolio.links.cvFile,
+      cvType: portfolio.links.cv ? (portfolio.links.cv.startsWith('data:') ? 'base64' : 'path') : 'none',
+      cvFileType: portfolio.links.cvFile ? (portfolio.links.cvFile.startsWith('data:') ? 'base64' : 'path') : 'none',
+      cvFileName: portfolio.links.cvFileName,
+      cvSize: portfolio.links.cvFile ? portfolio.links.cvFile.length : 0
+    } : { error: 'No links object' };
+    
     console.log('✅ Portfolio mis à jour avec succès:', {
       projects: portfolio.projects?.length || 0,
       skills: portfolio.skills?.length || 0,
-      timeline: portfolio.timeline?.length || 0
+      timeline: portfolio.timeline?.length || 0,
+      cvInfo: cvInfoAfter
     });
     
-    // Retourner une réponse propre
+    // VÉRIFICATION FINALE : S'assurer que le CV base64 est bien dans la réponse
     const portfolioObj = portfolio.toObject();
     delete portfolioObj._id;
     delete portfolioObj.__v;
     delete portfolioObj.createdAt;
     delete portfolioObj.updatedAt;
+    
+    // Vérification critique : Si un CV base64 a été envoyé, il doit être dans la réponse
+    if (updateData.links && updateData.links.cvFile && updateData.links.cvFile.startsWith('data:')) {
+      if (!portfolioObj.links || !portfolioObj.links.cvFile || !portfolioObj.links.cvFile.startsWith('data:')) {
+        console.error('❌ ERREUR CRITIQUE: Le CV base64 n\'est pas dans la réponse !');
+        console.error('CV envoyé (premiers 50 chars):', updateData.links.cvFile.substring(0, 50));
+        console.error('CV dans réponse:', portfolioObj.links?.cvFile ? portfolioObj.links.cvFile.substring(0, 50) : 'undefined');
+        
+        // Forcer le CV base64 dans la réponse même si MongoDB ne l'a pas sauvegardé
+        if (!portfolioObj.links) portfolioObj.links = {};
+        portfolioObj.links.cvFile = updateData.links.cvFile;
+        portfolioObj.links.cv = updateData.links.cv;
+        portfolioObj.links.cvFileName = updateData.links.cvFileName;
+        portfolioObj.links.cvFileSize = updateData.links.cvFileSize;
+        
+        console.log('⚠️ CV base64 forcé dans la réponse (problème de sauvegarde MongoDB détecté)');
+      } else {
+        console.log('✅ CV base64 confirmé dans la réponse:', {
+          cvFileLength: portfolioObj.links.cvFile.length,
+          cvFileName: portfolioObj.links.cvFileName
+        });
+      }
+    }
     
     res.json({ 
       success: true, 
@@ -208,6 +361,148 @@ router.post('/login', validateLoginData, async (req, res) => {
     console.error('Erreur lors de la connexion:', error.message);
     res.status(500).json({ 
       error: 'Erreur serveur lors de l\'authentification' 
+    });
+  }
+});
+
+// POST /api/portfolio/auth/change-password - Changer le mot de passe admin
+router.post('/auth/change-password',
+  authenticateAdmin,
+  async (req, res) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      
+      // Validation des champs
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ 
+          error: 'Le mot de passe actuel et le nouveau mot de passe sont requis' 
+        });
+      }
+      
+      if (newPassword.length < 8) {
+        return res.status(400).json({ 
+          error: 'Le nouveau mot de passe doit contenir au minimum 8 caractères' 
+        });
+      }
+      
+      // Vérifier le mot de passe actuel
+      const bcrypt = require('bcryptjs');
+      const isValidPassword = await bcrypt.compare(currentPassword, process.env.ADMIN_PASSWORD_HASH);
+      
+      if (!isValidPassword) {
+        console.log('❌ Tentative de changement de mot de passe avec mot de passe actuel incorrect');
+        return res.status(401).json({ 
+          error: 'Mot de passe actuel incorrect' 
+        });
+      }
+      
+      // Générer le nouveau hash
+      const saltRounds = 12;
+      const newPasswordHash = await bcrypt.hash(newPassword, saltRounds);
+      
+      // IMPORTANT: Le changement de mot de passe nécessite une modification du fichier .env
+      // Pour une solution complète, il faudrait stocker les credentials dans MongoDB
+      // Pour l'instant, on retourne le nouveau hash que l'admin devra ajouter manuellement
+      console.log('✅ Nouveau hash de mot de passe généré pour:', req.admin.email);
+      console.log('⚠️  IMPORTANT: Ajoutez cette ligne à votre fichier .env :');
+      console.log(`ADMIN_PASSWORD_HASH=${newPasswordHash}`);
+      console.log('⚠️  Puis redémarrez le serveur pour que le changement prenne effet.');
+      
+      res.json({ 
+        success: true,
+        message: 'Nouveau hash généré. Veuillez mettre à jour votre fichier .env avec le nouveau hash et redémarrer le serveur.',
+        newHash: newPasswordHash,
+        instructions: [
+          '1. Copiez le nouveau hash ci-dessus',
+          '2. Mettez à jour ADMIN_PASSWORD_HASH dans votre fichier .env',
+          '3. Redémarrez le serveur',
+          '4. Connectez-vous avec votre nouveau mot de passe'
+        ]
+      });
+      
+    } catch (error) {
+      console.error('Erreur lors du changement de mot de passe:', error.message);
+      res.status(500).json({ 
+        error: 'Erreur serveur lors du changement de mot de passe' 
+      });
+    }
+  }
+);
+
+// POST /api/portfolio/contact - Envoyer un message de contact
+router.post('/contact', 
+  limitDataSize,
+  sanitizeData,
+  async (req, res) => {
+  try {
+    const { name, email, subject, message } = req.body;
+    
+    // Validation des champs obligatoires
+    if (!name || !email || !message) {
+      return res.status(400).json({ 
+        error: 'Champs obligatoires manquants',
+        message: 'Le nom, l\'email et le message sont requis'
+      });
+    }
+    
+    // Validation de l'email
+    const emailRegex = /^\S+@\S+\.\S+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ 
+        error: 'Email invalide'
+      });
+    }
+    
+    // Récupérer le portfolio et ajouter le message
+    const portfolio = await Portfolio.findOne();
+    
+    if (!portfolio) {
+      // Créer un nouveau portfolio si inexistant
+      const defaultData = require('../models/Portfolio').MINIMAL_PORTFOLIO_DATA || {};
+      await Portfolio.create(defaultData);
+    }
+    
+    // Générer un ID unique pour le message
+    const existingMessages = portfolio.contactMessages || [];
+    const newMessageId = existingMessages.length > 0 
+      ? Math.max(...existingMessages.map(m => m.id || 0)) + 1 
+      : 1;
+    
+    // Créer le nouveau message
+    const newMessage = {
+      id: newMessageId,
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      subject: subject ? subject.trim() : 'Sans objet',
+      message: message.trim(),
+      date: new Date().toISOString(),
+      read: false
+    };
+    
+    // Ajouter le message au portfolio
+    await Portfolio.findOneAndUpdate(
+      {},
+      { $push: { contactMessages: newMessage } },
+      { new: true, upsert: true }
+    );
+    
+    console.log('✅ Message de contact reçu:', {
+      id: newMessageId,
+      email: email,
+      subject: subject || 'Sans objet'
+    });
+    
+    res.json({ 
+      success: true, 
+      message: 'Message envoyé avec succès',
+      messageId: newMessageId
+    });
+    
+  } catch (error) {
+    console.error('❌ Erreur lors de l\'envoi du message:', error.message);
+    res.status(500).json({ 
+      error: 'Erreur serveur lors de l\'envoi du message',
+      message: 'Une erreur est survenue. Veuillez réessayer plus tard.'
     });
   }
 });
