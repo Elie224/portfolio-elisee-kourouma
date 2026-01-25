@@ -82,6 +82,20 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Vérifie et affiche le mode maintenance
   function verifierModeMaintenance(donnees) {
+    // Si pas de données, essayer de charger depuis localStorage
+    if (!donnees) {
+      const donneesLocales = localStorage.getItem('portfolioData');
+      if (donneesLocales) {
+        try {
+          donnees = JSON.parse(donneesLocales);
+        } catch (e) {
+          return; // Si erreur, ne rien faire
+        }
+      } else {
+        return; // Pas de données disponibles
+      }
+    }
+    
     const settings = donnees?.settings || {};
     const maintenanceEnabled = settings.maintenance?.enabled || false;
     const maintenanceMessage = settings.maintenance?.message || 'Le site est actuellement en maintenance. Nous serons bientôt de retour !';
@@ -341,6 +355,20 @@ document.addEventListener('DOMContentLoaded', function() {
           experience: 2,
           technologies: 10
         }
+      },
+      settings: {
+        maintenance: {
+          enabled: false,
+          message: 'Le site est actuellement en maintenance. Nous serons bientôt de retour !'
+        },
+        seo: {
+          title: '',
+          description: '',
+          keywords: ''
+        },
+        analytics: {
+          googleAnalytics: ''
+        }
       }
     };
     
@@ -399,11 +427,29 @@ document.addEventListener('DOMContentLoaded', function() {
         mesDonnees = obtenirMesDonnees();
       }
       
+      // S'assurer que les settings existent dans les données
+      if (!mesDonnees.settings) {
+        mesDonnees.settings = {
+          maintenance: {
+            enabled: false,
+            message: 'Le site est actuellement en maintenance. Nous serons bientôt de retour !'
+          },
+          seo: {
+            title: '',
+            description: '',
+            keywords: ''
+          },
+          analytics: {
+            googleAnalytics: ''
+          }
+        };
+      }
+      
       // Stocker les données actuelles pour la comparaison
       donneesActuelles = mesDonnees;
       hashDonneesActuelles = calculerHash(mesDonnees);
       
-      // Vérifier le mode maintenance
+      // Vérifier le mode maintenance IMMÉDIATEMENT
       verifierModeMaintenance(mesDonnees);
       
       
@@ -2170,7 +2216,7 @@ document.addEventListener('DOMContentLoaded', function() {
           afficherMesDonnees(donnees);
           mettreAJourLiensCV(donnees.links);
           
-          // Vérifier le mode maintenance même en cas d'erreur
+          // Vérifier le mode maintenance même en cas d'erreur (IMMÉDIATEMENT)
           verifierModeMaintenance(donnees);
         }
       });
