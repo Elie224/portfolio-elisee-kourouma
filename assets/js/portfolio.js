@@ -2106,6 +2106,20 @@ document.addEventListener('DOMContentLoaded', function() {
     mettreAJourAnnee();
     nettoyerDonnees();
     
+    // Vérifier IMMÉDIATEMENT le mode maintenance avec les données du localStorage
+    // (avant même le chargement depuis le serveur)
+    const donneesLocales = localStorage.getItem('portfolioData');
+    if (donneesLocales) {
+      try {
+        const donnees = JSON.parse(donneesLocales);
+        if (donnees && donnees.settings) {
+          verifierModeMaintenance(donnees);
+        }
+      } catch (e) {
+        // Ignorer les erreurs de parsing
+      }
+    }
+    
     // Chargement des données
     chargerEtAfficherDonnees().then(() => {
       // Initialiser le hash après le premier chargement
