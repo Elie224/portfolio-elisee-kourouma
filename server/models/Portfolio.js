@@ -30,8 +30,8 @@ const portfolioSchema = new mongoose.Schema({
     skills: [{ type: String, trim: true, maxlength: 100 }]
   }],
   links: {
-    cv: { type: String, trim: true },
-    cvFile: { type: String },
+    cv: { type: String }, // Pas de trim pour préserver le base64 complet
+    cvFile: { type: String }, // Pas de trim pour préserver le base64 complet
     cvFileName: { type: String, trim: true, maxlength: 100 },
     cvFileSize: { type: Number, min: 0, max: 10000000 }, // Max 10MB
     social: [{
@@ -64,6 +64,27 @@ const portfolioSchema = new mongoose.Schema({
     name: String,
     issuer: String,
     date: String,
+    description: String,
+    link: String
+  }],
+  internships: [{
+    title: String,
+    company: String,
+    location: String,
+    type: { type: String, enum: ['stage', 'alternance'] },
+    date: String,
+    description: String,
+    technologies: [String],
+    link: String
+  }],
+  techEvents: [{
+    name: String,
+    title: String,
+    type: { type: String, enum: ['conference', 'hackathon', 'workshop', 'meetup', 'webinar', 'competition'] },
+    organizer: String,
+    location: String,
+    date: String,
+    description: String,
     link: String
   }],
   contactMessages: [{
@@ -78,7 +99,21 @@ const portfolioSchema = new mongoose.Schema({
   faq: [{
     question: String,
     answer: String
-  }]
+  }],
+  settings: {
+    maintenance: {
+      enabled: { type: Boolean, default: false },
+      message: { type: String, trim: true, maxlength: 500 }
+    },
+    seo: {
+      title: { type: String, trim: true, maxlength: 200 },
+      description: { type: String, trim: true, maxlength: 500 },
+      keywords: { type: String, trim: true, maxlength: 200 }
+    },
+    analytics: {
+      googleAnalytics: { type: String, trim: true, maxlength: 50 }
+    }
+  }
 }, {
   timestamps: true
 });
@@ -97,11 +132,13 @@ const MINIMAL_PORTFOLIO_DATA = {
   },
   projects: [],
   skills: [],
-  links: { cv: "assets/CV.pdf", social: [] },
+  links: { cv: "", cvFile: "", cvFileName: "", cvFileSize: 0, social: [] },
   about: { heroDescription: "Master IA", stats: { projects: 0, experience: 2, technologies: 10 } },
   timeline: [],
   services: [],
   certifications: [],
+  internships: [],
+  techEvents: [],
   contactMessages: [],
   faq: []
 };
@@ -140,15 +177,50 @@ portfolioSchema.statics.getPortfolio = async function() {
         hasPhoto: !!portfolio.personal?.photo
       });
       
-      // Si toutes les données importantes sont vides, réinitialiser
-      if (projectsCount === 0 && skillsCount === 0 && timelineCount === 0) {
-        console.log('📦 Portfolio vide détecté, réinitialisation...');
+      // Vérifier si le portfolio contient un CV base64 (dans cvFile ou cv)
+      const hasCvBase64 = portfolio.links && (
+        (portfolio.links.cvFile && portfolio.links.cvFile.startsWith('data:')) ||
+        (portfolio.links.cv && portfolio.links.cv.startsWith('data:'))
+      );
+      
+      // Log détaillé pour debug
+      console.log('🔍 Vérification CV avant décision de réinitialisation:', {
+        hasLinks: !!portfolio.links,
+        cvExists: !!portfolio.links?.cv,
+        cvFileExists: !!portfolio.links?.cvFile,
+        cvValue: portfolio.links?.cv ? (portfolio.links.cv.substring(0, 50) + '...') : 'none',
+        cvFileValue: portfolio.links?.cvFile ? (portfolio.links.cvFile.substring(0, 50) + '...') : 'none',
+        cvLength: portfolio.links?.cv ? portfolio.links.cv.length : 0,
+        cvFileLength: portfolio.links?.cvFile ? portfolio.links.cvFile.length : 0,
+        hasCvBase64: hasCvBase64,
+        projectsCount,
+        skillsCount,
+        timelineCount
+      });
+      
+      // Si toutes les données importantes sont vides MAIS qu'il y a un CV, NE PAS réinitialiser
+      // Ne réinitialiser que si vraiment vide ET sans CV
+      if (projectsCount === 0 && skillsCount === 0 && timelineCount === 0 && !hasCvBase64) {
+        console.log('📦 Portfolio vide détecté (sans CV), réinitialisation...');
         await this.deleteOne({ _id: portfolio._id });
         const dataToCreate = getDefaultPortfolioData();
         portfolio = await this.create(dataToCreate);
         console.log('✅ Portfolio réinitialisé avec succès');
+      } else if (projectsCount === 0 && skillsCount === 0 && timelineCount === 0 && hasCvBase64) {
+        console.log('✅ Portfolio avec CV base64 conservé (projets/skills/timeline vides mais CV présent)');
       }
     }
+    
+    // Vérifier le CV AVANT conversion
+    const cvAvantConversion = portfolio.links ? {
+      hasCv: !!portfolio.links.cv,
+      hasCvFile: !!portfolio.links.cvFile,
+      cvLength: portfolio.links.cv ? portfolio.links.cv.length : 0,
+      cvFileLength: portfolio.links.cvFile ? portfolio.links.cvFile.length : 0,
+      cvType: portfolio.links.cv ? (portfolio.links.cv.startsWith('data:') ? 'base64' : 'path') : 'none',
+      cvFileType: portfolio.links.cvFile ? (portfolio.links.cvFile.startsWith('data:') ? 'base64' : 'path') : 'none'
+    } : { error: 'No links before conversion' };
+    console.log('🔍 CV AVANT conversion toObject():', cvAvantConversion);
     
     // Convertir en objet propre
     const portfolioObj = portfolio.toObject();
@@ -157,11 +229,23 @@ portfolioSchema.statics.getPortfolio = async function() {
     delete portfolioObj.createdAt;
     delete portfolioObj.updatedAt;
     
+    // Vérifier le CV APRÈS conversion
+    const cvApresConversion = portfolioObj.links ? {
+      hasCv: !!portfolioObj.links.cv,
+      hasCvFile: !!portfolioObj.links.cvFile,
+      cvLength: portfolioObj.links.cv ? portfolioObj.links.cv.length : 0,
+      cvFileLength: portfolioObj.links.cvFile ? portfolioObj.links.cvFile.length : 0,
+      cvType: portfolioObj.links.cv ? (portfolioObj.links.cv.startsWith('data:') ? 'base64' : 'path') : 'none',
+      cvFileType: portfolioObj.links.cvFile ? (portfolioObj.links.cvFile.startsWith('data:') ? 'base64' : 'path') : 'none'
+    } : { error: 'No links after conversion' };
+    console.log('🔍 CV APRÈS conversion toObject():', cvApresConversion);
+    
     console.log('📤 Portfolio renvoyé avec succès:', {
       projects: portfolioObj.projects?.length || 0,
       skills: portfolioObj.skills?.length || 0,
       timeline: portfolioObj.timeline?.length || 0,
-      size: JSON.stringify(portfolioObj).length
+      size: JSON.stringify(portfolioObj).length,
+      cvPresent: cvApresConversion.hasCv || cvApresConversion.hasCvFile
     });
     
     return portfolioObj;

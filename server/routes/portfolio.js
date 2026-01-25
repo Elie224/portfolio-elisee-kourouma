@@ -87,10 +87,12 @@ router.post('/',
       timeline: Array.isArray(req.body.timeline) ? req.body.timeline : [],
       services: Array.isArray(req.body.services) ? req.body.services : [],
       certifications: Array.isArray(req.body.certifications) ? req.body.certifications : [],
-      internships: Array.isArray(req.body.internships) ? req.body.internships : [],
+      stages: Array.isArray(req.body.stages) ? req.body.stages : [],
+      alternances: Array.isArray(req.body.alternances) ? req.body.alternances : [],
       techEvents: Array.isArray(req.body.techEvents) ? req.body.techEvents : [],
       contactMessages: Array.isArray(req.body.contactMessages) ? req.body.contactMessages : [],
-      faq: Array.isArray(req.body.faq) ? req.body.faq : []
+      faq: Array.isArray(req.body.faq) ? req.body.faq : [],
+      settings: req.body.settings || {}
     };
     
     // PROTECTION : Ne pas écraser un CV base64 existant avec 'assets/CV.pdf'
