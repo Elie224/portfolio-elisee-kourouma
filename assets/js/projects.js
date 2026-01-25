@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Configuration
   const MON_SERVEUR = window.location.hostname === 'localhost' 
     ? 'http://localhost:3001/api'
-    : 'https://portfolio-backend-x47u.onrender.com/api';
+    : 'https://portfolio-backend-elisee.fly.dev/api';
   
   // Utilitaires pour les logs (uniquement en développement)
   const estEnDeveloppement = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
