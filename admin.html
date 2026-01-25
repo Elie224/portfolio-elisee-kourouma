@@ -183,6 +183,35 @@
         gap: 8px;
         margin-top: 12px;
       }
+      .item-actions .btn-small {
+        background: var(--accent) !important;
+        color: #ffffff !important;
+        border: 1px solid var(--accent) !important;
+        padding: 8px 16px !important;
+        font-size: 0.875rem !important;
+        font-weight: 500 !important;
+        border-radius: 8px !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+      }
+      .item-actions .btn-small:hover {
+        background: var(--accent-hover, #4f46e5) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3) !important;
+      }
+      .item-actions .btn-small.btn-secondary {
+        background: var(--couleur-fond-secondaire) !important;
+        color: var(--couleur-texte) !important;
+        border: 1px solid var(--couleur-bordure) !important;
+      }
+      .item-actions .btn-small.btn-secondary:hover {
+        background: var(--couleur-fond-elevated) !important;
+        border-color: var(--couleur-accent) !important;
+        color: var(--couleur-accent) !important;
+      }
       .form-row {
         display: grid;
         grid-template-columns: 1fr 1fr;
