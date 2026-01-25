@@ -15,6 +15,12 @@ document.addEventListener('DOMContentLoaded', function() {
   
   /* ===== CONFIGURATION ADMIN ===== */
   
+  // Utilitaires pour les logs (uniquement en développement)
+  const estEnDeveloppement = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const log = estEnDeveloppement ? log.bind(console) : () => {};
+  const logError = estEnDeveloppement ? logError.bind(console) : () => {};
+  const logWarn = estEnDeveloppement ? logWarn.bind(console) : () => {};
+  
   // Adresse de mon serveur
   const MON_SERVEUR = window.location.hostname === 'localhost'
     ? 'http://localhost:3000/api'
@@ -188,7 +194,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
     } catch (erreur) {
-      console.error('Erreur chargement:', erreur);
+      logError('Erreur chargement:', erreur);
       // Utiliser localStorage en fallback
       const donneesLocales = localStorage.getItem('portfolioData');
       if (donneesLocales) {
@@ -211,7 +217,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Log pour déboguer le CV avant envoi
     if (mesDonneesActuelles.links) {
-      console.log('📤 CV avant envoi au serveur:', {
+      log('📤 CV avant envoi au serveur:', {
         hasCv: !!mesDonneesActuelles.links.cv,
         hasCvFile: !!mesDonneesActuelles.links.cvFile,
         cvType: mesDonneesActuelles.links.cv ? (mesDonneesActuelles.links.cv.startsWith('data:') ? 'base64' : 'path') : 'none',
@@ -237,7 +243,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Vérifier que le CV a bien été sauvegardé
         if (resultat.portfolio && resultat.portfolio.links) {
           const cvSauvegarde = resultat.portfolio.links;
-          console.log('📥 CV retourné par le serveur après sauvegarde:', {
+          log('📥 CV retourné par le serveur après sauvegarde:', {
             hasCv: !!cvSauvegarde.cv,
             hasCvFile: !!cvSauvegarde.cvFile,
             cvType: cvSauvegarde.cv ? (cvSauvegarde.cv.startsWith('data:') ? 'base64' : 'path') : 'none',
@@ -249,11 +255,11 @@ document.addEventListener('DOMContentLoaded', function() {
           // Vérifier que le CV base64 a bien été sauvegardé
           if (mesDonneesActuelles.links && mesDonneesActuelles.links.cvFile && mesDonneesActuelles.links.cvFile.startsWith('data:')) {
             if (!cvSauvegarde.cvFile || !cvSauvegarde.cvFile.startsWith('data:')) {
-              console.error('❌ ERREUR: Le CV base64 n\'a pas été sauvegardé correctement sur le serveur !');
-              console.error('CV envoyé:', mesDonneesActuelles.links.cvFile.substring(0, 50) + '...');
-              console.error('CV reçu:', cvSauvegarde.cvFile ? cvSauvegarde.cvFile.substring(0, 50) + '...' : 'undefined');
+              logError('❌ ERREUR: Le CV base64 n\'a pas été sauvegardé correctement sur le serveur !');
+              logError('CV envoyé:', mesDonneesActuelles.links.cvFile.substring(0, 50) + '...');
+              logError('CV reçu:', cvSauvegarde.cvFile ? cvSauvegarde.cvFile.substring(0, 50) + '...' : 'undefined');
             } else {
-              console.log('✅ CV base64 confirmé sauvegardé sur le serveur');
+              log('✅ CV base64 confirmé sauvegardé sur le serveur');
             }
           }
           
@@ -271,7 +277,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (window.portfolioAPI && window.portfolioAPI.actualiser) {
           // Attendre un peu pour que le serveur ait fini de sauvegarder
           setTimeout(() => {
-            console.log('🔄 Actualisation des pages publiques après sauvegarde...');
+            log('🔄 Actualisation des pages publiques après sauvegarde...');
             window.portfolioAPI.actualiser();
           }, 500);
         }
@@ -282,7 +288,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return false;
       }
     } catch (erreur) {
-      console.error('Erreur sauvegarde:', erreur);
+      logError('Erreur sauvegarde:', erreur);
       afficherErreur(null, 'Impossible de sauvegarder sur le serveur');
       // Sauvegarder quand même dans localStorage
       localStorage.setItem('portfolioData', JSON.stringify(mesDonneesActuelles));
@@ -460,7 +466,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Afficher un message de confirmation
       if (window.location.hostname === 'localhost') {
-        console.log('✏️ Mode édition activé pour le projet:', projet.title);
+        log('✏️ Mode édition activé pour le projet:', projet.title);
       }
     } else {
       form.reset();
@@ -1524,14 +1530,14 @@ document.addEventListener('DOMContentLoaded', function() {
       // Si c'est un nouveau chemin (pas un fichier uploadé), mettre à jour
       // SUPPRIMER L'ANCIEN CV BASE64 : Si on change de méthode (de upload à chemin), supprimer cvFile
       if (mesDonneesActuelles.links.cvFile) {
-        console.log('🗑️ Suppression de l\'ancien CV base64 (remplacement par chemin)');
+        log('🗑️ Suppression de l\'ancien CV base64 (remplacement par chemin)');
         delete mesDonneesActuelles.links.cvFile;
         delete mesDonneesActuelles.links.cvFileName;
         delete mesDonneesActuelles.links.cvFileSize;
       }
       // SUPPRIMER L'ANCIEN CV BASE64 DANS cv : Si cv était en base64, le remplacer par le chemin
       if (mesDonneesActuelles.links.cv && mesDonneesActuelles.links.cv.startsWith('data:')) {
-        console.log('🗑️ Suppression de l\'ancien CV base64 dans cv (remplacement par chemin)');
+        log('🗑️ Suppression de l\'ancien CV base64 dans cv (remplacement par chemin)');
       }
       // Mettre le nouveau chemin
       mesDonneesActuelles.links.cv = cvPath;
@@ -1819,13 +1825,13 @@ document.addEventListener('DOMContentLoaded', function() {
       // Si cv était un base64, le supprimer aussi
       if (mesDonneesActuelles.links.cv && mesDonneesActuelles.links.cv.startsWith('data:')) {
         delete mesDonneesActuelles.links.cv;
-        console.log('🗑️ CV base64 supprimé');
+        log('🗑️ CV base64 supprimé');
       } else if (mesDonneesActuelles.links.cv === 'assets/CV.pdf') {
         // Supprimer aussi le chemin par défaut
         delete mesDonneesActuelles.links.cv;
-        console.log('🗑️ Chemin CV par défaut supprimé');
+        log('🗑️ Chemin CV par défaut supprimé');
       }
-      console.log('🗑️ CV uploadé supprimé - Aucun CV défini (l\'utilisateur peut en ajouter un)');
+      log('🗑️ CV uploadé supprimé - Aucun CV défini (l\'utilisateur peut en ajouter un)');
     }
     
     // Réactiver le champ cv-path
@@ -2018,7 +2024,7 @@ document.addEventListener('DOMContentLoaded', function() {
         afficherErreur(null, resultat.error || resultat.message || 'Erreur lors du changement de mot de passe');
       }
     } catch (erreur) {
-      console.error('Erreur changement mot de passe:', erreur);
+      logError('Erreur changement mot de passe:', erreur);
       afficherErreur(null, 'Impossible de changer le mot de passe. Vérifiez votre connexion au serveur.');
     }
   }
@@ -2118,7 +2124,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Affiche un message d'erreur
   function afficherErreur(element, message) {
     if (window.location.hostname === 'localhost') {
-      console.error('Erreur:', message);
+      logError('Erreur:', message);
     }
     
     if (element) {
@@ -2263,12 +2269,12 @@ document.addEventListener('DOMContentLoaded', function() {
             // SUPPRIMER L'ANCIEN CV : Remplacer complètement par le nouveau
             // Supprimer l'ancien cvFile s'il existe
             if (mesDonneesActuelles.links.cvFile) {
-              console.log('🗑️ Remplacement de l\'ancien CV par le nouveau');
+              log('🗑️ Remplacement de l\'ancien CV par le nouveau');
             }
             
             // SUPPRIMER L'ANCIEN CHEMIN : Si cv était un chemin (assets/CV.pdf), le remplacer
             if (mesDonneesActuelles.links.cv && !mesDonneesActuelles.links.cv.startsWith('data:')) {
-              console.log('🗑️ Suppression de l\'ancien chemin CV:', mesDonneesActuelles.links.cv);
+              log('🗑️ Suppression de l\'ancien chemin CV:', mesDonneesActuelles.links.cv);
             }
             
             // Mettre le nouveau CV (base64) dans cvFile ET cv
@@ -2278,7 +2284,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // REMPLACER l'ancien cv (chemin ou base64) par le nouveau base64
             mesDonneesActuelles.links.cv = base64;
             
-            console.log('✅ Nouveau CV base64 enregistré:', {
+            log('✅ Nouveau CV base64 enregistré:', {
               fileName: file.name,
               size: file.size,
               base64Length: base64.length,
@@ -2320,14 +2326,14 @@ document.addEventListener('DOMContentLoaded', function() {
           // Vérifier si l'ancien cv était un chemin
           const ancienCv = mesDonneesActuelles.links.cv;
           if (ancienCv && !ancienCv.startsWith('data:')) {
-            console.log('🗑️ Suppression de l\'ancien chemin CV:', ancienCv);
+            log('🗑️ Suppression de l\'ancien chemin CV:', ancienCv);
           }
           
           // S'assurer que cvFile et cv contiennent le même base64
           mesDonneesActuelles.links.cv = nouveauCvBase64;
           
           // Vérification finale avant sauvegarde
-          console.log('✅ Nouveau CV base64 prêt à être sauvegardé:', {
+          log('✅ Nouveau CV base64 prêt à être sauvegardé:', {
             fileName: mesDonneesActuelles.links.cvFileName,
             fileSize: mesDonneesActuelles.links.cvFileSize,
             cvIsBase64: mesDonneesActuelles.links.cv.startsWith('data:'),
@@ -2346,7 +2352,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Forcer le rechargement sur les autres pages après un court délai
             setTimeout(() => {
               if (window.portfolioAPI && window.portfolioAPI.actualiser) {
-                console.log('🔄 Actualisation des pages publiques...');
+                log('🔄 Actualisation des pages publiques...');
                 window.portfolioAPI.actualiser();
               }
             }, 1000);
@@ -2362,7 +2368,7 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     }
     
-    console.log('✅ Interface admin initialisée');
+    log('✅ Interface admin initialisée');
   }
   
   // Lance l'admin !

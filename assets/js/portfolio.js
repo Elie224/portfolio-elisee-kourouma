@@ -16,9 +16,9 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Utilitaires pour les logs (uniquement en développement)
   const estEnDeveloppement = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const log = estEnDeveloppement ? console.log.bind(console) : () => {};
-  const logError = estEnDeveloppement ? console.error.bind(console) : () => {};
-  const logWarn = estEnDeveloppement ? console.warn.bind(console) : () => {};
+  const log = estEnDeveloppement ? log.bind(console) : () => {};
+  const logError = estEnDeveloppement ? logError.bind(console) : () => {};
+  const logWarn = estEnDeveloppement ? logWarn.bind(console) : () => {};
   
   // Mon email et informations de contact
   const MES_CONTACTS = {
@@ -214,7 +214,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Si le hash est différent, les données ont changé
       if (nouveauHash !== hashDonneesActuelles) {
-        console.log('🔄 Mise à jour automatique détectée !');
+        log('🔄 Mise à jour automatique détectée !');
         
         // Mettre à jour les données
         donneesActuelles = nouvellesDonnees;
@@ -241,11 +241,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // Réanimer les éléments si nécessaire
         configurerAnimations();
         
-        console.log('✅ Mise à jour automatique terminée');
+        log('✅ Mise à jour automatique terminée');
       }
     } catch (erreur) {
       // Erreur silencieuse pour ne pas perturber l'utilisateur
-      console.debug('Vérification mise à jour:', erreur);
+      logError('Vérification mise à jour:', erreur);
     }
   }
   
@@ -269,7 +269,7 @@ document.addEventListener('DOMContentLoaded', function() {
       verifierEtMettreAJour();
     }, intervalle);
     
-    console.log('🔄 Vérification automatique activée (toutes les 10 secondes)');
+    log('🔄 Vérification automatique activée (toutes les 10 secondes)');
   }
   
   // Arrête la vérification automatique
@@ -277,7 +277,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (intervalVerification) {
       clearInterval(intervalVerification);
       intervalVerification = null;
-      console.log('⏸️ Vérification automatique arrêtée');
+      log('⏸️ Vérification automatique arrêtée');
     }
   }
   
@@ -294,7 +294,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Log pour déboguer le CV
       if (donnees && donnees.links) {
-        console.log('📥 Données CV reçues du serveur:', {
+        log('📥 Données CV reçues du serveur:', {
           hasCv: !!donnees.links.cv,
           hasCvFile: !!donnees.links.cvFile,
           cvType: donnees.links.cv ? (donnees.links.cv.startsWith('data:') ? 'base64' : 'path') : 'none',
@@ -306,7 +306,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       
       // Log des projets reçus du serveur
-      console.log('📥 Données PROJETS reçues du serveur:', {
+      log('📥 Données PROJETS reçues du serveur:', {
         hasProjects: !!donnees.projects,
         isArray: Array.isArray(donnees.projects),
         projectsLength: donnees.projects?.length || 0,
@@ -316,7 +316,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       return donneesSontVides(donnees) ? null : donnees;
     } catch (erreur) {
-      console.error('❌ Erreur lors du chargement depuis le serveur:', erreur);
+      logError('❌ Erreur lors du chargement depuis le serveur:', erreur);
       return null; // Si le serveur ne répond pas, on utilise les données locales
     }
   }
@@ -329,7 +329,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Log pour déboguer le CV dans localStorage
       if (donnees && donnees.links) {
-        console.log('💾 Données CV depuis localStorage:', {
+        log('💾 Données CV depuis localStorage:', {
           hasCv: !!donnees.links.cv,
           hasCvFile: !!donnees.links.cvFile,
           cvType: donnees.links.cv ? (donnees.links.cv.startsWith('data:') ? 'base64' : 'path') : 'none',
@@ -339,7 +339,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       return donnees;
     } catch (erreur) {
-      console.error('❌ Erreur lors du parsing des données locales:', erreur);
+      logError('❌ Erreur lors du parsing des données locales:', erreur);
       return creerDonneesParDefaut();
     }
   }
@@ -387,7 +387,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       if (donneesServeur) {
         // Utilise les données du serveur si disponibles
-        console.log('📥 Données serveur reçues - Vérification CV:', {
+        log('📥 Données serveur reçues - Vérification CV:', {
           hasLinks: !!donneesServeur.links,
           hasCv: !!donneesServeur.links?.cv,
           hasCvFile: !!donneesServeur.links?.cvFile,
@@ -397,7 +397,7 @@ document.addEventListener('DOMContentLoaded', function() {
           cvFileValue: donneesServeur.links?.cvFile ? (donneesServeur.links.cvFile.length > 50 ? donneesServeur.links.cvFile.substring(0, 50) + '...' : donneesServeur.links.cvFile) : 'none'
         });
         
-        console.log('📥 Données serveur reçues - Vérification Projets:', {
+        log('📥 Données serveur reçues - Vérification Projets:', {
           hasProjects: !!donneesServeur.projects,
           isArray: Array.isArray(donneesServeur.projects),
           projectsLength: donneesServeur.projects?.length || 0,
@@ -417,7 +417,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // S'assurer que projects est toujours un tableau
         if (!Array.isArray(donneesServeur.projects)) {
-          console.warn('⚠️ projects n\'est pas un tableau, conversion en tableau vide');
+          logWarn('⚠️ projects n\'est pas un tableau, conversion en tableau vide');
           donneesServeur.projects = [];
         }
         
@@ -426,30 +426,30 @@ document.addEventListener('DOMContentLoaded', function() {
         if (donneesServeur.links) {
           // Si le serveur a un CV base64, s'assurer qu'il remplace l'ancien
           if (donneesServeur.links.cvFile && donneesServeur.links.cvFile.startsWith('data:')) {
-            console.log('✅ Serveur a un CV base64 - Remplacement de l\'ancien CV dans localStorage');
+            log('✅ Serveur a un CV base64 - Remplacement de l\'ancien CV dans localStorage');
             // S'assurer que cv contient aussi le base64
             if (!donneesServeur.links.cv || !donneesServeur.links.cv.startsWith('data:')) {
               donneesServeur.links.cv = donneesServeur.links.cvFile;
-              console.log('✅ cv mis à jour avec le base64 de cvFile');
+              log('✅ cv mis à jour avec le base64 de cvFile');
             }
           } else if (donneesServeur.links.cv && donneesServeur.links.cv.startsWith('data:')) {
-            console.log('✅ Serveur a un CV base64 dans cv - Remplacement de l\'ancien CV dans localStorage');
+            log('✅ Serveur a un CV base64 dans cv - Remplacement de l\'ancien CV dans localStorage');
           } else if (!donneesServeur.links.cv || donneesServeur.links.cv === '') {
-            console.log('⚠️ Serveur n\'a pas de CV base64 - Vérification du localStorage pour un CV base64');
+            log('⚠️ Serveur n\'a pas de CV base64 - Vérification du localStorage pour un CV base64');
             // Vérifier si localStorage a un CV base64 qui n'a pas été sauvegardé
             const donneesLocales = localStorage.getItem('portfolioData');
             if (donneesLocales) {
               try {
                 const localData = JSON.parse(donneesLocales);
                 if (localData.links && localData.links.cvFile && localData.links.cvFile.startsWith('data:')) {
-                  console.log('⚠️ localStorage a un CV base64 non sauvegardé - Utilisation du localStorage');
+                  log('⚠️ localStorage a un CV base64 non sauvegardé - Utilisation du localStorage');
                   donneesServeur.links.cvFile = localData.links.cvFile;
                   donneesServeur.links.cv = localData.links.cvFile;
                   donneesServeur.links.cvFileName = localData.links.cvFileName;
                   donneesServeur.links.cvFileSize = localData.links.cvFileSize;
                 }
               } catch (e) {
-                console.error('Erreur parsing localStorage:', e);
+                logError('Erreur parsing localStorage:', e);
               }
             }
           }
@@ -459,7 +459,7 @@ document.addEventListener('DOMContentLoaded', function() {
         mesDonnees = donneesServeur;
       } else {
         // Sinon utilise les données locales
-        console.log('⚠️ Serveur indisponible, utilisation des données locales');
+        log('⚠️ Serveur indisponible, utilisation des données locales');
         mesDonnees = obtenirMesDonnees();
       }
       
@@ -471,7 +471,7 @@ document.addEventListener('DOMContentLoaded', function() {
       verifierModeMaintenance(mesDonnees);
       
       // Log final avant affichage
-      console.log('🎯 Données finales avant affichage:', {
+      log('🎯 Données finales avant affichage:', {
         hasProjects: !!mesDonnees.projects,
         projectsLength: mesDonnees.projects?.length || 0,
         projectsIsArray: Array.isArray(mesDonnees.projects),
@@ -480,15 +480,15 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Log détaillé des projets pour debug
       if (mesDonnees.projects && mesDonnees.projects.length > 0) {
-        console.log('✅ PROJETS TROUVÉS - Détails:', {
+        log('✅ PROJETS TROUVÉS - Détails:', {
           nombre: mesDonnees.projects.length,
           titres: mesDonnees.projects.map(p => p.title),
           publics: mesDonnees.projects.map(p => p.public !== false),
           featured: mesDonnees.projects.map(p => p.featured)
         });
       } else {
-        console.warn('⚠️ AUCUN PROJET TROUVÉ dans les données finales!');
-        console.warn('🔍 Vérification des données:', {
+        logWarn('⚠️ AUCUN PROJET TROUVÉ dans les données finales!');
+        logWarn('🔍 Vérification des données:', {
           projects: mesDonnees.projects,
           type: typeof mesDonnees.projects,
           isArray: Array.isArray(mesDonnees.projects),
@@ -520,7 +520,7 @@ document.addEventListener('DOMContentLoaded', function() {
       // Réessayer d'afficher les projets après un délai pour s'assurer que le DOM est prêt
       setTimeout(() => {
         if (mesDonnees.projects && mesDonnees.projects.length > 0) {
-          console.log('🔄 Réessai d\'affichage des projets après délai');
+          log('🔄 Réessai d\'affichage des projets après délai');
           afficherMesProjets(mesDonnees.projects);
         }
       }, 500);
@@ -566,14 +566,14 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Affiche toutes mes données sur le site
   function afficherMesDonnees(donnees) {
-    console.log('📊 Affichage des données - Links:', {
+    log('📊 Affichage des données - Links:', {
       links: donnees?.links,
       cv: donnees?.links?.cv ? (donnees.links.cv.substring(0, 50) + '...') : 'undefined',
       cvFile: donnees?.links?.cvFile ? (donnees.links.cvFile.substring(0, 50) + '...') : 'undefined',
       cvFileName: donnees?.links?.cvFileName
     });
     
-    console.log('📊 Affichage des données - Projets:', {
+    log('📊 Affichage des données - Projets:', {
       projects: donnees?.projects,
       isArray: Array.isArray(donnees?.projects),
       length: donnees?.projects?.length || 0,
@@ -610,14 +610,14 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Met à jour tous les liens CV dans la page
   function mettreAJourLiensCV(links) {
-    console.log('🔍 Mise à jour des liens CV - Données reçues:', links);
+    log('🔍 Mise à jour des liens CV - Données reçues:', links);
     
     // Récupérer le chemin du CV (priorité au cvFile si c'est un upload base64, sinon cv)
     let cvUrl = '';
     let isBase64 = false;
     let cvFileName = 'CV.pdf';
     
-    console.log('🔍 Analyse des données CV:', {
+    log('🔍 Analyse des données CV:', {
       hasLinks: !!links,
       hasCvFile: !!(links && links.cvFile),
       hasCv: !!(links && links.cv),
@@ -634,19 +634,19 @@ document.addEventListener('DOMContentLoaded', function() {
         cvUrl = links.cvFile;
         isBase64 = true;
         cvFileName = links.cvFileName || 'CV.pdf';
-        console.log('📄 CV détecté: Fichier base64 uploadé (cvFile avec data:) - Taille:', links.cvFile.length, 'caractères');
+        log('📄 CV détecté: Fichier base64 uploadé (cvFile avec data:) - Taille:', links.cvFile.length, 'caractères');
       } else if (links.cvFile.length > 100 && /^[A-Za-z0-9+/=\s]/.test(links.cvFile.trim())) {
         // Base64 sans préfixe data:
         cvUrl = `data:application/pdf;base64,${links.cvFile.trim()}`;
         isBase64 = true;
         cvFileName = links.cvFileName || 'CV.pdf';
-        console.log('📄 CV détecté: Fichier base64 uploadé (cvFile sans data:) - Taille:', links.cvFile.length, 'caractères');
+        log('📄 CV détecté: Fichier base64 uploadé (cvFile sans data:) - Taille:', links.cvFile.length, 'caractères');
       } else if (links.cvFile !== 'assets/CV.pdf' && links.cvFile !== '') {
         // cvFile est un chemin/URL
         cvUrl = links.cvFile;
         isBase64 = false;
         cvFileName = links.cvFileName || 'CV.pdf';
-        console.log('📄 CV détecté: Chemin dans cvFile:', cvUrl);
+        log('📄 CV détecté: Chemin dans cvFile:', cvUrl);
       }
     } 
     // PRIORITÉ 2: cv en base64 (fallback si cvFile n'existe pas mais cv contient base64)
@@ -656,18 +656,18 @@ document.addEventListener('DOMContentLoaded', function() {
         cvUrl = links.cv;
         isBase64 = true;
         cvFileName = links.cvFileName || 'CV.pdf';
-        console.log('📄 CV détecté: Base64 dans cv (avec data:) - Taille:', links.cv.length, 'caractères');
+        log('📄 CV détecté: Base64 dans cv (avec data:) - Taille:', links.cv.length, 'caractères');
       } else if (links.cv.length > 100 && /^[A-Za-z0-9+/=\s]/.test(links.cv.trim())) {
         // Base64 sans préfixe data:
         cvUrl = `data:application/pdf;base64,${links.cv.trim()}`;
         isBase64 = true;
         cvFileName = links.cvFileName || 'CV.pdf';
-        console.log('📄 CV détecté: Base64 dans cv (sans data:) - Taille:', links.cv.length, 'caractères');
+        log('📄 CV détecté: Base64 dans cv (sans data:) - Taille:', links.cv.length, 'caractères');
       } else if (links.cv !== 'assets/CV.pdf' && links.cv !== '') {
         // cv est un chemin/URL personnalisé
         cvUrl = links.cv;
         isBase64 = false;
-        console.log('📄 CV détecté: Chemin/URL personnalisé:', cvUrl);
+        log('📄 CV détecté: Chemin/URL personnalisé:', cvUrl);
       }
     } 
     // DÉFAUT: Aucun CV disponible (ne plus utiliser 'assets/CV.pdf')
@@ -677,11 +677,11 @@ document.addEventListener('DOMContentLoaded', function() {
       const cvFileEstVide = links && links.cvFile === '';
       
       // Ne jamais utiliser 'assets/CV.pdf' - Si aucun CV n'est défini, laisser vide
-      console.log('⚠️ CV non défini - Aucun CV disponible (pas de fallback vers assets/CV.pdf)');
+      log('⚠️ CV non défini - Aucun CV disponible (pas de fallback vers assets/CV.pdf)');
       cvUrl = ''; // Pas de CV disponible
       isBase64 = false;
       
-      console.log('🔍 État des données links:', {
+      log('🔍 État des données links:', {
         hasLinks: !!links,
         hasCvFile: !!(links && links.cvFile),
         hasCv: !!(links && links.cv),
@@ -696,8 +696,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Si cvUrl est vide, ne pas mettre à jour les liens (pas de CV disponible)
     if (!cvUrl || cvUrl === '') {
-      console.log('⚠️ Aucun CV disponible - Les liens CV ne seront pas mis à jour');
-      console.log('🔍 DEBUG - État complet des données links:', {
+      log('⚠️ Aucun CV disponible - Les liens CV ne seront pas mis à jour');
+      log('🔍 DEBUG - État complet des données links:', {
         links: links,
         linksType: typeof links,
         linksKeys: links ? Object.keys(links) : 'none',
@@ -723,22 +723,22 @@ document.addEventListener('DOMContentLoaded', function() {
     // Mettre à jour tous les liens CV avec l'attribut data-cv-link
     const cvLinks = document.querySelectorAll('[data-cv-link="true"]');
     
-    console.log('🔍 Liens CV trouvés dans le DOM:', cvLinks.length);
+    log('🔍 Liens CV trouvés dans le DOM:', cvLinks.length);
     
     if (cvLinks.length === 0) {
-      console.warn('⚠️ Aucun lien CV trouvé dans la page avec data-cv-link="true"');
-      console.log('🔍 Recherche de tous les liens dans la page...');
+      logWarn('⚠️ Aucun lien CV trouvé dans la page avec data-cv-link="true"');
+      log('🔍 Recherche de tous les liens dans la page...');
       const allLinks = document.querySelectorAll('a[href*="CV"], a[href*="cv"]');
-      console.log('🔍 Liens contenant "CV" ou "cv":', allLinks.length);
+      log('🔍 Liens contenant "CV" ou "cv":', allLinks.length);
       
       // Réessayer après un court délai
       setTimeout(() => {
         const retryLinks = document.querySelectorAll('[data-cv-link="true"]');
         if (retryLinks.length > 0) {
-          console.log('✅ Liens CV trouvés au retry:', retryLinks.length);
+          log('✅ Liens CV trouvés au retry:', retryLinks.length);
           mettreAJourLiensCV(links);
         } else {
-          console.error('❌ Toujours aucun lien CV trouvé après retry');
+          logError('❌ Toujours aucun lien CV trouvé après retry');
         }
       }, 500);
       return;
@@ -777,12 +777,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const filename = this.getAttribute('data-cv-filename') || 'CV.pdf';
             
             if (!base64Data) {
-              console.error('❌ Données base64 manquantes');
+              logError('❌ Données base64 manquantes');
               return;
             }
             
             try {
-              console.log('📥 Début du téléchargement du CV:', filename);
+              log('📥 Début du téléchargement du CV:', filename);
               
               // Extraire les données base64
               const base64String = base64Data.split(',')[1] || base64Data;
@@ -807,17 +807,17 @@ document.addEventListener('DOMContentLoaded', function() {
               setTimeout(() => {
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
-                console.log('✅ CV téléchargé avec succès:', filename);
+                log('✅ CV téléchargé avec succès:', filename);
               }, 100);
             } catch (error) {
-              console.error('❌ Erreur lors du téléchargement du CV:', error);
+              logError('❌ Erreur lors du téléchargement du CV:', error);
               // Fallback : essayer d'ouvrir directement
               try {
                 const blob = new Blob([base64Data], { type: 'application/pdf' });
                 const url = URL.createObjectURL(blob);
                 window.open(url, '_blank');
               } catch (err) {
-                console.error('❌ Impossible d\'ouvrir le CV:', err);
+                logError('❌ Impossible d\'ouvrir le CV:', err);
               }
             }
           }, { once: false, passive: false });
@@ -834,7 +834,7 @@ document.addEventListener('DOMContentLoaded', function() {
           newLink.onclick = null; // Supprimer tout onclick existant
           
           liensMisAJour++;
-          console.log(`✅ Lien CV ${index + 1} configuré pour téléchargement base64:`, {
+          log(`✅ Lien CV ${index + 1} configuré pour téléchargement base64:`, {
             href: newLink.href,
             hasListener: true,
             filename: cvFileName
@@ -847,14 +847,14 @@ document.addEventListener('DOMContentLoaded', function() {
             link.href = cvUrl + (cvUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
           }
           liensMisAJour++;
-          console.log(`✅ Lien CV ${index + 1} mis à jour: ${ancienHref} → ${link.href}`);
+          log(`✅ Lien CV ${index + 1} mis à jour: ${ancienHref} → ${link.href}`);
         }
       } catch (error) {
-        console.error(`❌ Erreur lors de la mise à jour du lien CV ${index + 1}:`, error);
+        logError(`❌ Erreur lors de la mise à jour du lien CV ${index + 1}:`, error);
       }
     });
     
-    console.log('✅ Liens CV mis à jour:', {
+    log('✅ Liens CV mis à jour:', {
       url: isBase64 ? 'Base64 (fichier uploadé)' : cvUrl,
       nombreLiens: cvLinks.length,
       liensMisAJour: liensMisAJour,
@@ -864,8 +864,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Vérification finale : tester si les liens sont cliquables
     if (isBase64 && liensMisAJour > 0) {
-      console.log('💡 Les liens CV sont maintenant prêts. Cliquez sur un lien pour télécharger le CV.');
-      console.log('💡 Si le téléchargement ne fonctionne pas, vérifiez la console pour les erreurs.');
+      log('💡 Les liens CV sont maintenant prêts. Cliquez sur un lien pour télécharger le CV.');
+      log('💡 Si le téléchargement ne fonctionne pas, vérifiez la console pour les erreurs.');
     }
   }
   
@@ -881,7 +881,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Affiche mes projets sur la page d'accueil avec carrousel
   function afficherMesProjets(projets) {
-    console.log('🎯 afficherMesProjets appelée avec:', {
+    log('🎯 afficherMesProjets appelée avec:', {
       projets: projets,
       isArray: Array.isArray(projets),
       length: projets?.length || 0,
@@ -895,12 +895,12 @@ document.addEventListener('DOMContentLoaded', function() {
                        window.location.pathname.endsWith('/');
     
     if (!isHomePage) {
-      console.log('ℹ️ afficherMesProjets ignorée - pas sur la page d\'accueil');
+      log('ℹ️ afficherMesProjets ignorée - pas sur la page d\'accueil');
       return;
     }
     
     const container = document.getElementById('homepage-projects');
-    console.log('🔍 Container homepage-projects:', {
+    log('🔍 Container homepage-projects:', {
       exists: !!container,
       id: container?.id,
       currentHTML: container?.innerHTML?.substring(0, 100),
@@ -908,27 +908,27 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     if (!container) {
-      console.warn('⚠️ Container homepage-projects non trouvé dans le DOM - Réessai dans 500ms...');
+      logWarn('⚠️ Container homepage-projects non trouvé dans le DOM - Réessai dans 500ms...');
       // Réessayer après un court délai au cas où le DOM n'est pas encore prêt
       setTimeout(() => {
         const retryContainer = document.getElementById('homepage-projects');
         if (retryContainer) {
-          console.log('✅ Container trouvé après délai, réessai de l\'affichage');
+          log('✅ Container trouvé après délai, réessai de l\'affichage');
           afficherMesProjets(projets);
         } else {
-          console.error('❌ Container toujours introuvable après délai');
+          logError('❌ Container toujours introuvable après délai');
         }
       }, 500);
       return;
     }
     
     if (!projets || !Array.isArray(projets)) {
-      console.warn('⚠️ Projets invalides:', { projets, isArray: Array.isArray(projets) });
+      logWarn('⚠️ Projets invalides:', { projets, isArray: Array.isArray(projets) });
       return;
     }
     
     if (projets.length === 0) {
-      console.log('📭 Aucun projet à afficher');
+      log('📭 Aucun projet à afficher');
       container.innerHTML = '<p class="text-center muted">Aucun projet disponible pour le moment. Ajoutez des projets depuis l\'interface d\'administration.</p>';
       return;
     }
@@ -952,7 +952,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let projetsAFiltrer = projets;
     if (!isAdmin) {
       projetsAFiltrer = projets.filter(p => p.public !== false);
-      console.log('🔍 Filtrage des projets (public uniquement):', {
+      log('🔍 Filtrage des projets (public uniquement):', {
         total: projets.length,
         publics: projetsAFiltrer.length,
         filtres: projets.length - projetsAFiltrer.length
@@ -960,12 +960,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     if (projetsAFiltrer.length === 0) {
-      console.log('📭 Aucun projet public à afficher');
+      log('📭 Aucun projet public à afficher');
       container.innerHTML = '<p class="text-center muted">Aucun projet disponible pour le moment. Ajoutez des projets depuis l\'interface d\'administration.</p>';
       return;
     }
     
-    console.log('✅ Affichage de', projetsAFiltrer.length, 'projets');
+    log('✅ Affichage de', projetsAFiltrer.length, 'projets');
     
     // Trier les projets : featured en premier
     const projetsFeatured = projetsAFiltrer.filter(p => p.featured);
@@ -1041,7 +1041,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialiser le carrousel après un court délai pour s'assurer que le DOM est prêt
     setTimeout(() => {
       if (tousLesProjets.length > 0) {
-        console.log('🎠 Initialisation du carrousel avec', tousLesProjets.length, 'projets');
+        log('🎠 Initialisation du carrousel avec', tousLesProjets.length, 'projets');
         initialiserCarrousel(tousLesProjets.length);
       }
     }, 300);
@@ -1056,7 +1056,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const container = track?.parentElement;
     
     if (!track || !prevBtn || !nextBtn || !container) {
-      console.warn('Éléments du carrousel non trouvés');
+      logWarn('Éléments du carrousel non trouvés');
       return;
     }
     
@@ -1319,7 +1319,7 @@ document.addEventListener('DOMContentLoaded', function() {
       mettreAJourCarrousel(false);
     }, 100);
     
-    console.log('✅ Carousel slider initialisé:', {
+    log('✅ Carousel slider initialisé:', {
       nombreProjets,
       type: 'Horizontal Slider',
       swipe: 'Activé',
@@ -1848,7 +1848,7 @@ document.addEventListener('DOMContentLoaded', function() {
           }
           
         } catch (erreur) {
-          console.error('Erreur lors de l\'envoi du message:', erreur);
+          logError('Erreur lors de l\'envoi du message:', erreur);
           
           if (messageDiv) {
             messageDiv.textContent = '❌ Erreur lors de l\'envoi du message. Veuillez réessayer ou m\'envoyer un email directement à ' + MES_CONTACTS.email;
@@ -2269,7 +2269,7 @@ document.addEventListener('DOMContentLoaded', function() {
       // Forcer la mise à jour des liens CV après que le DOM soit complètement prêt
       setTimeout(() => {
         const donnees = obtenirMesDonnees();
-        console.log('🔄 Mise à jour finale des liens CV après chargement DOM');
+        log('🔄 Mise à jour finale des liens CV après chargement DOM');
         mettreAJourLiensCV(donnees?.links);
       }, 300);
     }, 150);
@@ -2286,7 +2286,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Portfolio initialisé avec succès
-    console.log('✅ Portfolio initialisé avec animations améliorées et mise à jour automatique');
+    log('✅ Portfolio initialisé avec animations améliorées et mise à jour automatique');
   }
   
   // API publique pour l'admin panel
@@ -2322,7 +2322,7 @@ document.addEventListener('DOMContentLoaded', function() {
           }, 100);
         }
       }).catch(function(erreur) {
-        console.error('Erreur lors de l\'actualisation:', erreur);
+        logError('Erreur lors de l\'actualisation:', erreur);
         // Utiliser localStorage en fallback
         const donneesLocales = localStorage.getItem('portfolioData');
         if (donneesLocales) {
@@ -2341,20 +2341,20 @@ document.addEventListener('DOMContentLoaded', function() {
     demarrerVerification: demarrerVerificationAutomatique,
     arreterVerification: arreterVerificationAutomatique,
     nettoyerLocalStorage: function() {
-      console.log('🗑️ Nettoyage du localStorage...');
+      log('🗑️ Nettoyage du localStorage...');
       localStorage.removeItem('portfolioData');
-      console.log('✅ localStorage nettoyé - Rechargement depuis le serveur');
+      log('✅ localStorage nettoyé - Rechargement depuis le serveur');
       location.reload();
     },
     forcerRechargementServeur: async function() {
-      console.log('🔄 Forçage du rechargement depuis le serveur...');
+      log('🔄 Forçage du rechargement depuis le serveur...');
       localStorage.removeItem('portfolioData');
       const donnees = await chargerDonneesServeur();
       if (donnees) {
         localStorage.setItem('portfolioData', JSON.stringify(donnees));
         location.reload();
       } else {
-        console.error('❌ Impossible de charger depuis le serveur');
+        logError('❌ Impossible de charger depuis le serveur');
       }
     }
   };
@@ -2368,26 +2368,26 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Forcer la mise à jour des liens CV après le chargement complet de la page
   window.addEventListener('load', function() {
-    console.log('🔄 Page complètement chargée - Vérification finale des liens CV');
+    log('🔄 Page complètement chargée - Vérification finale des liens CV');
     
     // Vérifier que les liens existent dans le DOM
     const testLinks = document.querySelectorAll('[data-cv-link="true"]');
-    console.log('🔍 Test: Liens CV trouvés au chargement:', testLinks.length);
+    log('🔍 Test: Liens CV trouvés au chargement:', testLinks.length);
     
     if (testLinks.length === 0) {
-      console.error('❌ PROBLÈME: Aucun lien CV trouvé dans le DOM !');
-      console.log('🔍 Recherche de tous les liens contenant "CV":');
+      logError('❌ PROBLÈME: Aucun lien CV trouvé dans le DOM !');
+      log('🔍 Recherche de tous les liens contenant "CV":');
       const allLinks = document.querySelectorAll('a');
       allLinks.forEach((link, i) => {
         if (link.href.includes('CV') || link.href.includes('cv') || link.textContent.includes('CV')) {
-          console.log(`  Lien ${i + 1}:`, link.href, link.textContent, link.outerHTML);
+          log(`  Lien ${i + 1}:`, link.href, link.textContent, link.outerHTML);
         }
       });
     }
     
     setTimeout(() => {
       const donnees = obtenirMesDonnees();
-      console.log('📊 Données chargées pour CV:', {
+      log('📊 Données chargées pour CV:', {
         links: donnees?.links,
         cv: donnees?.links?.cv ? (donnees.links.cv.substring(0, 100) + '...') : 'undefined',
         cvFile: donnees?.links?.cvFile ? (donnees.links.cvFile.substring(0, 100) + '...') : 'undefined',
@@ -2398,7 +2398,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Réessayer une dernière fois après 2 secondes
       setTimeout(() => {
-        console.log('🔄 Dernière tentative de mise à jour des liens CV');
+        log('🔄 Dernière tentative de mise à jour des liens CV');
         const donneesFinales = obtenirMesDonnees();
         mettreAJourLiensCV(donneesFinales?.links);
       }, 2000);
@@ -2407,11 +2407,11 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Exposer la fonction globalement pour le débogage
   window.debugCV = function() {
-    console.log('🔍 DEBUG CV - État actuel:');
+    log('🔍 DEBUG CV - État actuel:');
     const links = document.querySelectorAll('[data-cv-link="true"]');
-    console.log('Liens avec data-cv-link:', links.length);
+    log('Liens avec data-cv-link:', links.length);
     links.forEach((link, i) => {
-      console.log(`Lien ${i + 1}:`, {
+      log(`Lien ${i + 1}:`, {
         href: link.href,
         text: link.textContent,
         parent: link.parentNode?.tagName,
@@ -2420,7 +2420,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     const donnees = obtenirMesDonnees();
-    console.log('💾 Données depuis localStorage:', {
+    log('💾 Données depuis localStorage:', {
       links: donnees?.links,
       cv: donnees?.links?.cv ? (donnees.links.cv.substring(0, 100) + '...') : 'undefined',
       cvFile: donnees?.links?.cvFile ? (donnees.links.cvFile.substring(0, 100) + '...') : 'undefined',
@@ -2431,7 +2431,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Tester le chargement depuis le serveur
     chargerDonneesServeur().then(donneesServeur => {
-      console.log('📥 Données serveur (debug):', {
+      log('📥 Données serveur (debug):', {
         hasLinks: !!donneesServeur?.links,
         cv: donneesServeur?.links?.cv ? (donneesServeur.links.cv.substring(0, 100) + '...') : 'undefined',
         cvFile: donneesServeur?.links?.cvFile ? (donneesServeur.links.cvFile.substring(0, 100) + '...') : 'undefined',
@@ -2443,7 +2443,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Forcer la mise à jour avec les données du serveur
       if (donneesServeur?.links) {
-        console.log('🔄 Forçage de la mise à jour des liens CV avec les données serveur...');
+        log('🔄 Forçage de la mise à jour des liens CV avec les données serveur...');
         mettreAJourLiensCV(donneesServeur.links);
       }
     });

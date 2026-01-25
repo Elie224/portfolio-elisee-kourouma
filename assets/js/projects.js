@@ -10,6 +10,12 @@ document.addEventListener('DOMContentLoaded', function() {
     ? 'http://localhost:3000/api'
     : 'https://portfolio-backend-x47u.onrender.com/api';
   
+  // Utilitaires pour les logs (uniquement en développement)
+  const estEnDeveloppement = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const log = estEnDeveloppement ? log.bind(console) : () => {};
+  const logError = estEnDeveloppement ? logError.bind(console) : () => {};
+  const logWarn = estEnDeveloppement ? logWarn.bind(console) : () => {};
+  
   let allProjects = [];
   let filteredProjects = [];
   let currentView = 'grid'; // 'grid' ou 'list'
@@ -32,7 +38,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (reponse.ok) {
           const donnees = await reponse.json();
           projetsCharges = donnees.projects || [];
-          console.log('✅ Projets chargés depuis le serveur:', projetsCharges.length);
+          log('✅ Projets chargés depuis le serveur:', projetsCharges.length);
           
           // Sauvegarder dans localStorage comme backup
           if (projetsCharges.length > 0) {
@@ -42,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         }
       } catch (erreur) {
-        console.log('⚠️ Serveur non disponible, utilisation du localStorage');
+        log('⚠️ Serveur non disponible, utilisation du localStorage');
       }
       
       // Si pas de projets depuis le serveur, utiliser localStorage
@@ -52,9 +58,9 @@ document.addEventListener('DOMContentLoaded', function() {
           try {
             const donnees = JSON.parse(portfolioData);
             projetsCharges = donnees.projects || [];
-            console.log('✅ Projets chargés depuis localStorage:', projetsCharges.length);
+            log('✅ Projets chargés depuis localStorage:', projetsCharges.length);
           } catch (e) {
-            console.error('Erreur parsing localStorage:', e);
+            logError('Erreur parsing localStorage:', e);
           }
         }
       }
@@ -85,7 +91,7 @@ document.addEventListener('DOMContentLoaded', function() {
         allProjects = projetsCharges;
       }
       
-      console.log('📊 Projets finaux à afficher:', allProjects.length);
+      log('📊 Projets finaux à afficher:', allProjects.length);
       
       isLoading = false;
       filteredProjects = [...allProjects];
@@ -94,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
       afficherProjets();
       
     } catch (erreur) {
-      console.error('❌ Erreur lors du chargement des projets:', erreur);
+      logError('❌ Erreur lors du chargement des projets:', erreur);
       isLoading = false;
       afficherErreur();
     }
@@ -108,7 +114,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const loadingState = document.getElementById('projects-loading');
     
     if (!container) {
-      console.error('❌ Container projects-grid non trouvé');
+      logError('❌ Container projects-grid non trouvé');
       return;
     }
     
@@ -117,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function() {
       loadingState.style.display = 'none';
     }
     
-    console.log('📋 Affichage de', filteredProjects.length, 'projets');
+    log('📋 Affichage de', filteredProjects.length, 'projets');
     
     // Si aucun projet
     if (filteredProjects.length === 0) {
@@ -439,7 +445,7 @@ document.addEventListener('DOMContentLoaded', function() {
   /* ===== INITIALISATION ===== */
   
   function initialiser() {
-    console.log('🚀 Initialisation de la page projets...');
+    log('🚀 Initialisation de la page projets...');
     chargerProjets();
     configurerFiltres();
     configurerToggleVue();
