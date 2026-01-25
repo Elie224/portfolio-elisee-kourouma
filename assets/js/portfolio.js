@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Adresse de mon serveur backend
   const MON_SERVEUR = window.location.hostname === 'localhost' 
-    ? 'http://localhost:3000/api'
+    ? 'http://localhost:3001/api'
     : 'https://portfolio-backend-x47u.onrender.com/api';
   
   
@@ -89,20 +89,40 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
           donnees = JSON.parse(donneesLocales);
         } catch (e) {
+          logError('Erreur parsing localStorage pour maintenance:', e);
           return; // Si erreur, ne rien faire
         }
       } else {
-        return; // Pas de données disponibles
+        // Pas de données disponibles, ne rien faire
+        return;
       }
     }
     
     const settings = donnees?.settings || {};
-    const maintenanceEnabled = settings.maintenance?.enabled || false;
+    const maintenanceEnabled = settings.maintenance?.enabled === true; // Utiliser === pour être strict
     const maintenanceMessage = settings.maintenance?.message || 'Le site est actuellement en maintenance. Nous serons bientôt de retour !';
+    
+    // Log pour debug (uniquement en développement) - Réduire la verbosité
+    // Ne logger que si le mode maintenance change ou si c'est la première vérification
+    if (estEnDeveloppement) {
+      // Créer un identifiant unique pour cette vérification
+      const maintenanceKey = `${maintenanceEnabled ? 'ON' : 'OFF'}-${maintenanceMessage.substring(0, 20)}`;
+      if (!window.lastMaintenanceLog || window.lastMaintenanceLog !== maintenanceKey) {
+        window.lastMaintenanceLog = maintenanceKey;
+        log('🔧 Vérification mode maintenance:', {
+          enabled: maintenanceEnabled,
+          message: maintenanceMessage,
+          hasSettings: !!donnees?.settings
+        });
+      }
+    }
     
     // Vérifier si on est sur la page admin (ne pas afficher la maintenance sur admin)
     const isAdminPage = window.location.pathname.includes('admin.html');
     if (isAdminPage) {
+      if (estEnDeveloppement) {
+        log('🔧 Mode maintenance ignoré - page admin');
+      }
       return; // Ne pas afficher la maintenance sur la page admin
     }
     
@@ -115,54 +135,77 @@ document.addEventListener('DOMContentLoaded', function() {
         maintenanceOverlay = document.createElement('div');
         maintenanceOverlay.id = 'maintenance-overlay';
         maintenanceOverlay.style.cssText = `
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(135deg, #0a0a0f 0%, #1a1a22 100%);
-          z-index: 10000;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-direction: column;
-          padding: 20px;
-          text-align: center;
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          background: linear-gradient(135deg, #0a0a0f 0%, #1a1a22 100%) !important;
+          z-index: 999999 !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          flex-direction: column !important;
+          padding: 20px !important;
+          text-align: center !important;
+          margin: 0 !important;
         `;
         
+        // Utiliser textContent pour éviter XSS et préserver les sauts de ligne
         maintenanceOverlay.innerHTML = `
           <div style="max-width: 600px; padding: 48px; background: var(--couleur-fond-carte, #0f0f15); border-radius: 24px; border: 1px solid var(--couleur-bordure, #1f1f28); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);">
             <div style="font-size: 64px; margin-bottom: 24px;">🔧</div>
             <h1 style="font-size: 32px; margin-bottom: 16px; color: var(--couleur-texte, #ffffff);">Mode Maintenance</h1>
-            <p id="maintenance-message-text" style="font-size: 18px; line-height: 1.6; color: var(--couleur-texte-muted, #9ca3af); margin-bottom: 32px;">
-              ${maintenanceMessage}
-            </p>
+            <p id="maintenance-message-text" style="font-size: 18px; line-height: 1.6; color: var(--couleur-texte-muted, #9ca3af); margin-bottom: 32px; white-space: pre-wrap; word-wrap: break-word;"></p>
             <div style="width: 60px; height: 4px; background: var(--couleur-accent, #6366f1); border-radius: 2px; margin: 0 auto;"></div>
           </div>
         `;
         
-        document.body.appendChild(maintenanceOverlay);
+        // Définir le message avec textContent pour éviter XSS
+        const messageElement = document.getElementById('maintenance-message-text');
+        if (messageElement) {
+          messageElement.textContent = maintenanceMessage;
+        }
+        
+        // S'assurer que le body existe avant d'ajouter l'overlay
+        if (document.body) {
+          document.body.appendChild(maintenanceOverlay);
+        } else {
+          // Si le body n'existe pas encore, attendre qu'il soit prêt
+          document.addEventListener('DOMContentLoaded', () => {
+            if (!document.getElementById('maintenance-overlay')) {
+              document.body.appendChild(maintenanceOverlay);
+            }
+          });
+        }
       } else {
         // Mettre à jour le message
         const messageText = document.getElementById('maintenance-message-text');
         if (messageText) {
-          messageText.textContent = maintenanceMessage;
+          messageText.textContent = maintenanceMessage; // Utiliser textContent pour éviter XSS
         }
         maintenanceOverlay.style.display = 'flex';
+        maintenanceOverlay.style.zIndex = '999999';
       }
       
-      // Masquer le contenu principal
+      // Masquer le contenu principal avec !important pour forcer
       const mainContent = document.querySelector('main');
       if (mainContent) {
-        mainContent.style.display = 'none';
+        mainContent.style.setProperty('display', 'none', 'important');
       }
       const header = document.querySelector('header');
       if (header) {
-        header.style.display = 'none';
+        header.style.setProperty('display', 'none', 'important');
       }
       const footer = document.querySelector('footer');
       if (footer) {
-        footer.style.display = 'none';
+        footer.style.setProperty('display', 'none', 'important');
+      }
+      
+      // Ne logger qu'une seule fois
+      if (estEnDeveloppement && !window.maintenanceActivatedLogged) {
+        window.maintenanceActivatedLogged = true;
+        log('✅ Mode maintenance activé et affiché');
       }
     } else {
       // Désactiver le mode maintenance
@@ -173,15 +216,22 @@ document.addEventListener('DOMContentLoaded', function() {
       // Réafficher le contenu principal
       const mainContent = document.querySelector('main');
       if (mainContent) {
-        mainContent.style.display = '';
+        mainContent.style.removeProperty('display');
       }
       const header = document.querySelector('header');
       if (header) {
-        header.style.display = '';
+        header.style.removeProperty('display');
       }
       const footer = document.querySelector('footer');
       if (footer) {
-        footer.style.display = '';
+        footer.style.removeProperty('display');
+      }
+      
+      // Ne logger qu'une seule fois
+      if (estEnDeveloppement && !window.maintenanceDeactivatedLogged) {
+        window.maintenanceDeactivatedLogged = true;
+        window.maintenanceActivatedLogged = false; // Réinitialiser pour la prochaine activation
+        log('✅ Mode maintenance désactivé');
       }
     }
   }
@@ -217,13 +267,22 @@ document.addEventListener('DOMContentLoaded', function() {
       const nouvellesDonnees = await chargerDonneesServeur();
       
       if (!nouvellesDonnees) {
-        // Serveur indisponible, on continue avec les données actuelles
+        // Serveur indisponible, vérifier quand même le mode maintenance avec les données locales
+        const donneesLocales = localStorage.getItem('portfolioData');
+        if (donneesLocales) {
+          try {
+            const donnees = JSON.parse(donneesLocales);
+            verifierModeMaintenance(donnees);
+          } catch (e) {
+            // Ignorer les erreurs
+          }
+        }
         return;
       }
       
       const nouveauHash = calculerHash(nouvellesDonnees);
       
-      // Vérifier le mode maintenance à chaque vérification
+      // Vérifier le mode maintenance à chaque vérification (AVANT de mettre à jour)
       verifierModeMaintenance(nouvellesDonnees);
       
       // Si le hash est différent, les données ont changé
@@ -237,15 +296,23 @@ document.addEventListener('DOMContentLoaded', function() {
         // Sauvegarder dans localStorage
         localStorage.setItem('portfolioData', JSON.stringify(nouvellesDonnees));
         
-        // Mettre à jour l'affichage
-        afficherMesDonnees(nouvellesDonnees);
-        afficherCertifications(nouvellesDonnees.certifications || []);
-        afficherStages(nouvellesDonnees.stages || []);
-        afficherAlternances(nouvellesDonnees.alternances || []);
-        afficherEvenementsTech(nouvellesDonnees.techEvents || []);
-        
-        // Vérifier le mode maintenance après mise à jour
+        // Vérifier le mode maintenance AVANT d'afficher le contenu
         verifierModeMaintenance(nouvellesDonnees);
+        
+        // Mettre à jour l'affichage (seulement si le mode maintenance n'est pas activé)
+        const maintenanceEnabled = nouvellesDonnees?.settings?.maintenance?.enabled === true;
+        if (!maintenanceEnabled) {
+          afficherMesDonnees(nouvellesDonnees);
+          afficherCertifications(nouvellesDonnees.certifications || []);
+          afficherStages(nouvellesDonnees.stages || []);
+          afficherAlternances(nouvellesDonnees.alternances || []);
+          afficherEvenementsTech(nouvellesDonnees.techEvents || []);
+        }
+        
+        // Vérifier le mode maintenance après mise à jour (répétition pour être sûr)
+        setTimeout(() => {
+          verifierModeMaintenance(nouvellesDonnees);
+        }, 100);
         
         // Mettre à jour les liens CV
         setTimeout(() => {
@@ -301,16 +368,58 @@ document.addEventListener('DOMContentLoaded', function() {
   // Charge mes données depuis le serveur
   async function chargerDonneesServeur() {
     try {
-      const reponse = await fetch(`${MON_SERVEUR}/portfolio`);
-      if (!reponse.ok) throw new Error('Serveur indisponible');
+      // Créer un AbortController pour le timeout (compatible avec tous les navigateurs)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
+      const reponse = await fetch(`${MON_SERVEUR}/portfolio`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        },
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!reponse.ok) {
+        // Erreur HTTP (4xx, 5xx) - ne pas logger, c'est normal si le serveur n'est pas configuré
+        return null;
+      }
       
       const donnees = await reponse.json();
       
+      // Log pour debug (uniquement en développement) - Réduire la verbosité
+      if (estEnDeveloppement && donnees?.settings) {
+        const settingsKey = `${donnees.settings?.maintenance?.enabled ? 'ON' : 'OFF'}-${(donnees.settings?.maintenance?.message || '').substring(0, 20)}`;
+        if (!window.lastSettingsLog || window.lastSettingsLog !== settingsKey) {
+          window.lastSettingsLog = settingsKey;
+          log('📥 Données reçues du serveur - Settings:', {
+            hasSettings: !!donnees.settings,
+            maintenanceEnabled: donnees.settings?.maintenance?.enabled,
+            maintenanceMessage: donnees.settings?.maintenance?.message || '(message par défaut)'
+          });
+        }
+      }
       
       return donneesSontVides(donnees) ? null : donnees;
     } catch (erreur) {
-      logError('❌ Erreur lors du chargement depuis le serveur:', erreur);
-      return null; // Si le serveur ne répond pas, on utilise les données locales
+      // Ignorer silencieusement les erreurs réseau courantes (serveur indisponible, timeout, etc.)
+      // Ces erreurs sont normales quand le serveur n'est pas démarré ou en développement
+      if (erreur.name === 'AbortError') {
+        // Timeout - comportement normal, ne pas logger
+        return null;
+      }
+      
+      // Pour les autres erreurs (TypeError pour ERR_CONNECTION_REFUSED, etc.)
+      // Ne pas logger non plus car c'est normal si le serveur n'est pas disponible
+      // Seulement logger en développement si c'est une erreur vraiment inattendue
+      if (estEnDeveloppement && erreur.message && !erreur.message.includes('Failed to fetch') && !erreur.message.includes('network')) {
+        logError('❌ Erreur inattendue lors du chargement:', erreur);
+      }
+      
+      // Si le serveur ne répond pas, on utilise les données locales (comportement normal)
+      return null;
     }
   }
   
@@ -449,8 +558,11 @@ document.addEventListener('DOMContentLoaded', function() {
       donneesActuelles = mesDonnees;
       hashDonneesActuelles = calculerHash(mesDonnees);
       
-      // Vérifier le mode maintenance IMMÉDIATEMENT
-      verifierModeMaintenance(mesDonnees);
+      // Vérifier le mode maintenance IMMÉDIATEMENT (avant d'afficher le contenu)
+      // Utiliser requestAnimationFrame pour s'assurer que le DOM est prêt
+      requestAnimationFrame(() => {
+        verifierModeMaintenance(mesDonnees);
+      });
       
       
       // S'assurer que le DOM est prêt avant d'afficher
@@ -471,8 +583,10 @@ document.addEventListener('DOMContentLoaded', function() {
       afficherAlternances(mesDonnees.alternances || []);
       afficherEvenementsTech(mesDonnees.techEvents || []);
       
-      // Vérifier le mode maintenance après affichage
-      verifierModeMaintenance(mesDonnees);
+      // Vérifier le mode maintenance après affichage (répétition pour être sûr)
+      setTimeout(() => {
+        verifierModeMaintenance(mesDonnees);
+      }, 100);
       
       // Réessayer d'afficher les projets après un délai pour s'assurer que le DOM est prêt
       setTimeout(() => {
@@ -481,19 +595,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }, 500);
       
-      // Forcer la mise à jour des liens CV après un court délai pour s'assurer que le DOM est prêt
+      // Mettre à jour les liens CV après un court délai pour s'assurer que le DOM est prêt
       setTimeout(() => {
         mettreAJourLiensCV(mesDonnees.links);
       }, 500);
-      
-      // Vérifier aussi après un délai plus long au cas où le DOM n'est pas encore prêt
-      setTimeout(() => {
-        mettreAJourLiensCV(mesDonnees.links);
-        // Réessayer une dernière fois pour les projets
-        if (mesDonnees.projects && mesDonnees.projects.length > 0) {
-          afficherMesProjets(mesDonnees.projects);
-        }
-      }, 1000);
       
       return mesDonnees;
       
@@ -544,13 +649,8 @@ document.addEventListener('DOMContentLoaded', function() {
     afficherMonParcours(donnees.timeline);
     afficherMesStats(donnees.about?.stats);
     
-    // Mettre à jour les liens CV immédiatement
+      // Mettre à jour les liens CV (une seule fois avec debounce)
     mettreAJourLiensCV(donnees?.links);
-    
-    // Réessayer après un court délai pour s'assurer que le DOM est prêt
-    setTimeout(() => {
-      mettreAJourLiensCV(donnees?.links);
-    }, 200);
     
     // Ajouter le lien "Voir tous les projets" si nécessaire
     if (donnees.projects && donnees.projects.length > 4) {
@@ -564,17 +664,52 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
-  // Met à jour tous les liens CV dans la page
+  // Variable pour éviter les appels répétitifs
+  let dernierCvHash = null;
+  let timeoutMiseAJourCV = null;
+  
+  // Met à jour tous les liens CV dans la page (avec debounce)
   function mettreAJourLiensCV(links) {
-    log('🔍 Mise à jour des liens CV - Données reçues:', links);
+    // Calculer un hash simple des données CV pour éviter les mises à jour inutiles
+    const cvHash = links ? JSON.stringify({
+      cv: links.cv ? links.cv.substring(0, 50) : '',
+      cvFile: links.cvFile ? links.cvFile.substring(0, 50) : '',
+      cvFileName: links.cvFileName || ''
+    }) : 'empty';
+    
+    // Si les données n'ont pas changé, ne pas mettre à jour
+    if (cvHash === dernierCvHash) {
+      return;
+    }
+    
+    // Annuler le timeout précédent s'il existe
+    if (timeoutMiseAJourCV) {
+      clearTimeout(timeoutMiseAJourCV);
+    }
+    
+    // Debounce : attendre 100ms avant de mettre à jour
+    timeoutMiseAJourCV = setTimeout(() => {
+      dernierCvHash = cvHash;
+      mettreAJourLiensCVImmediate(links);
+    }, 100);
+  }
+  
+  // Fonction interne pour mettre à jour les liens CV immédiatement
+  function mettreAJourLiensCVImmediate(links) {
+    if (!estEnDeveloppement) {
+      // En production, ne pas logger
+    } else {
+      log('🔍 Mise à jour des liens CV - Données reçues:', links);
+    }
     
     // Récupérer le chemin du CV (priorité au cvFile si c'est un upload base64, sinon cv)
     let cvUrl = '';
     let isBase64 = false;
     let cvFileName = 'CV.pdf';
     
-    log('🔍 Analyse des données CV:', {
-      hasLinks: !!links,
+    if (estEnDeveloppement) {
+      log('🔍 Analyse des données CV:', {
+        hasLinks: !!links,
       hasCvFile: !!(links && links.cvFile),
       hasCv: !!(links && links.cv),
       cvFileType: links && links.cvFile ? (links.cvFile.startsWith('data:') ? 'base64' : 'other') : 'none',
@@ -582,6 +717,7 @@ document.addEventListener('DOMContentLoaded', function() {
       cvValue: links && links.cv ? (links.cv.length > 100 ? links.cv.substring(0, 100) + '...' : links.cv) : 'none',
       cvFileValue: links && links.cvFile ? (links.cvFile.length > 100 ? links.cvFile.substring(0, 100) + '...' : links.cvFile) : 'none'
     });
+    }
     
     // PRIORITÉ 1: cvFile en base64 (le plus fiable pour les uploads)
     if (links && links.cvFile && typeof links.cvFile === 'string' && links.cvFile.trim() !== '') {
@@ -648,13 +784,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const cvLinks = document.querySelectorAll('[data-cv-link="true"]');
     
     if (cvLinks.length === 0) {
-      // Réessayer après un court délai
-      setTimeout(() => {
-        const retryLinks = document.querySelectorAll('[data-cv-link="true"]');
-        if (retryLinks.length > 0) {
-          mettreAJourLiensCV(links);
-        }
-      }, 500);
+      // Réessayer après un court délai (une seule fois)
+      if (!timeoutMiseAJourCV) {
+        setTimeout(() => {
+          const retryLinks = document.querySelectorAll('[data-cv-link="true"]');
+          if (retryLinks.length > 0) {
+            mettreAJourLiensCVImmediate(links);
+          }
+        }, 500);
+      }
       return;
     }
     
@@ -2038,6 +2176,63 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 200);
   }
   
+  // Affiche les alternances
+  function afficherAlternances(alternances) {
+    const container = document.getElementById('alternances-container');
+    if (!container) return;
+    
+    if (!alternances || alternances.length === 0) {
+      container.innerHTML = `
+        <div class="experience-card" style="grid-column: 1 / -1; text-align: center; padding: var(--espacement-2xl);">
+          <p style="color: var(--couleur-texte-muted);">Aucune alternance pour le moment</p>
+        </div>
+      `;
+      return;
+    }
+    
+    container.innerHTML = alternances.map((alternance, index) => {
+      return `
+        <div class="experience-card" style="animation-delay: ${index * 0.1}s;">
+          <div class="experience-card-header">
+            <div class="experience-card-icon">🔄</div>
+            <div style="flex: 1;">
+              <h4 class="experience-card-title">${alternance.title || alternance.company || 'Alternance'}</h4>
+              <p class="experience-card-issuer">${alternance.company || ''} ${alternance.location ? `· ${alternance.location}` : ''}</p>
+            </div>
+            ${alternance.date ? `<span class="experience-card-date">${alternance.date}</span>` : ''}
+          </div>
+          ${alternance.rhythm ? `<span style="display: inline-block; padding: 4px 12px; background: rgba(99, 102, 241, 0.15); border-radius: var(--rayon-full); font-size: 0.8125rem; color: var(--couleur-accent); margin-bottom: var(--espacement-sm);">${alternance.rhythm}</span>` : ''}
+          ${alternance.description ? `<p class="experience-card-description">${alternance.description}</p>` : ''}
+          ${alternance.technologies && alternance.technologies.length > 0 ? `
+            <div style="display: flex; flex-wrap: wrap; gap: var(--espacement-xs); margin-top: var(--espacement-sm);">
+              ${alternance.technologies.map(tech => `
+                <span style="padding: 4px 10px; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: var(--rayon-full); font-size: 0.8125rem; color: var(--couleur-accent-light);">
+                  ${tech}
+                </span>
+              `).join('')}
+            </div>
+          ` : ''}
+          ${alternance.link ? `
+            <a href="${alternance.link}" target="_blank" rel="noopener noreferrer" class="experience-card-link">
+              En savoir plus
+            </a>
+          ` : ''}
+        </div>
+      `;
+    }).join('');
+    
+    // Animer l'apparition
+    setTimeout(() => {
+      const cards = container.querySelectorAll('.experience-card');
+      cards.forEach((card, i) => {
+        setTimeout(() => {
+          card.style.opacity = '1';
+          card.style.transform = 'translateY(0)';
+        }, i * 100);
+      });
+    }, 200);
+  }
+  
   // Affiche les événements technologiques
   function afficherEvenementsTech(events) {
     const container = document.getElementById('tech-events-container');
@@ -2127,10 +2322,19 @@ document.addEventListener('DOMContentLoaded', function() {
       donneesActuelles = donnees;
       hashDonneesActuelles = calculerHash(donnees);
       
-      // Vérifier le mode maintenance au chargement initial (avec délai pour s'assurer que le DOM est prêt)
+      // Vérifier le mode maintenance au chargement initial (plusieurs fois pour être sûr)
+      // Immédiatement
+      verifierModeMaintenance(donnees);
+      
+      // Après un court délai pour s'assurer que le DOM est prêt
       setTimeout(() => {
         verifierModeMaintenance(donnees);
-      }, 200);
+      }, 100);
+      
+      // Encore une fois après un délai plus long
+      setTimeout(() => {
+        verifierModeMaintenance(donnees);
+      }, 500);
       
       // Démarrer la vérification automatique
       demarrerVerificationAutomatique();
@@ -2165,7 +2369,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
       });
       
-      // Forcer la mise à jour des liens CV après que le DOM soit complètement prêt
+      // Mettre à jour les liens CV après que le DOM soit complètement prêt
       setTimeout(() => {
         const donnees = obtenirMesDonnees();
         mettreAJourLiensCV(donnees?.links);
@@ -2302,36 +2506,49 @@ document.addEventListener('DOMContentLoaded', function() {
     
     setTimeout(() => {
       const donnees = obtenirMesDonnees();
-      log('📊 Données chargées pour CV:', {
-        links: donnees?.links,
-        cv: donnees?.links?.cv ? (donnees.links.cv.substring(0, 100) + '...') : 'undefined',
-        cvFile: donnees?.links?.cvFile ? (donnees.links.cvFile.substring(0, 100) + '...') : 'undefined',
-        cvFileName: donnees?.links?.cvFileName,
-        cvFileSize: donnees?.links?.cvFileSize
-      });
+      if (estEnDeveloppement) {
+        log('📊 Données chargées pour CV:', {
+          links: donnees?.links,
+          cv: donnees?.links?.cv ? (donnees.links.cv.substring(0, 100) + '...') : 'undefined',
+          cvFile: donnees?.links?.cvFile ? (donnees.links.cvFile.substring(0, 100) + '...') : 'undefined',
+          cvFileName: donnees?.links?.cvFileName,
+          cvFileSize: donnees?.links?.cvFileSize
+        });
+      }
       mettreAJourLiensCV(donnees?.links);
-      
-      // Réessayer une dernière fois après 2 secondes
-      setTimeout(() => {
-        const donneesFinales = obtenirMesDonnees();
-        mettreAJourLiensCV(donneesFinales?.links);
-      }, 2000);
     }, 500);
   });
   
-  // Fonction de debug (uniquement en développement)
-  window.debugCV = function() {
-    if (!estEnDeveloppement) return;
+  // Fonction de debug (uniquement si appelée explicitement depuis la console)
+  // Par défaut, cette fonction est silencieuse pour éviter les logs répétitifs
+  window.debugCV = function(verbose = false) {
+    if (!estEnDeveloppement && !verbose) return;
     
     const links = document.querySelectorAll('[data-cv-link="true"]');
-    log('🔍 DEBUG CV - Liens trouvés:', links.length);
-    
     const donnees = obtenirMesDonnees();
-    log('💾 CV dans localStorage:', {
+    
+    // Ne logger que si verbose=true (appel explicite depuis la console)
+    if (verbose) {
+      log('🔍 DEBUG CV - Liens trouvés:', links.length);
+      log('💾 CV dans localStorage:', {
+        hasCv: !!donnees?.links?.cv,
+        hasCvFile: !!donnees?.links?.cvFile,
+        cvFileName: donnees?.links?.cvFileName
+      });
+    }
+    
+    // Retourner les données pour inspection dans la console
+    return {
+      linksCount: links.length,
       hasCv: !!donnees?.links?.cv,
       hasCvFile: !!donnees?.links?.cvFile,
-      cvFileName: donnees?.links?.cvFileName
-    });
+      cvFileName: donnees?.links?.cvFileName,
+      links: Array.from(links).map(l => ({
+        href: l.href,
+        text: l.textContent,
+        hasBase64: !!l.getAttribute('data-cv-base64')
+      }))
+    };
   };
   
 });

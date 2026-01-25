@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Adresse de mon serveur
   const MON_SERVEUR = window.location.hostname === 'localhost'
-    ? 'http://localhost:3000/api'
+    ? 'http://localhost:3001/api'
     : 'https://portfolio-backend-x47u.onrender.com/api';
   
   // Données actuelles en cours d'édition
@@ -176,7 +176,12 @@ document.addEventListener('DOMContentLoaded', function() {
           services: donnees.services || [],
           faq: donnees.faq || [],
           links: donnees.links || {},
-          about: donnees.about || {}
+          about: donnees.about || {},
+          settings: donnees.settings || {
+            maintenance: { enabled: false, message: 'Le site est actuellement en maintenance. Nous serons bientôt de retour !' },
+            seo: { title: '', description: '', keywords: '' },
+            analytics: { googleAnalytics: '' }
+          }
         };
         
         // Sauvegarder aussi dans localStorage comme backup
@@ -228,13 +233,40 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     try {
+      // S'assurer que les settings sont inclus dans les données à envoyer
+      // Si mesDonneesActuelles n'a pas de settings, les récupérer depuis localStorage
+      if (!mesDonneesActuelles.settings) {
+        const currentData = JSON.parse(localStorage.getItem('portfolioData') || '{}');
+        if (currentData.settings) {
+          mesDonneesActuelles.settings = currentData.settings;
+          log('📥 Settings récupérées depuis localStorage:', mesDonneesActuelles.settings);
+        }
+      }
+      
+      const donneesAEnvoyer = {
+        ...mesDonneesActuelles,
+        settings: mesDonneesActuelles.settings || {
+          maintenance: { enabled: false, message: 'Le site est actuellement en maintenance. Nous serons bientôt de retour !' },
+          seo: { title: '', description: '', keywords: '' },
+          analytics: { googleAnalytics: '' }
+        }
+      };
+      
+      // Log pour debug
+      log('📤 Données envoyées au serveur:', {
+        hasSettings: !!donneesAEnvoyer.settings,
+        maintenanceEnabled: donneesAEnvoyer.settings?.maintenance?.enabled,
+        maintenanceMessage: donneesAEnvoyer.settings?.maintenance?.message,
+        settingsComplete: JSON.stringify(donneesAEnvoyer.settings)
+      });
+      
       const reponse = await fetch(`${MON_SERVEUR}/portfolio`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(mesDonneesActuelles)
+        body: JSON.stringify(donneesAEnvoyer)
       });
       
       const resultat = await reponse.json();
@@ -266,6 +298,15 @@ document.addEventListener('DOMContentLoaded', function() {
           // Mettre à jour mesDonneesActuelles avec les données retournées par le serveur
           if (resultat.portfolio.links) {
             mesDonneesActuelles.links = { ...mesDonneesActuelles.links, ...resultat.portfolio.links };
+          }
+          
+          // Mettre à jour les settings aussi
+          if (resultat.portfolio.settings) {
+            mesDonneesActuelles.settings = resultat.portfolio.settings;
+            log('✅ Settings mis à jour depuis le serveur:', {
+              maintenanceEnabled: mesDonneesActuelles.settings?.maintenance?.enabled,
+              maintenanceMessage: mesDonneesActuelles.settings?.maintenance?.message
+            });
           }
         }
         
@@ -1852,10 +1893,17 @@ document.addEventListener('DOMContentLoaded', function() {
   // Paramètres
   window.saveSettings = async function() {
     try {
+      // Récupérer le message de maintenance
+      const maintenanceMessageInput = document.getElementById('maintenance-message');
+      const maintenanceMessage = maintenanceMessageInput?.value?.trim() || '';
+      
+      // Si le message est vide, utiliser le message par défaut
+      const finalMessage = maintenanceMessage || 'Le site est actuellement en maintenance. Nous serons bientôt de retour !';
+      
       const settings = {
         maintenance: {
           enabled: document.getElementById('maintenance-mode')?.checked || false,
-          message: document.getElementById('maintenance-message')?.value || ''
+          message: finalMessage
         },
         seo: {
           title: document.getElementById('meta-title')?.value || '',
@@ -1870,10 +1918,27 @@ document.addEventListener('DOMContentLoaded', function() {
       // Sauvegarder dans les données actuelles
       mesDonneesActuelles.settings = settings;
       
+      // Log pour debug
+      log('💾 Settings à sauvegarder:', {
+        maintenance: settings.maintenance,
+        enabled: settings.maintenance.enabled,
+        message: settings.maintenance.message
+      });
+      
       // Sauvegarder dans localStorage
       const currentData = JSON.parse(localStorage.getItem('portfolioData') || '{}');
       currentData.settings = settings;
       localStorage.setItem('portfolioData', JSON.stringify(currentData));
+      
+      // S'assurer que mesDonneesActuelles contient bien les settings avant la sauvegarde
+      if (!mesDonneesActuelles.settings) {
+        mesDonneesActuelles.settings = settings;
+      }
+      
+      log('💾 mesDonneesActuelles avant sauvegarde:', {
+        hasSettings: !!mesDonneesActuelles.settings,
+        maintenanceEnabled: mesDonneesActuelles.settings?.maintenance?.enabled
+      });
       
       // Déclencher manuellement l'événement storage pour les autres onglets
       // (l'événement storage ne se déclenche que pour les autres onglets, pas pour celui qui fait le changement)
@@ -1884,7 +1949,13 @@ document.addEventListener('DOMContentLoaded', function() {
       }));
       
       // Sauvegarder sur le serveur
-      await sauvegarderSurServeur();
+      const success = await sauvegarderSurServeur();
+      
+      if (success) {
+        log('✅ Settings sauvegardés sur le serveur avec succès');
+      } else {
+        logError('❌ Erreur lors de la sauvegarde des settings sur le serveur');
+      }
       
       // Forcer la mise à jour du mode maintenance sur toutes les pages
       if (window.portfolioAPI && window.portfolioAPI.actualiser) {

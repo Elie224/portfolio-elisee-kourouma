@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Configuration
   const MON_SERVEUR = window.location.hostname === 'localhost' 
-    ? 'http://localhost:3000/api'
+    ? 'http://localhost:3001/api'
     : 'https://portfolio-backend-x47u.onrender.com/api';
   
   // Utilitaires pour les logs (uniquement en développement)

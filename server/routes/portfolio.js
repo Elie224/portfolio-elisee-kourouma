@@ -34,6 +34,14 @@ router.get('/', async (req, res) => {
       linksKeys: Object.keys(portfolio.links || {})
     } : { error: 'No links object' };
     
+    // Log pour déboguer les settings
+    const settingsInfo = portfolio.settings ? {
+      hasSettings: true,
+      maintenanceEnabled: portfolio.settings.maintenance?.enabled,
+      maintenanceMessage: portfolio.settings.maintenance?.message,
+      settingsKeys: Object.keys(portfolio.settings)
+    } : { hasSettings: false };
+    
     console.log('📊 GET /api/portfolio:', {
       hasData,
       projects: portfolio.projects?.length || 0,
@@ -41,8 +49,19 @@ router.get('/', async (req, res) => {
       timeline: portfolio.timeline?.length || 0,
       hasPhoto: !!portfolio.personal?.photo,
       responseSize: JSON.stringify(portfolio).length,
-      cvInfo: cvInfo
+      cvInfo: cvInfo,
+      settingsInfo: settingsInfo
     });
+    
+    // S'assurer que les settings sont bien dans la réponse
+    if (!portfolio.settings) {
+      console.log('⚠️ Aucune settings dans le portfolio, ajout des valeurs par défaut');
+      portfolio.settings = {
+        maintenance: { enabled: false, message: 'Le site est actuellement en maintenance. Nous serons bientôt de retour !' },
+        seo: { title: '', description: '', keywords: '' },
+        analytics: { googleAnalytics: '' }
+      };
+    }
     
     res.json(portfolio);
   } catch (error) {
@@ -77,6 +96,18 @@ router.post('/',
   try {
     console.log('📥 Requête de mise à jour reçue de:', req.admin.email);
     
+    // Log des settings reçues dans req.body
+    if (req.body.settings) {
+      console.log('📥 Settings reçues dans req.body:', {
+        hasSettings: true,
+        maintenanceEnabled: req.body.settings.maintenance?.enabled,
+        maintenanceMessage: req.body.settings.maintenance?.message,
+        settingsKeys: Object.keys(req.body.settings)
+      });
+    } else {
+      console.log('⚠️ Aucune settings dans req.body');
+    }
+    
     // Préparation des données (la validation a déjà été faite par les middlewares)
     const updateData = {
       personal: req.body.personal || {},
@@ -94,6 +125,16 @@ router.post('/',
       faq: Array.isArray(req.body.faq) ? req.body.faq : [],
       settings: req.body.settings || {}
     };
+    
+    // S'assurer que les settings sont bien présentes
+    if (!updateData.settings || Object.keys(updateData.settings).length === 0) {
+      console.log('⚠️ Settings vides ou absentes, utilisation des valeurs par défaut');
+      updateData.settings = {
+        maintenance: { enabled: false, message: 'Le site est actuellement en maintenance. Nous serons bientôt de retour !' },
+        seo: { title: '', description: '', keywords: '' },
+        analytics: { googleAnalytics: '' }
+      };
+    }
     
     // PROTECTION : Ne pas écraser un CV base64 existant avec 'assets/CV.pdf'
     // Si links.cv est 'assets/CV.pdf' mais qu'il existe un cvFile base64, garder le base64
@@ -141,6 +182,9 @@ router.post('/',
       timeline: updateData.timeline.length,
       hasPersonal: !!updateData.personal,
       hasAbout: !!updateData.about,
+      hasSettings: !!updateData.settings,
+      maintenanceEnabled: updateData.settings?.maintenance?.enabled,
+      maintenanceMessage: updateData.settings?.maintenance?.message,
       admin: req.admin.email
     });
     
@@ -161,8 +205,20 @@ router.post('/',
       }
     }
     
+    // Log des settings reçues AVANT sauvegarde
+    if (updateData.settings) {
+      console.log('🔧 Settings reçues pour sauvegarde:', {
+        hasSettings: true,
+        maintenanceEnabled: updateData.settings.maintenance?.enabled,
+        maintenanceMessage: updateData.settings.maintenance?.message,
+        settingsObject: JSON.stringify(updateData.settings)
+      });
+    } else {
+      console.log('⚠️ Aucune settings reçue dans updateData');
+    }
+    
     // Mettre à jour directement avec findOneAndUpdate
-    // Utiliser $set pour mettre à jour tous les champs, y compris links avec le CV base64
+    // Utiliser $set pour mettre à jour tous les champs, y compris links avec le CV base64 et settings
     const portfolio = await Portfolio.findOneAndUpdate(
       {}, // Pas de filtre spécifique, on veut le document unique
       { $set: updateData },
@@ -228,19 +284,60 @@ router.post('/',
       cvSize: portfolio.links.cvFile ? portfolio.links.cvFile.length : 0
     } : { error: 'No links object' };
     
+    // Vérifier que les settings sont bien sauvegardées
+    const settingsInfo = portfolio.settings ? {
+      hasSettings: true,
+      maintenanceEnabled: portfolio.settings.maintenance?.enabled,
+      maintenanceMessage: portfolio.settings.maintenance?.message,
+      hasSeo: !!portfolio.settings.seo,
+      hasAnalytics: !!portfolio.settings.analytics
+    } : { hasSettings: false };
+    
     console.log('✅ Portfolio mis à jour avec succès:', {
       projects: portfolio.projects?.length || 0,
       skills: portfolio.skills?.length || 0,
       timeline: portfolio.timeline?.length || 0,
-      cvInfo: cvInfoAfter
+      cvInfo: cvInfoAfter,
+      settingsInfo: settingsInfo
     });
     
-    // VÉRIFICATION FINALE : S'assurer que le CV base64 est bien dans la réponse
+    // VÉRIFICATION FINALE : S'assurer que le CV base64 et les settings sont bien dans la réponse
     const portfolioObj = portfolio.toObject();
     delete portfolioObj._id;
     delete portfolioObj.__v;
     delete portfolioObj.createdAt;
     delete portfolioObj.updatedAt;
+    
+    // VÉRIFICATION CRITIQUE : S'assurer que les settings sont bien dans la réponse
+    if (updateData.settings) {
+      if (!portfolioObj.settings) {
+        console.error('❌ ERREUR: Les settings n\'ont pas été sauvegardées dans MongoDB !');
+        console.error('Settings envoyées:', {
+          maintenanceEnabled: updateData.settings.maintenance?.enabled,
+          maintenanceMessage: updateData.settings.maintenance?.message
+        });
+        
+        // Forcer les settings dans la réponse
+        portfolioObj.settings = updateData.settings;
+        console.log('⚠️ Settings forcées dans la réponse (problème de sauvegarde MongoDB détecté)');
+      } else {
+        // Vérifier que les settings sont correctes
+        if (updateData.settings.maintenance?.enabled !== portfolioObj.settings.maintenance?.enabled) {
+          console.error('❌ ERREUR: Le mode maintenance ne correspond pas !');
+          console.error('Attendu:', updateData.settings.maintenance?.enabled);
+          console.error('Reçu:', portfolioObj.settings.maintenance?.enabled);
+          
+          // Forcer les settings correctes
+          portfolioObj.settings = updateData.settings;
+          console.log('⚠️ Settings corrigées dans la réponse');
+        } else {
+          console.log('✅ Settings confirmées dans la réponse:', {
+            maintenanceEnabled: portfolioObj.settings.maintenance?.enabled,
+            maintenanceMessage: portfolioObj.settings.maintenance?.message
+          });
+        }
+      }
+    }
     
     // Vérification critique : Si un CV base64 a été envoyé, il doit être dans la réponse
     if (updateData.links && updateData.links.cvFile && updateData.links.cvFile.startsWith('data:')) {

@@ -1,7 +1,8 @@
 # 💼 Portfolio de Nema Elisée Kourouma
 
 > **Étudiant en Master 1 Intelligence Artificielle**  
-> Master 1 IA à l'École Supérieure d'Informatique de Paris
+> Master 1 IA à l'École Supérieure d'Informatique de Paris  
+> 🌐 Site web : [elisee-kourouma.fr](https://elisee-kourouma.fr)
 
 ## 🚀 Ce que vous trouverez ici
 
@@ -59,9 +60,11 @@ npm start
 ## 📞 Contact
 
 **Nema Elisée Kourouma**  
-📧 Email : kouroumaelisee@gmail.com  
+📧 Email : [kouroumaelisee@gmail.com](mailto:kouroumaelisee@gmail.com)  
 📱 Téléphone : +33 6 89 30 64 32  
-💼 LinkedIn : [linkedin.com/in/nema-kourouma](https://linkedin.com/in/nema-kourouma)
+💼 LinkedIn : [linkedin.com/in/nema-kourouma](https://linkedin.com/in/nema-kourouma)  
+🌐 Site web : [elisee-kourouma.fr](https://elisee-kourouma.fr)  
+👨‍💻 GitHub : [@Elie224](https://github.com/Elie224)
 
 ---
 

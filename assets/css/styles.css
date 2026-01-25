@@ -1509,8 +1509,8 @@ header:hover::before {
 }
 
 .stat-card:hover::after {
-  opacity: 1;
-}
+    opacity: 1;
+  }
 
 .stat-number {
   font-size: clamp(2.5rem, 6vw, 4rem);
@@ -1542,8 +1542,8 @@ header:hover::before {
   position: relative;
   z-index: 1;
   font-weight: var(--font-weight-semibold);
-  opacity: 0.8;
-}
+    opacity: 0.8;
+  }
 
 /* ===== TIMELINE (Parcours) - Design Premium ===== */
 .timeline {
@@ -1560,8 +1560,8 @@ header:hover::before {
   bottom: 0;
   width: 2px;
   background: var(--gradient-accent);
-  opacity: 0.3;
-}
+    opacity: 0.3;
+  }
 
 .timeline-item {
   position: relative;
@@ -1672,9 +1672,9 @@ header:hover::before {
   display: flex;
   flex-direction: column;
   gap: var(--espacement-md);
-  opacity: 0;
-  transform: translateY(30px);
-}
+    opacity: 0;
+    transform: translateY(30px);
+  }
 
 .experience-card::before {
   content: '';
@@ -1714,7 +1714,7 @@ header:hover::before {
 }
 
 .experience-card:hover::after {
-  opacity: 1;
+    opacity: 1;
 }
 
 .experience-card-header {
@@ -1839,7 +1839,7 @@ header:hover::before {
   max-height: 380px;
   width: 100%;
   max-width: 100%;
-  opacity: 0;
+    opacity: 0;
   transform: translateY(30px);
   box-shadow: var(--ombre-sm);
   backdrop-filter: blur(10px);
@@ -1872,7 +1872,7 @@ header:hover::before {
   bottom: -1px;
   background: var(--gradient-accent);
   border-radius: var(--rayon-xl);
-  opacity: 0;
+    opacity: 0;
   transition: opacity var(--transition-base);
   z-index: -1;
 }
@@ -1887,8 +1887,8 @@ header:hover::before {
 }
 
 .project-card-modern:hover::before {
-  opacity: 1;
-}
+    opacity: 1;
+  }
 
 .project-card-modern:hover::after {
   opacity: 0.3;
@@ -2594,9 +2594,9 @@ header:hover::before {
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-.fade-in {
+  }
+  
+  .fade-in {
   animation: fadeIn 0.6s ease-out;
 }
 
