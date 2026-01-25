@@ -11,7 +11,7 @@
 5. Network Access → Add IP Address → `0.0.0.0/0` (autoriser toutes les IPs)
 6. Database → Connect → Driver: Node.js → Copier la connection string
    - Remplacer `<password>` par votre mot de passe utilisateur
-   - Exemple : `mongodb+srv://user:password@cluster.mongodb.net/portfolio?retryWrites=true&w=majority`
+   - Format : `mongodb+srv://<username>:<password>@<cluster>.mongodb.net/<database>?retryWrites=true&w=majority`
 
 ### Étape 2 : Déployer le Backend sur Railway (10 minutes)
 
@@ -23,7 +23,7 @@
    ```
    PORT=3000
    NODE_ENV=production
-   MONGODB_URI=mongodb+srv://user:password@cluster.mongodb.net/portfolio?retryWrites=true&w=majority
+   MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/portfolio?retryWrites=true&w=majority
    JWT_SECRET=votre_secret_jwt_aleatoire_long
    ADMIN_EMAIL=votre_email@example.com
    ADMIN_PASSWORD_HASH=votre_hash_bcrypt

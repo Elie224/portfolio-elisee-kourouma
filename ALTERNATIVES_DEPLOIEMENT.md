@@ -213,7 +213,9 @@ Toutes les options nécessitent MongoDB. Utilisez **MongoDB Atlas** (gratuit) :
 2. Créer un cluster gratuit (M0 - 512MB)
 3. Créer un utilisateur de base de données
 4. Whitelist IP : `0.0.0.0/0` (pour permettre toutes les IPs)
-5. Récupérer la connection string : `mongodb+srv://user:password@cluster.mongodb.net/portfolio?retryWrites=true&w=majority`
+5. Récupérer la connection string depuis MongoDB Atlas Dashboard
+   - Format : `mongodb+srv://<username>:<password>@<cluster>.mongodb.net/portfolio?retryWrites=true&w=majority`
+   - Remplacez `<username>`, `<password>`, et `<cluster>` par vos vraies valeurs
 
 ---
 
