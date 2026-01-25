@@ -10,6 +10,9 @@
     <link rel="stylesheet" href="assets/css/styles.css" />
   </head>
   <body id="top" class="dark">
+    <!-- Skip Link pour accessibilité -->
+    <a href="#main-content" class="skip-link">Aller au contenu principal</a>
+    
     <header class="container">
       <nav class="nav">
         <a class="brand" href="index.html">Mon Portfolio</a>
@@ -24,14 +27,14 @@
           <a href="about.html">À propos</a>
           <a href="projects.html">Projets</a>
           <a href="contact.html">Contact</a>
-          <a href="assets/CV.pdf" target="_blank" rel="noopener noreferrer" data-cv-link="true">CV</a>
+          <a href="#" target="_blank" rel="noopener noreferrer" data-cv-link="true">CV</a>
           <a href="admin.html" class="admin-nav-link admin-nav-hidden">
             <span>🔐</span> <span class="admin-text">Admin</span>
           </a>
         </div>
       </nav>
     </header>
-    <main class="container">
+    <main class="container" role="main" id="main-content">
       <div style="margin-bottom: 24px;">
         <a href="projects.html" class="btn secondary">← Retour aux projets</a>
       </div>
