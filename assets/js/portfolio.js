@@ -292,27 +292,6 @@ document.addEventListener('DOMContentLoaded', function() {
       
       const donnees = await reponse.json();
       
-      // Log pour déboguer le CV
-      if (donnees && donnees.links) {
-        log('📥 Données CV reçues du serveur:', {
-          hasCv: !!donnees.links.cv,
-          hasCvFile: !!donnees.links.cvFile,
-          cvType: donnees.links.cv ? (donnees.links.cv.startsWith('data:') ? 'base64' : 'path') : 'none',
-          cvFileType: donnees.links.cvFile ? (donnees.links.cvFile.startsWith('data:') ? 'base64' : 'path') : 'none',
-          cvFileName: donnees.links.cvFileName,
-          cvPreview: donnees.links.cv ? donnees.links.cv.substring(0, 50) + '...' : 'none',
-          cvFilePreview: donnees.links.cvFile ? donnees.links.cvFile.substring(0, 50) + '...' : 'none'
-        });
-      }
-      
-      // Log des projets reçus du serveur
-      log('📥 Données PROJETS reçues du serveur:', {
-        hasProjects: !!donnees.projects,
-        isArray: Array.isArray(donnees.projects),
-        projectsLength: donnees.projects?.length || 0,
-        projectsTitres: donnees.projects?.map(p => p.title) || [],
-        projectsPublics: donnees.projects?.map(p => p.public !== false) || []
-      });
       
       return donneesSontVides(donnees) ? null : donnees;
     } catch (erreur) {
@@ -327,15 +306,6 @@ document.addEventListener('DOMContentLoaded', function() {
       const donneesLocales = localStorage.getItem('portfolioData');
       const donnees = donneesLocales ? JSON.parse(donneesLocales) : creerDonneesParDefaut();
       
-      // Log pour déboguer le CV dans localStorage
-      if (donnees && donnees.links) {
-        log('💾 Données CV depuis localStorage:', {
-          hasCv: !!donnees.links.cv,
-          hasCvFile: !!donnees.links.cvFile,
-          cvType: donnees.links.cv ? (donnees.links.cv.startsWith('data:') ? 'base64' : 'path') : 'none',
-          cvFileType: donnees.links.cvFile ? (donnees.links.cvFile.startsWith('data:') ? 'base64' : 'path') : 'none'
-        });
-      }
       
       return donnees;
     } catch (erreur) {
@@ -387,33 +357,6 @@ document.addEventListener('DOMContentLoaded', function() {
       
       if (donneesServeur) {
         // Utilise les données du serveur si disponibles
-        log('📥 Données serveur reçues - Vérification CV:', {
-          hasLinks: !!donneesServeur.links,
-          hasCv: !!donneesServeur.links?.cv,
-          hasCvFile: !!donneesServeur.links?.cvFile,
-          cvIsBase64: donneesServeur.links?.cv?.startsWith('data:'),
-          cvFileIsBase64: donneesServeur.links?.cvFile?.startsWith('data:'),
-          cvValue: donneesServeur.links?.cv ? (donneesServeur.links.cv.length > 50 ? donneesServeur.links.cv.substring(0, 50) + '...' : donneesServeur.links.cv) : 'none',
-          cvFileValue: donneesServeur.links?.cvFile ? (donneesServeur.links.cvFile.length > 50 ? donneesServeur.links.cvFile.substring(0, 50) + '...' : donneesServeur.links.cvFile) : 'none'
-        });
-        
-        log('📥 Données serveur reçues - Vérification Projets:', {
-          hasProjects: !!donneesServeur.projects,
-          isArray: Array.isArray(donneesServeur.projects),
-          projectsLength: donneesServeur.projects?.length || 0,
-          projects: donneesServeur.projects?.map(p => ({
-            title: p.title,
-            type: p.type,
-            featured: p.featured,
-            public: p.public
-          })) || [],
-          firstProject: donneesServeur.projects?.[0] ? {
-            title: donneesServeur.projects[0].title,
-            type: donneesServeur.projects[0].type,
-            featured: donneesServeur.projects[0].featured,
-            public: donneesServeur.projects[0].public
-          } : 'none'
-        });
         
         // S'assurer que projects est toujours un tableau
         if (!Array.isArray(donneesServeur.projects)) {
@@ -426,23 +369,17 @@ document.addEventListener('DOMContentLoaded', function() {
         if (donneesServeur.links) {
           // Si le serveur a un CV base64, s'assurer qu'il remplace l'ancien
           if (donneesServeur.links.cvFile && donneesServeur.links.cvFile.startsWith('data:')) {
-            log('✅ Serveur a un CV base64 - Remplacement de l\'ancien CV dans localStorage');
             // S'assurer que cv contient aussi le base64
             if (!donneesServeur.links.cv || !donneesServeur.links.cv.startsWith('data:')) {
               donneesServeur.links.cv = donneesServeur.links.cvFile;
-              log('✅ cv mis à jour avec le base64 de cvFile');
             }
-          } else if (donneesServeur.links.cv && donneesServeur.links.cv.startsWith('data:')) {
-            log('✅ Serveur a un CV base64 dans cv - Remplacement de l\'ancien CV dans localStorage');
           } else if (!donneesServeur.links.cv || donneesServeur.links.cv === '') {
-            log('⚠️ Serveur n\'a pas de CV base64 - Vérification du localStorage pour un CV base64');
             // Vérifier si localStorage a un CV base64 qui n'a pas été sauvegardé
             const donneesLocales = localStorage.getItem('portfolioData');
             if (donneesLocales) {
               try {
                 const localData = JSON.parse(donneesLocales);
                 if (localData.links && localData.links.cvFile && localData.links.cvFile.startsWith('data:')) {
-                  log('⚠️ localStorage a un CV base64 non sauvegardé - Utilisation du localStorage');
                   donneesServeur.links.cvFile = localData.links.cvFile;
                   donneesServeur.links.cv = localData.links.cvFile;
                   donneesServeur.links.cvFileName = localData.links.cvFileName;
@@ -459,7 +396,6 @@ document.addEventListener('DOMContentLoaded', function() {
         mesDonnees = donneesServeur;
       } else {
         // Sinon utilise les données locales
-        log('⚠️ Serveur indisponible, utilisation des données locales');
         mesDonnees = obtenirMesDonnees();
       }
       
@@ -470,31 +406,6 @@ document.addEventListener('DOMContentLoaded', function() {
       // Vérifier le mode maintenance
       verifierModeMaintenance(mesDonnees);
       
-      // Log final avant affichage
-      log('🎯 Données finales avant affichage:', {
-        hasProjects: !!mesDonnees.projects,
-        projectsLength: mesDonnees.projects?.length || 0,
-        projectsIsArray: Array.isArray(mesDonnees.projects),
-        projects: mesDonnees.projects?.slice(0, 2).map(p => p.title) || []
-      });
-      
-      // Log détaillé des projets pour debug
-      if (mesDonnees.projects && mesDonnees.projects.length > 0) {
-        log('✅ PROJETS TROUVÉS - Détails:', {
-          nombre: mesDonnees.projects.length,
-          titres: mesDonnees.projects.map(p => p.title),
-          publics: mesDonnees.projects.map(p => p.public !== false),
-          featured: mesDonnees.projects.map(p => p.featured)
-        });
-      } else {
-        logWarn('⚠️ AUCUN PROJET TROUVÉ dans les données finales!');
-        logWarn('🔍 Vérification des données:', {
-          projects: mesDonnees.projects,
-          type: typeof mesDonnees.projects,
-          isArray: Array.isArray(mesDonnees.projects),
-          keys: Object.keys(mesDonnees || {})
-        });
-      }
       
       // S'assurer que le DOM est prêt avant d'afficher
       if (document.readyState === 'loading') {
@@ -520,7 +431,6 @@ document.addEventListener('DOMContentLoaded', function() {
       // Réessayer d'afficher les projets après un délai pour s'assurer que le DOM est prêt
       setTimeout(() => {
         if (mesDonnees.projects && mesDonnees.projects.length > 0) {
-          log('🔄 Réessai d\'affichage des projets après délai');
           afficherMesProjets(mesDonnees.projects);
         }
       }, 500);
@@ -836,7 +746,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     const container = document.getElementById('homepage-projects');
-    log('🔍 Container homepage-projects:', {
+    // Vérifier le container
+    if (!container) {
       exists: !!container,
       id: container?.id,
       currentHTML: container?.innerHTML?.substring(0, 100),
@@ -864,7 +775,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     if (projets.length === 0) {
-      log('📭 Aucun projet à afficher');
       container.innerHTML = '<p class="text-center muted">Aucun projet disponible pour le moment. Ajoutez des projets depuis l\'interface d\'administration.</p>';
       return;
     }
@@ -2205,7 +2115,6 @@ document.addEventListener('DOMContentLoaded', function() {
       // Forcer la mise à jour des liens CV après que le DOM soit complètement prêt
       setTimeout(() => {
         const donnees = obtenirMesDonnees();
-        log('🔄 Mise à jour finale des liens CV après chargement DOM');
         mettreAJourLiensCV(donnees?.links);
       }, 300);
     }, 150);
@@ -2283,7 +2192,6 @@ document.addEventListener('DOMContentLoaded', function() {
       location.reload();
     },
     forcerRechargementServeur: async function() {
-      log('🔄 Forçage du rechargement depuis le serveur...');
       localStorage.removeItem('portfolioData');
       const donnees = await chargerDonneesServeur();
       if (donnees) {
