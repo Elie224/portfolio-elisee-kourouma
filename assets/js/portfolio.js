@@ -634,19 +634,16 @@ document.addEventListener('DOMContentLoaded', function() {
         cvUrl = links.cvFile;
         isBase64 = true;
         cvFileName = links.cvFileName || 'CV.pdf';
-        log('📄 CV détecté: Fichier base64 uploadé (cvFile avec data:) - Taille:', links.cvFile.length, 'caractères');
       } else if (links.cvFile.length > 100 && /^[A-Za-z0-9+/=\s]/.test(links.cvFile.trim())) {
         // Base64 sans préfixe data:
         cvUrl = `data:application/pdf;base64,${links.cvFile.trim()}`;
         isBase64 = true;
         cvFileName = links.cvFileName || 'CV.pdf';
-        log('📄 CV détecté: Fichier base64 uploadé (cvFile sans data:) - Taille:', links.cvFile.length, 'caractères');
       } else if (links.cvFile !== 'assets/CV.pdf' && links.cvFile !== '') {
         // cvFile est un chemin/URL
         cvUrl = links.cvFile;
         isBase64 = false;
         cvFileName = links.cvFileName || 'CV.pdf';
-        log('📄 CV détecté: Chemin dans cvFile:', cvUrl);
       }
     } 
     // PRIORITÉ 2: cv en base64 (fallback si cvFile n'existe pas mais cv contient base64)
@@ -656,18 +653,15 @@ document.addEventListener('DOMContentLoaded', function() {
         cvUrl = links.cv;
         isBase64 = true;
         cvFileName = links.cvFileName || 'CV.pdf';
-        log('📄 CV détecté: Base64 dans cv (avec data:) - Taille:', links.cv.length, 'caractères');
       } else if (links.cv.length > 100 && /^[A-Za-z0-9+/=\s]/.test(links.cv.trim())) {
         // Base64 sans préfixe data:
         cvUrl = `data:application/pdf;base64,${links.cv.trim()}`;
         isBase64 = true;
         cvFileName = links.cvFileName || 'CV.pdf';
-        log('📄 CV détecté: Base64 dans cv (sans data:) - Taille:', links.cv.length, 'caractères');
       } else if (links.cv !== 'assets/CV.pdf' && links.cv !== '') {
         // cv est un chemin/URL personnalisé
         cvUrl = links.cv;
         isBase64 = false;
-        log('📄 CV détecté: Chemin/URL personnalisé:', cvUrl);
       }
     } 
     // DÉFAUT: Aucun CV disponible (ne plus utiliser 'assets/CV.pdf')
@@ -677,38 +671,12 @@ document.addEventListener('DOMContentLoaded', function() {
       const cvFileEstVide = links && links.cvFile === '';
       
       // Ne jamais utiliser 'assets/CV.pdf' - Si aucun CV n'est défini, laisser vide
-      log('⚠️ CV non défini - Aucun CV disponible (pas de fallback vers assets/CV.pdf)');
       cvUrl = ''; // Pas de CV disponible
       isBase64 = false;
-      
-      log('🔍 État des données links:', {
-        hasLinks: !!links,
-        hasCvFile: !!(links && links.cvFile),
-        hasCv: !!(links && links.cv),
-        cvEstVide: cvEstVide,
-        cvFileEstVide: cvFileEstVide,
-        cvValue: links && links.cv ? (links.cv.length > 100 ? links.cv.substring(0, 100) + '...' : links.cv) : 'none',
-        cvFileValue: links && links.cvFile ? (links.cvFile.length > 100 ? links.cvFile.substring(0, 100) + '...' : links.cvFile) : 'none',
-        cvFileType: links && links.cvFile ? typeof links.cvFile : 'none',
-        cvType: links && links.cv ? typeof links.cv : 'none'
-      });
     }
     
     // Si cvUrl est vide, ne pas mettre à jour les liens (pas de CV disponible)
     if (!cvUrl || cvUrl === '') {
-      log('⚠️ Aucun CV disponible - Les liens CV ne seront pas mis à jour');
-      log('🔍 DEBUG - État complet des données links:', {
-        links: links,
-        linksType: typeof links,
-        linksKeys: links ? Object.keys(links) : 'none',
-        cvExists: links && 'cv' in links,
-        cvFileExists: links && 'cvFile' in links,
-        cvValue: links?.cv,
-        cvFileValue: links?.cvFile ? (links.cvFile.length > 50 ? links.cvFile.substring(0, 50) + '...' : links.cvFile) : 'none',
-        cvLength: links?.cv ? links.cv.length : 0,
-        cvFileLength: links?.cvFile ? links.cvFile.length : 0
-      });
-      
       // Désactiver les liens CV s'il n'y a pas de CV
       const cvLinks = document.querySelectorAll('[data-cv-link="true"]');
       cvLinks.forEach(link => {
@@ -723,22 +691,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Mettre à jour tous les liens CV avec l'attribut data-cv-link
     const cvLinks = document.querySelectorAll('[data-cv-link="true"]');
     
-    log('🔍 Liens CV trouvés dans le DOM:', cvLinks.length);
-    
     if (cvLinks.length === 0) {
-      logWarn('⚠️ Aucun lien CV trouvé dans la page avec data-cv-link="true"');
-      log('🔍 Recherche de tous les liens dans la page...');
-      const allLinks = document.querySelectorAll('a[href*="CV"], a[href*="cv"]');
-      log('🔍 Liens contenant "CV" ou "cv":', allLinks.length);
-      
       // Réessayer après un court délai
       setTimeout(() => {
         const retryLinks = document.querySelectorAll('[data-cv-link="true"]');
         if (retryLinks.length > 0) {
-          log('✅ Liens CV trouvés au retry:', retryLinks.length);
           mettreAJourLiensCV(links);
-        } else {
-          logError('❌ Toujours aucun lien CV trouvé après retry');
         }
       }, 500);
       return;
@@ -782,8 +740,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             try {
-              log('📥 Début du téléchargement du CV:', filename);
-              
               // Extraire les données base64
               const base64String = base64Data.split(',')[1] || base64Data;
               const byteCharacters = atob(base64String);
@@ -807,7 +763,6 @@ document.addEventListener('DOMContentLoaded', function() {
               setTimeout(() => {
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
-                log('✅ CV téléchargé avec succès:', filename);
               }, 100);
             } catch (error) {
               logError('❌ Erreur lors du téléchargement du CV:', error);
@@ -834,11 +789,6 @@ document.addEventListener('DOMContentLoaded', function() {
           newLink.onclick = null; // Supprimer tout onclick existant
           
           liensMisAJour++;
-          log(`✅ Lien CV ${index + 1} configuré pour téléchargement base64:`, {
-            href: newLink.href,
-            hasListener: true,
-            filename: cvFileName
-          });
         } else {
           // Pour les chemins/URL normaux, mettre à jour directement
           link.href = cvUrl;
@@ -847,26 +797,12 @@ document.addEventListener('DOMContentLoaded', function() {
             link.href = cvUrl + (cvUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
           }
           liensMisAJour++;
-          log(`✅ Lien CV ${index + 1} mis à jour: ${ancienHref} → ${link.href}`);
         }
       } catch (error) {
         logError(`❌ Erreur lors de la mise à jour du lien CV ${index + 1}:`, error);
       }
     });
     
-    log('✅ Liens CV mis à jour:', {
-      url: isBase64 ? 'Base64 (fichier uploadé)' : cvUrl,
-      nombreLiens: cvLinks.length,
-      liensMisAJour: liensMisAJour,
-      isBase64: isBase64,
-      filename: isBase64 ? cvFileName : 'N/A'
-    });
-    
-    // Vérification finale : tester si les liens sont cliquables
-    if (isBase64 && liensMisAJour > 0) {
-      log('💡 Les liens CV sont maintenant prêts. Cliquez sur un lien pour télécharger le CV.');
-      log('💡 Si le téléchargement ne fonctionne pas, vérifiez la console pour les erreurs.');
-    }
   }
   
   // Affiche mes informations personnelles
@@ -2405,51 +2341,19 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 500);
   });
   
-  // Exposer la fonction globalement pour le débogage
+  // Fonction de debug (uniquement en développement)
   window.debugCV = function() {
-    log('🔍 DEBUG CV - État actuel:');
+    if (!estEnDeveloppement) return;
+    
     const links = document.querySelectorAll('[data-cv-link="true"]');
-    log('Liens avec data-cv-link:', links.length);
-    links.forEach((link, i) => {
-      log(`Lien ${i + 1}:`, {
-        href: link.href,
-        text: link.textContent,
-        parent: link.parentNode?.tagName,
-        hasBase64: link.hasAttribute('data-cv-base64')
-      });
-    });
+    log('🔍 DEBUG CV - Liens trouvés:', links.length);
     
     const donnees = obtenirMesDonnees();
-    log('💾 Données depuis localStorage:', {
-      links: donnees?.links,
-      cv: donnees?.links?.cv ? (donnees.links.cv.substring(0, 100) + '...') : 'undefined',
-      cvFile: donnees?.links?.cvFile ? (donnees.links.cvFile.substring(0, 100) + '...') : 'undefined',
-      cvFileName: donnees?.links?.cvFileName,
-      cvLength: donnees?.links?.cv ? donnees.links.cv.length : 0,
-      cvFileLength: donnees?.links?.cvFile ? donnees.links.cvFile.length : 0
+    log('💾 CV dans localStorage:', {
+      hasCv: !!donnees?.links?.cv,
+      hasCvFile: !!donnees?.links?.cvFile,
+      cvFileName: donnees?.links?.cvFileName
     });
-    
-    // Tester le chargement depuis le serveur
-    chargerDonneesServeur().then(donneesServeur => {
-      log('📥 Données serveur (debug):', {
-        hasLinks: !!donneesServeur?.links,
-        cv: donneesServeur?.links?.cv ? (donneesServeur.links.cv.substring(0, 100) + '...') : 'undefined',
-        cvFile: donneesServeur?.links?.cvFile ? (donneesServeur.links.cvFile.substring(0, 100) + '...') : 'undefined',
-        cvLength: donneesServeur?.links?.cv ? donneesServeur.links.cv.length : 0,
-        cvFileLength: donneesServeur?.links?.cvFile ? donneesServeur.links.cvFile.length : 0,
-        cvType: donneesServeur?.links?.cv ? (donneesServeur.links.cv.startsWith('data:') ? 'base64' : 'other') : 'none',
-        cvFileType: donneesServeur?.links?.cvFile ? (donneesServeur.links.cvFile.startsWith('data:') ? 'base64' : 'other') : 'none'
-      });
-      
-      // Forcer la mise à jour avec les données du serveur
-      if (donneesServeur?.links) {
-        log('🔄 Forçage de la mise à jour des liens CV avec les données serveur...');
-        mettreAJourLiensCV(donneesServeur.links);
-      }
-    });
-    
-    // Forcer la mise à jour avec les données locales
-    mettreAJourLiensCV(donnees?.links);
   };
   
 });
