@@ -74,6 +74,98 @@ document.addEventListener('DOMContentLoaded', function() {
   let hashDonneesActuelles = null;
   let intervalVerification = null;
   
+  // Vérifie et affiche le mode maintenance
+  function verifierModeMaintenance(donnees) {
+    const settings = donnees?.settings || {};
+    const maintenanceEnabled = settings.maintenance?.enabled || false;
+    const maintenanceMessage = settings.maintenance?.message || 'Le site est actuellement en maintenance. Nous serons bientôt de retour !';
+    
+    // Vérifier si on est sur la page admin (ne pas afficher la maintenance sur admin)
+    const isAdminPage = window.location.pathname.includes('admin.html');
+    if (isAdminPage) {
+      return; // Ne pas afficher la maintenance sur la page admin
+    }
+    
+    // Créer ou mettre à jour l'overlay de maintenance
+    let maintenanceOverlay = document.getElementById('maintenance-overlay');
+    
+    if (maintenanceEnabled) {
+      if (!maintenanceOverlay) {
+        // Créer l'overlay de maintenance
+        maintenanceOverlay = document.createElement('div');
+        maintenanceOverlay.id = 'maintenance-overlay';
+        maintenanceOverlay.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(135deg, #0a0a0f 0%, #1a1a22 100%);
+          z-index: 10000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-direction: column;
+          padding: 20px;
+          text-align: center;
+        `;
+        
+        maintenanceOverlay.innerHTML = `
+          <div style="max-width: 600px; padding: 48px; background: var(--couleur-fond-carte, #0f0f15); border-radius: 24px; border: 1px solid var(--couleur-bordure, #1f1f28); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);">
+            <div style="font-size: 64px; margin-bottom: 24px;">🔧</div>
+            <h1 style="font-size: 32px; margin-bottom: 16px; color: var(--couleur-texte, #ffffff);">Mode Maintenance</h1>
+            <p id="maintenance-message-text" style="font-size: 18px; line-height: 1.6; color: var(--couleur-texte-muted, #9ca3af); margin-bottom: 32px;">
+              ${maintenanceMessage}
+            </p>
+            <div style="width: 60px; height: 4px; background: var(--couleur-accent, #6366f1); border-radius: 2px; margin: 0 auto;"></div>
+          </div>
+        `;
+        
+        document.body.appendChild(maintenanceOverlay);
+      } else {
+        // Mettre à jour le message
+        const messageText = document.getElementById('maintenance-message-text');
+        if (messageText) {
+          messageText.textContent = maintenanceMessage;
+        }
+        maintenanceOverlay.style.display = 'flex';
+      }
+      
+      // Masquer le contenu principal
+      const mainContent = document.querySelector('main');
+      if (mainContent) {
+        mainContent.style.display = 'none';
+      }
+      const header = document.querySelector('header');
+      if (header) {
+        header.style.display = 'none';
+      }
+      const footer = document.querySelector('footer');
+      if (footer) {
+        footer.style.display = 'none';
+      }
+    } else {
+      // Désactiver le mode maintenance
+      if (maintenanceOverlay) {
+        maintenanceOverlay.style.display = 'none';
+      }
+      
+      // Réafficher le contenu principal
+      const mainContent = document.querySelector('main');
+      if (mainContent) {
+        mainContent.style.display = '';
+      }
+      const header = document.querySelector('header');
+      if (header) {
+        header.style.display = '';
+      }
+      const footer = document.querySelector('footer');
+      if (footer) {
+        footer.style.display = '';
+      }
+    }
+  }
+  
   // Calcule un hash simple des données pour détecter les changements
   function calculerHash(donnees) {
     if (!donnees) return null;
@@ -161,7 +253,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 5000); // Première vérification après 5 secondes
     
     // Puis vérifier périodiquement
-    intervalVerification = setInterval(() => {
+    intervalVerification = setInterval(async () => {
       verifierEtMettreAJour();
     }, intervalle);
     
@@ -363,6 +455,9 @@ document.addEventListener('DOMContentLoaded', function() {
       donneesActuelles = mesDonnees;
       hashDonneesActuelles = calculerHash(mesDonnees);
       
+      // Vérifier le mode maintenance
+      verifierModeMaintenance(mesDonnees);
+      
       // Log final avant affichage
       console.log('🎯 Données finales avant affichage:', {
         hasProjects: !!mesDonnees.projects,
@@ -443,6 +538,9 @@ document.addEventListener('DOMContentLoaded', function() {
       afficherAlternances(donnees.alternances || []);
       afficherEvenementsTech(donnees.techEvents || []);
       mettreAJourLiensCV(donnees.links);
+      
+      // Vérifier le mode maintenance même en cas d'erreur
+      verifierModeMaintenance(donnees);
       
       return donnees;
     }
@@ -2114,6 +2212,9 @@ document.addEventListener('DOMContentLoaded', function() {
       const donnees = obtenirMesDonnees();
       donneesActuelles = donnees;
       hashDonneesActuelles = calculerHash(donnees);
+      
+      // Vérifier le mode maintenance au chargement initial
+      verifierModeMaintenance(donnees);
       
       // Démarrer la vérification automatique
       demarrerVerificationAutomatique();
