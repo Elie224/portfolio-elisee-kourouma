@@ -228,9 +228,57 @@
       .success-message.active {
         display: block;
       }
+      .form-section {
+        transition: all 0.3s ease;
+      }
+      .form-section:hover {
+        background: rgba(99, 102, 241, 0.05) !important;
+        border-color: rgba(99, 102, 241, 0.2) !important;
+      }
+      .form-group label {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #ffffff !important;
+        font-size: 14px;
+      }
+      .form-group label span {
+        color: #b4bcc8 !important;
+        font-weight: 400;
+      }
+      .form-group input,
+      .form-group textarea,
+      .form-group select {
+        width: 100%;
+        padding: 12px 16px;
+        background: var(--bg);
+        border: 2px solid var(--line);
+        border-radius: 8px;
+        color: #ffffff !important;
+      }
+      .form-group input:focus,
+      .form-group textarea:focus,
+      .form-group select:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+      }
+      .form-group input::placeholder,
+      .form-group textarea::placeholder {
+        color: var(--muted) !important;
+        opacity: 0.8;
+      }
+      .form-group select option {
+        background: var(--bg);
+        color: #ffffff !important;
+      }
       textarea {
         min-height: 100px;
         resize: vertical;
+        font-family: inherit;
+        color: #ffffff !important;
       }
       .featured-checkbox {
         display: flex;
@@ -373,7 +421,7 @@
           <a href="about.html">À propos</a>
           <a href="projects.html">Projets</a>
           <a href="contact.html">Contact</a>
-          <a href="assets/CV.pdf" target="_blank" rel="noopener" data-cv-link="true">CV</a>
+          <a href="#" target="_blank" rel="noopener" data-cv-link="true">CV</a>
           <a href="admin.html" class="admin-nav-link">
             <span>🔐</span> Admin
           </a>
@@ -444,6 +492,8 @@
           <button class="admin-tab" data-tab="timeline">📅 Timeline</button>
           <button class="admin-tab" data-tab="services">🛠️ Services</button>
           <button class="admin-tab" data-tab="certifications">🏆 Certifications</button>
+          <button class="admin-tab" data-tab="internships">💼 Stages & Alternances</button>
+          <button class="admin-tab" data-tab="tech-events">🚀 Événements Tech</button>
           <button class="admin-tab" data-tab="faq">❓ FAQ</button>
           <button class="admin-tab" data-tab="messages">📧 Messages</button>
           <button class="admin-tab" data-tab="settings">⚙️ Paramètres</button>
@@ -637,82 +687,166 @@
 
             <!-- Project Form Modal -->
             <div id="project-form-modal" style="display: none;">
-              <div class="admin-section" style="margin-top: 20px; border: 2px solid var(--accent);">
-                <h3 id="project-form-title">Ajouter un projet</h3>
+              <div class="admin-section" style="margin-top: 20px; border: 2px solid var(--accent); background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--line);">
+                  <span style="font-size: 24px;">🚀</span>
+                  <h3 id="project-form-title" style="margin: 0;">Ajouter un projet</h3>
+                </div>
+                
                 <form id="project-form">
                   <input type="hidden" id="project-id" />
                   
-                  <div class="form-group">
-                    <label for="project-title">Titre du projet *</label>
-                    <input type="text" id="project-title" required />
-                  </div>
-                  
-                  <div class="form-row">
+                  <!-- Section 1: Informations de base -->
+                  <div class="form-section" style="margin-bottom: 32px; padding: 20px; background: rgba(99, 102, 241, 0.08); border-radius: 12px; border: 1px solid rgba(99, 102, 241, 0.2);">
+                    <h4 style="margin: 0 0 16px; color: #818cf8 !important; font-size: 16px; display: flex; align-items: center; gap: 8px; font-weight: 600;">
+                      <span>📋</span> Informations de base
+                    </h4>
+                    
                     <div class="form-group">
-                      <label for="project-type">Type de projet</label>
-                      <select id="project-type">
-                        <option value="Projet Personnel">Projet Personnel</option>
-                        <option value="Projet Majeur">Projet Majeur</option>
-                        <option value="PFE Licence">PFE Licence</option>
-                        <option value="PFA">PFA (Projet de Fin d'Année)</option>
-                        <option value="PFE Master 1">PFE Master 1</option>
-                        <option value="Projet Majeur · PFE Master 1">Projet Majeur · PFE Master 1</option>
-                      </select>
+                      <label for="project-title">
+                        Titre du projet *
+                        <span style="color: #b4bcc8 !important; font-weight: normal; font-size: 12px; margin-left: 8px;">(Nom qui apparaîtra sur le portfolio)</span>
+                      </label>
+                      <input type="text" id="project-title" placeholder="Ex: Application de gestion de tâches" required />
                     </div>
+                    
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label for="project-type">
+                          Type de projet
+                          <span style="color: var(--muted); font-weight: normal; font-size: 12px; margin-left: 8px;">(Classification)</span>
+                        </label>
+                        <select id="project-type" style="padding: 12px; background: var(--couleur-fond-secondaire); border: 2px solid var(--line); border-radius: 8px; color: #ffffff !important; font-size: 14px; width: 100%;">
+                          <option value="Projet Personnel">Projet Personnel</option>
+                          <option value="Projet Majeur">Projet Majeur</option>
+                          <option value="PFE Licence">PFE Licence</option>
+                          <option value="PFA">PFA (Projet de Fin d'Année)</option>
+                          <option value="PFE Master 1">PFE Master 1</option>
+                          <option value="Projet Majeur · PFE Master 1">Projet Majeur · PFE Master 1</option>
+                        </select>
+                      </div>
+                      <div class="form-group">
+                        <label for="project-category">
+                          Catégorie
+                          <span style="color: var(--muted); font-weight: normal; font-size: 12px; margin-left: 8px;">(Domaine d'application)</span>
+                        </label>
+                        <input type="text" id="project-category" placeholder="Ex: Application web, Mobile, IA..." />
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Section 2: Description -->
+                  <div class="form-section" style="margin-bottom: 32px; padding: 20px; background: rgba(99, 102, 241, 0.08); border-radius: 12px; border: 1px solid rgba(99, 102, 241, 0.2);">
+                    <h4 style="margin: 0 0 16px; color: #818cf8 !important; font-size: 16px; display: flex; align-items: center; gap: 8px; font-weight: 600;">
+                      <span>📝</span> Description
+                    </h4>
+                    
                     <div class="form-group">
-                      <label for="project-category">Catégorie</label>
-                      <input type="text" id="project-category" placeholder="Ex: Application web" />
+                      <label for="project-short-desc">
+                        Description courte *
+                        <span style="color: var(--muted); font-weight: normal; font-size: 12px; margin-left: 8px;">(Une phrase, visible dans les cartes de projet)</span>
+                      </label>
+                      <input type="text" id="project-short-desc" placeholder="Ex: Application web moderne pour la gestion de tâches en équipe" required />
                     </div>
-                  </div>
 
-                  <div class="form-group">
-                    <label for="project-short-desc">Description courte *</label>
-                    <input type="text" id="project-short-desc" required />
-                  </div>
-
-                  <div class="form-group">
-                    <label for="project-description">Description complète *</label>
-                    <textarea id="project-description" required></textarea>
-                  </div>
-
-                  <div class="form-group">
-                    <label for="project-features">Fonctionnalités (une par ligne)</label>
-                    <textarea id="project-features" placeholder="Fonctionnalité 1&#10;Fonctionnalité 2"></textarea>
-                  </div>
-
-                  <div class="form-group">
-                    <label for="project-tags">Technologies (séparées par des virgules) *</label>
-                    <input type="text" id="project-tags" placeholder="React, Node.js, MongoDB" required />
-                    <div id="project-tags-display" class="tag-input"></div>
-                  </div>
-
-                  <div class="form-row">
                     <div class="form-group">
-                      <label for="project-link">Lien du projet</label>
-                      <input type="url" id="project-link" placeholder="https://..." />
+                      <label for="project-description">
+                        Description complète *
+                        <span style="color: var(--muted); font-weight: normal; font-size: 12px; margin-left: 8px;">(Détails du projet, visible sur la page de détails)</span>
+                      </label>
+                      <textarea id="project-description" placeholder="Décrivez votre projet en détail : objectifs, contexte, approche technique, résultats obtenus..." required style="min-height: 120px; resize: vertical;"></textarea>
                     </div>
+                  </div>
+
+                  <!-- Section 3: Fonctionnalités et Technologies -->
+                  <div class="form-section" style="margin-bottom: 32px; padding: 20px; background: rgba(99, 102, 241, 0.08); border-radius: 12px; border: 1px solid rgba(99, 102, 241, 0.2);">
+                    <h4 style="margin: 0 0 16px; color: #818cf8 !important; font-size: 16px; display: flex; align-items: center; gap: 8px; font-weight: 600;">
+                      <span>⚙️</span> Fonctionnalités et Technologies
+                    </h4>
+                    
                     <div class="form-group">
-                      <label for="project-demo-link">Lien de démo</label>
-                      <input type="url" id="project-demo-link" placeholder="https://..." />
+                      <label for="project-features">
+                        Fonctionnalités principales
+                        <span style="color: var(--muted); font-weight: normal; font-size: 12px; margin-left: 8px;">(Une fonctionnalité par ligne)</span>
+                      </label>
+                      <textarea id="project-features" placeholder="Authentification utilisateur&#10;Gestion des tâches en temps réel&#10;Tableau de bord analytique&#10;Notifications push" style="min-height: 100px; resize: vertical; font-family: monospace; font-size: 13px;"></textarea>
+                      <div style="margin-top: 6px; font-size: 12px; color: #b4bcc8 !important;">
+                        💡 Astuce : Chaque ligne sera affichée comme une puce dans la liste des fonctionnalités
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="project-tags">
+                        Technologies utilisées *
+                        <span style="color: var(--muted); font-weight: normal; font-size: 12px; margin-left: 8px;">(Séparées par des virgules)</span>
+                      </label>
+                      <input type="text" id="project-tags" placeholder="React, Node.js, MongoDB, Express, JWT" required />
+                      <div id="project-tags-display" class="tag-input" style="margin-top: 12px;"></div>
+                      <div style="margin-top: 6px; font-size: 12px; color: #b4bcc8 !important;">
+                        💡 Les technologies seront affichées comme des badges sur la carte du projet
+                      </div>
                     </div>
                   </div>
 
-                  <div class="featured-checkbox">
-                    <input type="checkbox" id="project-featured" />
-                    <label for="project-featured">Projet mis en avant (featured)</label>
-                  </div>
-
-                  <div class="featured-checkbox">
-                    <input type="checkbox" id="project-public" checked />
-                    <label for="project-public">Projet public (visible par tous)</label>
-                    <div class="photo-info" style="margin-top: 4px;">
-                      Si décoché, le projet sera privé et visible uniquement par l'administrateur
+                  <!-- Section 4: Liens -->
+                  <div class="form-section" style="margin-bottom: 32px; padding: 20px; background: rgba(99, 102, 241, 0.08); border-radius: 12px; border: 1px solid rgba(99, 102, 241, 0.2);">
+                    <h4 style="margin: 0 0 16px; color: #818cf8 !important; font-size: 16px; display: flex; align-items: center; gap: 8px; font-weight: 600;">
+                      <span>🔗</span> Liens
+                    </h4>
+                    
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label for="project-link">
+                          Lien du projet
+                          <span style="color: var(--muted); font-weight: normal; font-size: 12px; margin-left: 8px;">(GitHub, GitLab, etc.)</span>
+                        </label>
+                        <input type="url" id="project-link" placeholder="https://github.com/user/project" />
+                      </div>
+                      <div class="form-group">
+                        <label for="project-demo-link">
+                          Lien de démo
+                          <span style="color: var(--muted); font-weight: normal; font-size: 12px; margin-left: 8px;">(Site web, application déployée)</span>
+                        </label>
+                        <input type="url" id="project-demo-link" placeholder="https://mon-projet.com" />
+                      </div>
                     </div>
                   </div>
 
-                  <div style="display: flex; gap: 12px; margin-top: 20px;">
-                    <button type="submit" class="btn">Enregistrer</button>
-                    <button type="button" class="btn secondary" onclick="hideProjectForm()">Annuler</button>
+                  <!-- Section 5: Options d'affichage -->
+                  <div class="form-section" style="margin-bottom: 32px; padding: 20px; background: rgba(99, 102, 241, 0.03); border-radius: 12px; border: 1px solid rgba(99, 102, 241, 0.1);">
+                    <h4 style="margin: 0 0 16px; color: var(--accent); font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                      <span>👁️</span> Options d'affichage
+                    </h4>
+                    
+                    <div class="featured-checkbox" style="padding: 12px; background: rgba(99, 102, 241, 0.1); border-radius: 8px; margin-bottom: 12px; border: 1px solid rgba(99, 102, 241, 0.2);">
+                      <label for="project-featured" style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 500; color: #ffffff !important;">
+                        <input type="checkbox" id="project-featured" style="width: 18px; height: 18px; cursor: pointer;" />
+                        <span>⭐ Projet mis en avant (featured)</span>
+                      </label>
+                      <div style="margin-top: 6px; margin-left: 28px; font-size: 12px; color: #b4bcc8 !important;">
+                        Les projets mis en avant apparaîtront en premier sur la page d'accueil
+                      </div>
+                    </div>
+
+                    <div class="featured-checkbox" style="padding: 12px; background: rgba(99, 102, 241, 0.1); border-radius: 8px; border: 1px solid rgba(99, 102, 241, 0.2);">
+                      <label for="project-public" style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 500; color: #ffffff !important;">
+                        <input type="checkbox" id="project-public" checked style="width: 18px; height: 18px; cursor: pointer;" />
+                        <span>🌐 Projet public (visible par tous)</span>
+                      </label>
+                      <div style="margin-top: 6px; margin-left: 28px; font-size: 12px; color: #b4bcc8 !important;">
+                        Si décoché, le projet sera privé et visible uniquement par l'administrateur
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Boutons d'action -->
+                  <div style="display: flex; gap: 12px; margin-top: 32px; padding-top: 24px; border-top: 2px solid var(--line);">
+                    <button type="submit" class="btn" style="flex: 1; padding: 14px 24px; font-size: 16px; font-weight: 600;">
+                      ✅ Enregistrer le projet
+                    </button>
+                    <button type="button" class="btn secondary" onclick="hideProjectForm()" style="padding: 14px 24px; font-size: 16px;">
+                      ❌ Annuler
+                    </button>
                   </div>
                 </form>
               </div>
@@ -888,9 +1022,9 @@
               <form id="cv-form">
                 <div class="form-group">
                   <label for="cv-path">Chemin du CV ou URL *</label>
-                  <input type="text" id="cv-path" placeholder="assets/CV.pdf ou https://..." />
+                  <input type="text" id="cv-path" placeholder="https://example.com/cv.pdf ou chemin relatif" />
                   <div class="photo-info" style="margin-top: 8px;">
-                    Entrez un chemin relatif (ex: assets/CV.pdf) ou une URL complète (ex: https://example.com/cv.pdf)
+                    Entrez une URL complète (ex: https://example.com/cv.pdf) ou un chemin relatif (ex: /documents/cv.pdf)
                   </div>
                 </div>
                 <button type="submit" class="btn">Enregistrer le CV</button>
@@ -1114,6 +1248,128 @@
           </div>
         </div>
 
+        <!-- Stages & Alternances Tab -->
+        <div id="tab-internships" class="admin-tab-content">
+          <div class="admin-section">
+            <h2>💼 Gestion des Stages & Alternances</h2>
+            <button class="btn" onclick="showInternshipForm()" style="margin-bottom: 20px;">+ Ajouter un stage/alternance</button>
+            <div id="internships-list" class="item-list"></div>
+            
+            <div id="internship-form-modal" style="display: none;">
+              <div class="admin-section" style="margin-top: 20px; border: 2px solid var(--accent);">
+                <h3 id="internship-form-title">Ajouter un stage/alternance</h3>
+                <form id="internship-form">
+                  <input type="hidden" id="internship-id" />
+                  <div class="form-group">
+                    <label for="internship-title">Titre *</label>
+                    <input type="text" id="internship-title" required />
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="internship-company">Entreprise *</label>
+                      <input type="text" id="internship-company" required />
+                    </div>
+                    <div class="form-group">
+                      <label for="internship-location">Lieu</label>
+                      <input type="text" id="internship-location" />
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="internship-type">Type *</label>
+                      <select id="internship-type" required>
+                        <option value="stage">Stage</option>
+                        <option value="alternance">Alternance</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label for="internship-date">Date</label>
+                      <input type="text" id="internship-date" placeholder="Ex: 2024" />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="internship-description">Description *</label>
+                    <textarea id="internship-description" required></textarea>
+                  </div>
+                  <div class="form-group">
+                    <label for="internship-technologies">Technologies (séparées par des virgules)</label>
+                    <input type="text" id="internship-technologies" placeholder="React, Node.js, MongoDB" />
+                  </div>
+                  <div class="form-group">
+                    <label for="internship-link">Lien (optionnel)</label>
+                    <input type="url" id="internship-link" placeholder="https://..." />
+                  </div>
+                  <div style="display: flex; gap: 12px; margin-top: 20px;">
+                    <button type="submit" class="btn">Enregistrer</button>
+                    <button type="button" class="btn secondary" onclick="hideInternshipForm()">Annuler</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Événements Technologiques Tab -->
+        <div id="tab-tech-events" class="admin-tab-content">
+          <div class="admin-section">
+            <h2>🚀 Gestion des Événements Technologiques</h2>
+            <button class="btn" onclick="showTechEventForm()" style="margin-bottom: 20px;">+ Ajouter un événement</button>
+            <div id="tech-events-list" class="item-list"></div>
+            
+            <div id="tech-event-form-modal" style="display: none;">
+              <div class="admin-section" style="margin-top: 20px; border: 2px solid var(--accent);">
+                <h3 id="tech-event-form-title">Ajouter un événement</h3>
+                <form id="tech-event-form">
+                  <input type="hidden" id="tech-event-id" />
+                  <div class="form-group">
+                    <label for="tech-event-name">Nom de l'événement *</label>
+                    <input type="text" id="tech-event-name" required />
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="tech-event-type">Type *</label>
+                      <select id="tech-event-type" required>
+                        <option value="conference">Conférence</option>
+                        <option value="hackathon">Hackathon</option>
+                        <option value="workshop">Workshop</option>
+                        <option value="meetup">Meetup</option>
+                        <option value="webinar">Webinar</option>
+                        <option value="competition">Compétition</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label for="tech-event-date">Date</label>
+                      <input type="text" id="tech-event-date" placeholder="Ex: 2024" />
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="tech-event-organizer">Organisateur</label>
+                      <input type="text" id="tech-event-organizer" />
+                    </div>
+                    <div class="form-group">
+                      <label for="tech-event-location">Lieu</label>
+                      <input type="text" id="tech-event-location" />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="tech-event-description">Description *</label>
+                    <textarea id="tech-event-description" required></textarea>
+                  </div>
+                  <div class="form-group">
+                    <label for="tech-event-link">Lien (optionnel)</label>
+                    <input type="url" id="tech-event-link" placeholder="https://..." />
+                  </div>
+                  <div style="display: flex; gap: 12px; margin-top: 20px;">
+                    <button type="submit" class="btn">Enregistrer</button>
+                    <button type="button" class="btn secondary" onclick="hideTechEventForm()">Annuler</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- FAQ Tab -->
         <div id="tab-faq" class="admin-tab-content">
           <div class="admin-section">
@@ -1177,7 +1433,7 @@
             </div>
             <div class="form-group">
               <label for="meta-description">Description SEO (meta description)</label>
-              <textarea id="meta-description" placeholder="Développeur Full-Stack spécialisé en IA..."></textarea>
+              <textarea id="meta-description" placeholder="Étudiant en Master 1 Intelligence Artificielle..."></textarea>
             </div>
             <div class="form-group">
               <label for="meta-keywords">Mots-clés (séparés par des virgules)</label>
