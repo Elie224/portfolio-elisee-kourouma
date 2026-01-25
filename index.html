@@ -10,13 +10,13 @@
     <link rel="canonical" href="https://portfolio.nemakourouma.com/" />
     
     <!-- Meta descriptions optimisées -->
-    <meta name="description" content="Portfolio de Nema Elisée Kourouma - Développeur Full-Stack spécialisé en Intelligence Artificielle. Master IA à l'ESGI Paris, expert Python, React, MongoDB." />
+    <meta name="description" content="Portfolio de Nema Elisée Kourouma - Étudiant en Master 1 Intelligence Artificielle à l'École Supérieure d'Informatique de Paris. Passionné par l'IA, Python, React, MongoDB." />
     <meta name="author" content="Nema Elisée Kourouma" />
     <meta name="theme-color" content="#5b7cfa" />
     
     <!-- Open Graph optimisé -->
-    <meta property="og:title" content="Nema Elisée Kourouma - Portfolio Développeur Full-Stack IA" />
-    <meta property="og:description" content="Portfolio professionnel - Développeur Full-Stack spécialisé en Intelligence Artificielle. Master IA ESGI Paris." />
+    <meta property="og:title" content="Nema Elisée Kourouma - Portfolio Étudiant en Master IA" />
+    <meta property="og:description" content="Portfolio étudiant - Master 1 Intelligence Artificielle à l'École Supérieure d'Informatique de Paris. Passionné par l'IA et le développement." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://portfolio.nemakourouma.com/" />
     <meta property="og:image" content="https://portfolio.nemakourouma.com/assets/og-image.jpg" />
@@ -27,12 +27,12 @@
     
     <!-- Twitter Card optimisé -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Nema Elisée Kourouma - Développeur Full-Stack IA" />
+    <meta name="twitter:title" content="Nema Elisée Kourouma - Étudiant en Master IA" />
     <meta name="twitter:description" content="Portfolio professionnel - Expert IA, Python, React. Master ESGI Paris." />
     <meta name="twitter:image" content="https://portfolio.nemakourouma.com/assets/twitter-card.jpg" />
     <meta name="twitter:image:alt" content="Portfolio Nema Kourouma - Développeur IA" />
     
-    <title>Nema Elisée Kourouma - Portfolio Développeur Full-Stack IA | ESGI Paris</title>
+    <title>Nema Elisée Kourouma - Portfolio Étudiant Master IA | École Supérieure d'Informatique</title>
     <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💼</text></svg>" />
     
     <!-- CORRECTION SEO TECHNIQUE AVANCÉ - Structured Data JSON-LD -->
@@ -41,7 +41,7 @@
       "@context": "https://schema.org",
       "@type": "Person",
       "name": "Nema Elisée Kourouma",
-      "jobTitle": "Développeur Full-Stack spécialisé en Intelligence Artificielle",
+      "jobTitle": "Étudiant en Master 1 Intelligence Artificielle",
       "description": "Master 1 en Intelligence Artificielle à l'École Supérieure d'Informatique de Paris. Expert en Python, React, MongoDB.",
       "url": "https://portfolio.nemakourouma.com",
       "image": "https://portfolio.nemakourouma.com/assets/photo.jpeg",
@@ -83,7 +83,7 @@
           "@id": "https://portfolio.nemakourouma.com/#website",
           "url": "https://portfolio.nemakourouma.com",
           "name": "Portfolio Nema Elisée Kourouma",
-          "description": "Portfolio professionnel d'un développeur Full-Stack spécialisé en Intelligence Artificielle",
+          "description": "Portfolio d'un étudiant en Master 1 Intelligence Artificielle à l'ESGI Paris",
           "inLanguage": "fr-FR",
           "potentialAction": {
             "@type": "SearchAction",
@@ -96,7 +96,7 @@
           "@id": "https://portfolio.nemakourouma.com/#webpage",
           "url": "https://portfolio.nemakourouma.com",
           "name": "Accueil - Portfolio Nema Elisée Kourouma",
-          "description": "Développeur Full-Stack IA - Master ESGI Paris - Expert Python, React, MongoDB",
+          "description": "Étudiant en Master 1 IA - École Supérieure d'Informatique de Paris - Passionné par Python, React, MongoDB",
           "inLanguage": "fr-FR",
           "isPartOf": {
             "@id": "https://portfolio.nemakourouma.com/#website"
@@ -132,7 +132,7 @@
           <a href="about.html">À propos</a>
           <a href="projects.html">Projets</a>
           <a href="contact.html">Contact</a>
-          <a href="assets/CV.pdf" target="_blank" rel="noopener noreferrer">CV</a>
+          <a href="#" target="_blank" rel="noopener noreferrer" data-cv-link="true">CV</a>
           <a href="admin.html" class="admin-nav-link admin-nav-hidden">
             <span>🔐</span> <span class="admin-text">Admin</span>
           </a>
@@ -141,47 +141,106 @@
     </header>
 
     <main class="container" role="main" id="main-content">
-      <section class="hero" data-animate>
-        <h1 class="gradient-text">Nema Elisée Kourouma</h1>
-        <p>
-          Master 1 en Intelligence Artificielle à l'École Supérieure d'Informatique de Paris. 
-          Titulaire d'une licence en mathématiques et informatique (USMBA Fès).
-        </p>
-        <div class="hero-profile-section">
-          <img class="hero-avatar" src="assets/photo.jpeg" alt="Photo de Nema Elisée Kourouma" 
-               width="140" height="140" loading="lazy" />
-          <a href="assets/CV.pdf" target="_blank" rel="noopener" class="btn" data-cv-link="true">Voir mon CV</a>
+      <!-- Hero Section - Structure Améliorée -->
+      <section class="hero hero-structured" data-animate>
+        <div class="hero-content">
+          <!-- Photo de profil centrée -->
+          <div class="hero-avatar-wrapper">
+            <img class="hero-avatar" src="assets/photo.jpeg" alt="Photo de Nema Elisée Kourouma" 
+                 width="220" height="220" loading="eager" style="border-radius: 50% !important; display: block; margin: 0 auto;" />
+            <div class="hero-avatar-border"></div>
+          </div>
+          
+          <!-- Titre et description -->
+          <div class="hero-text">
+            <h1 class="gradient-text">Nema Elisée Kourouma</h1>
+            <p class="hero-subtitle">
+              Étudiant en Master 1 Intelligence Artificielle
+            </p>
+            <p class="hero-description">
+              Master 1 en Intelligence Artificielle à l'École Supérieure d'Informatique de Paris. 
+              Titulaire d'une licence en mathématiques et informatique (USMBA Fès).
+            </p>
+          </div>
+          
+          <!-- Actions principales -->
+          <div class="hero-actions">
+            <a href="#" target="_blank" rel="noopener" class="btn btn-primary" data-cv-link="true">
+              <span>📄</span> Voir mon CV
+            </a>
+            <a href="projects.html" class="btn btn-secondary">
+              <span>💼</span> Mes projets
+            </a>
+            <a href="contact.html" class="btn btn-outline">
+              <span>📧</span> Me contacter
+            </a>
+          </div>
         </div>
-        <p class="hero-projects-link">
-          Quelques réalisations récentes —
-          <a class="btn secondary underline" href="projects.html">Voir mes projets</a>
-        </p>
       </section>
 
-      <section data-animate>
-        <h2>À propos</h2>
-        <p>
-          Master 1 en Intelligence Artificielle à l'École Supérieure d'Informatique de Paris. 
-          Titulaire d'une licence en mathématiques et informatique (USMBA Fès).
-        </p>
-      </section>
-
-      <section data-animate aria-labelledby="projects-heading">
-        <h2 id="projects-heading">Projets récents</h2>
-        <div class="grid grid-2" id="homepage-projects" aria-live="polite">
-          <!-- Les projets seront chargés dynamiquement -->
+      <!-- Section À propos - Structure Améliorée -->
+      <section class="section-structured" data-animate>
+        <div class="section-header">
+          <h2>À propos</h2>
+          <div class="section-divider"></div>
+        </div>
+        <div class="section-content">
+          <p class="section-text">
+            Étudiant passionné par l'Intelligence Artificielle et le développement web. Je développe des projets 
+            et des applications dans le cadre de mes études et de ma formation en Master IA à l'École Supérieure d'Informatique de Paris.
+          </p>
         </div>
       </section>
 
-      <section data-animate aria-labelledby="skills-heading">
-        <h2 id="skills-heading">Mes compétences</h2>
+      <!-- Section Projets récents -->
+      <section class="section-structured" data-animate aria-labelledby="projects-heading">
+        <div class="section-header">
+          <h2 id="projects-heading">Projets récents</h2>
+          <div class="section-divider"></div>
+        </div>
+        <p class="section-description">
+          Découvrez une sélection de mes réalisations les plus récentes
+        </p>
+        <!-- Carrousel de projets -->
+        <div class="projects-carousel-wrapper">
+          <button class="carousel-btn carousel-btn-prev" aria-label="Projet précédent" id="carousel-prev">
+            <span>←</span>
+          </button>
+          <div class="projects-carousel-container">
+            <div class="projects-carousel-track" id="homepage-projects" aria-live="polite">
+              <!-- Les projets seront chargés dynamiquement -->
+            </div>
+          </div>
+          <button class="carousel-btn carousel-btn-next" aria-label="Projet suivant" id="carousel-next">
+            <span>→</span>
+          </button>
+        </div>
+        <!-- Indicateurs de pagination -->
+        <div class="carousel-indicators" id="carousel-indicators"></div>
+        <div class="section-footer">
+          <a href="projects.html" class="btn btn-secondary">
+            <span>📋</span> Voir tous les projets
+          </a>
+        </div>
+      </section>
+
+      <!-- Section Compétences -->
+      <section class="section-structured" data-animate aria-labelledby="skills-heading">
+        <div class="section-header">
+          <h2 id="skills-heading">Mes compétences</h2>
+          <div class="section-divider"></div>
+        </div>
         <div class="grid grid-3" id="homepage-skills" aria-live="polite">
           <!-- Les compétences seront chargées dynamiquement -->
         </div>
       </section>
 
-      <section data-animate>
-        <h2>Statistiques</h2>
+      <!-- Section Statistiques -->
+      <section class="section-structured" data-animate>
+        <div class="section-header">
+          <h2>Statistiques</h2>
+          <div class="section-divider"></div>
+        </div>
         <div class="stats-grid" id="stats-grid">
           <div class="card stat-card">
             <div class="stat-number" id="stat-projects">0</div>
@@ -198,28 +257,48 @@
         </div>
       </section>
 
-      <section data-animate>
-        <h2>Contact</h2>
-        <p>Intéressé par une collaboration ? N'hésitez pas à me contacter !</p>
-        <div class="contact-actions">
-          <a href="contact.html" class="btn">Me contacter</a>
-          <a href="#" class="btn secondary" id="contact-email-btn">Envoyer un email</a>
+      <!-- Section Contact -->
+      <section class="section-structured" data-animate>
+        <div class="section-header">
+          <h2>Contact</h2>
+          <div class="section-divider"></div>
+        </div>
+        <div class="section-content">
+          <p class="section-text">
+            Intéressé par une collaboration ? N'hésitez pas à me contacter !
+          </p>
+          <div class="contact-actions">
+            <a href="contact.html" class="btn btn-primary">
+              <span>📧</span> Me contacter
+            </a>
+            <a href="#" class="btn btn-secondary" id="contact-email-btn">
+              <span>✉️</span> Envoyer un email
+            </a>
+          </div>
         </div>
       </section>
 
       <!-- Social Share Section -->
-      <section data-animate class="section-center">
-        <h2>Partager ce portfolio</h2>
-        <div class="share-buttons">
-          <button data-share="linkedin" class="share-btn linkedin" aria-label="Partager sur LinkedIn">
-            <span aria-hidden="true">💼</span> LinkedIn
-          </button>
-          <button data-share="twitter" class="share-btn twitter" aria-label="Partager sur Twitter">
-            <span aria-hidden="true">🐦</span> Twitter
-          </button>
-          <button data-share="email" class="share-btn" aria-label="Partager par email">
-            <span aria-hidden="true">📧</span> Email
-          </button>
+      <section class="section-structured" data-animate>
+        <div class="section-header">
+          <h2>Partager ce portfolio</h2>
+          <div class="section-divider"></div>
+        </div>
+        <div class="section-content">
+          <p class="section-text">
+            Partagez mon portfolio avec votre réseau professionnel
+          </p>
+          <div class="share-buttons">
+            <button data-share="linkedin" class="share-btn linkedin" aria-label="Partager sur LinkedIn">
+              <span aria-hidden="true">💼</span> LinkedIn
+            </button>
+            <button data-share="twitter" class="share-btn twitter" aria-label="Partager sur Twitter">
+              <span aria-hidden="true">🐦</span> Twitter
+            </button>
+            <button data-share="email" class="share-btn" aria-label="Partager par email">
+              <span aria-hidden="true">📧</span> Email
+            </button>
+          </div>
         </div>
       </section>
     </main>

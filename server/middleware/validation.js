@@ -127,7 +127,38 @@ const sanitizeData = (req, res, next) => {
   try {
     const bodyString = JSON.stringify(req.body);
     
-    // Patterns dangereux à détecter
+    // EXCEPTION : Autoriser les données base64 (data:application/pdf;base64,...)
+    // Les données base64 peuvent contenir des caractères qui ressemblent à du code mais qui sont valides
+    const isBase64Data = bodyString.includes('data:application/pdf') || 
+                         bodyString.includes('data:image/') ||
+                         (req.body.links && req.body.links.cvFile && req.body.links.cvFile.startsWith('data:'));
+    
+    if (isBase64Data) {
+      console.log('📄 Données base64 détectées - Validation de sécurité assouplie pour les fichiers');
+      // Pour les données base64, on vérifie seulement les patterns vraiment dangereux
+      const criticalPatterns = [
+        /<script.*?>/gi,                  // Script tags
+        /javascript:/gi,                  // Javascript protocol
+        /eval\s*\(/g,                     // Eval calls
+        /document\.write/gi               // Document write
+      ];
+      
+      for (const pattern of criticalPatterns) {
+        if (pattern.test(bodyString)) {
+          console.log('🚨 Code JavaScript malveillant détecté dans base64:', pattern);
+          return res.status(400).json({
+            error: 'Code JavaScript détecté dans les données',
+            message: 'Les données contiennent du code non autorisé',
+            code: 'MALICIOUS_CODE_DETECTED'
+          });
+        }
+      }
+      
+      next();
+      return;
+    }
+    
+    // Patterns dangereux à détecter (pour les données non-base64)
     const dangerousPatterns = [
       /`.*`/g,                           // Backticks
       /\$\{.*\}/g,                      // Template literals

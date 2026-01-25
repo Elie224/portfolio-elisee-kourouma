@@ -3,4 +3,4 @@ Allow: /
 Disallow: /admin.html
 Disallow: /app/
 
-Sitemap: https://votredomaine.com/sitemap.xml
+Sitemap: https://portfolio.nemakourouma.com/sitemap.xml

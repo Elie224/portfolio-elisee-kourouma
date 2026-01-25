@@ -1,6 +1,6 @@
 # 💼 Portfolio de Nema Elisée Kourouma
 
-> **Développeur Full-Stack spécialisé en Intelligence Artificielle**  
+> **Étudiant en Master 1 Intelligence Artificielle**  
 > Master 1 IA à l'École Supérieure d'Informatique de Paris
 
 ## 🚀 Ce que vous trouverez ici

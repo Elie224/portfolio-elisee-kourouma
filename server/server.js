@@ -22,16 +22,20 @@ app.use(helmet({
   }
 }));
 
-// Rate limiting
+// Rate limiting (augmenté pour le développement)
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limite de 100 requêtes par IP par fenêtre
+  max: 1000, // Limite augmentée à 1000 requêtes pour le développement
   message: {
     error: 'Trop de requêtes, veuillez réessayer plus tard.',
     retryAfter: '15 minutes'
   },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => {
+    // Ignorer complètement le rate limiting en développement
+    return process.env.NODE_ENV === 'development';
+  },
   handler: (req, res) => {
     console.log(`🚫 Rate limit atteint pour IP: ${req.ip}`);
     res.status(429).json({
@@ -44,12 +48,16 @@ const limiter = rateLimit({
 // Rate limiting spécial pour les routes d'authentification
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Maximum 5 tentatives de connexion par IP
+  max: process.env.NODE_ENV === 'development' ? 100 : 5, // 100 en dev, 5 en prod
   message: {
     error: 'Trop de tentatives de connexion, veuillez réessayer plus tard.',
     retryAfter: '15 minutes'
   },
   skipSuccessfulRequests: true, // Ne pas compter les connexions réussies
+  skip: (req) => {
+    // Ignorer le rate limiting en développement
+    return process.env.NODE_ENV === 'development';
+  },
   handler: (req, res) => {
     console.log(`🚫 Trop de tentatives de connexion pour IP: ${req.ip}`);
     res.status(429).json({
@@ -77,21 +85,29 @@ const corsOptions = {
         'http://127.0.0.1:3000'
       ];
       
-      if (!origin || allowedLocalOrigins.includes(origin)) {
+      // En développement, autoriser toutes les origines localhost
+      if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1') || allowedLocalOrigins.includes(origin)) {
         return callback(null, true);
       }
     }
     
     // En production, liste stricte des origines autorisées
-    const allowedOrigins = [
-      'https://mon-portfolio-sdlk.onrender.com',
-      'https://portfolio-sdlk.onrender.com'
-    ];
+    // Les origines sont définies via la variable d'environnement ALLOWED_ORIGINS
+    // Format: ALLOWED_ORIGINS=https://domain1.com,https://domain2.com
+    const allowedOrigins = [];
     
-    // Ajouter les origines depuis les variables d'environnement si définies
+    // Ajouter les origines depuis les variables d'environnement (obligatoire en production)
     if (process.env.ALLOWED_ORIGINS) {
       const envOrigins = process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim());
       allowedOrigins.push(...envOrigins);
+    } else if (process.env.NODE_ENV === 'production') {
+      // En production, ALLOWED_ORIGINS doit être défini
+      console.warn('⚠️ ALLOWED_ORIGINS non défini en production - CORS peut être restrictif');
+    }
+    
+    // Ajouter le domaine du portfolio par défaut si présent dans les variables d'environnement
+    if (process.env.PORTFOLIO_DOMAIN) {
+      allowedOrigins.push(process.env.PORTFOLIO_DOMAIN);
     }
     
     // Vérification stricte des origines
@@ -176,7 +192,7 @@ mongoose.connect(process.env.MONGODB_URI)
         },
         projects: [],
         skills: [],
-        links: { cv: "assets/CV.pdf", social: [] },
+        links: { cv: "", cvFile: "", cvFileName: "", cvFileSize: 0, social: [] },
         about: { 
           heroDescription: "Master 1 en Intelligence Artificielle",
           stats: { projects: 0, experience: 2, technologies: 10 }

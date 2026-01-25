@@ -1,0 +1,276 @@
+/* ===== STYLES POUR LA PAGE CONTACT ===== */
+
+/* Hero Section Contact */
+.contact-hero {
+  text-align: center;
+  padding: var(--espacement-2xl) 0;
+  margin-bottom: var(--espacement-2xl);
+}
+
+.contact-hero-title {
+  font-size: clamp(2.5rem, 5vw, 3.5rem);
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--couleur-accent), #93a5ff);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: var(--espacement-md);
+}
+
+/* Contact Cards */
+.contact-card {
+  text-align: center;
+  padding: var(--espacement-xl);
+  background: var(--couleur-fond-carte);
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon-lg);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.contact-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--couleur-accent), #93a5ff);
+  transform: scaleX(0);
+  transition: transform 0.4s ease;
+}
+
+.contact-card:hover {
+  transform: translateY(-8px);
+  border-color: var(--couleur-accent);
+  box-shadow: 0 15px 40px rgba(91, 124, 250, 0.2);
+}
+
+.contact-card:hover::before {
+  transform: scaleX(1);
+}
+
+.contact-card-icon {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(91, 124, 250, 0.2), rgba(147, 165, 255, 0.1));
+  border-radius: 50%;
+  margin-bottom: var(--espacement-lg);
+  border: 2px solid rgba(91, 124, 250, 0.3);
+  transition: all 0.3s ease;
+}
+
+.contact-card:hover .contact-card-icon {
+  transform: scale(1.1) rotate(5deg);
+  background: linear-gradient(135deg, rgba(91, 124, 250, 0.3), rgba(147, 165, 255, 0.2));
+}
+
+.contact-section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: var(--espacement-sm);
+  color: var(--couleur-texte);
+}
+
+/* Formulaire de Contact - Design Moderne */
+.contact-form-container {
+  max-width: 700px;
+  margin: 0 auto;
+  background: var(--couleur-fond-carte);
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon-lg);
+  padding: var(--espacement-2xl);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.contact-form-title {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: var(--espacement-sm);
+  background: linear-gradient(135deg, var(--couleur-accent), #93a5ff);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.contact-form-subtitle {
+  text-align: center;
+  color: var(--couleur-texte-muted);
+  margin-bottom: var(--espacement-xl);
+  font-size: 1rem;
+}
+
+/* Form Group */
+.form-group {
+  margin-bottom: var(--espacement-lg);
+  position: relative;
+}
+
+.form-group label {
+  display: flex;
+  align-items: center;
+  gap: var(--espacement-sm);
+  margin-bottom: var(--espacement-sm);
+  font-weight: 600;
+  color: var(--couleur-texte);
+  font-size: 0.9rem;
+}
+
+.form-group label span {
+  font-size: 1.1rem;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 14px 18px;
+  background: var(--couleur-fond-secondaire);
+  border: 2px solid var(--couleur-bordure);
+  border-radius: var(--rayon-md);
+  color: var(--couleur-texte);
+  font-size: 1rem;
+  font-family: inherit;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--couleur-accent);
+  background: var(--couleur-fond-carte);
+  box-shadow: 0 0 0 4px rgba(91, 124, 250, 0.1);
+  transform: translateY(-2px);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: var(--couleur-texte-muted);
+  opacity: 0.6;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 120px;
+  line-height: 1.6;
+}
+
+/* Form Error */
+.form-error {
+  display: none;
+  color: var(--couleur-erreur);
+  font-size: 0.85rem;
+  margin-top: var(--espacement-xs);
+  padding-left: var(--espacement-sm);
+  animation: shake 0.3s ease;
+}
+
+.form-error.active {
+  display: block;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.form-group.error input,
+.form-group.error textarea {
+  border-color: var(--couleur-erreur);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.form-group.success input,
+.form-group.success textarea {
+  border-color: var(--couleur-succes);
+  background: rgba(34, 197, 94, 0.05);
+}
+
+/* Form Actions */
+.form-actions {
+  display: flex;
+  gap: var(--espacement-md);
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: var(--espacement-xl);
+}
+
+/* Form Message */
+.form-message {
+  padding: var(--espacement-md);
+  border-radius: var(--rayon-md);
+  margin-top: var(--espacement-lg);
+  text-align: center;
+  font-weight: 500;
+  animation: slideDown 0.4s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.form-message.success {
+  background: rgba(34, 197, 94, 0.1);
+  border: 2px solid rgba(34, 197, 94, 0.3);
+  color: var(--couleur-succes);
+}
+
+.form-message.error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 2px solid rgba(239, 68, 68, 0.3);
+  color: var(--couleur-erreur);
+}
+
+/* Button Loader */
+.btn-loader {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espacement-sm);
+}
+
+.btn-loader::after {
+  content: '';
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Responsive Contact */
+@media (max-width: 768px) {
+  .contact-form-container {
+    padding: var(--espacement-lg);
+  }
+  
+  .contact-card {
+    padding: var(--espacement-lg);
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .form-actions .btn {
+    width: 100%;
+  }
+}
