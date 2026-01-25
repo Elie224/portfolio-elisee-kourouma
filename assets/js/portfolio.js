@@ -14,6 +14,12 @@ document.addEventListener('DOMContentLoaded', function() {
   
   /* ===== CONFIGURATION GÉNÉRALE ===== */
   
+  // Utilitaires pour les logs (uniquement en développement)
+  const estEnDeveloppement = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const log = estEnDeveloppement ? console.log.bind(console) : () => {};
+  const logError = estEnDeveloppement ? console.error.bind(console) : () => {};
+  const logWarn = estEnDeveloppement ? console.warn.bind(console) : () => {};
+  
   // Mon email et informations de contact
   const MES_CONTACTS = {
     email: 'kouroumaelisee@gmail.com',
