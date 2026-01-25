@@ -1893,8 +1893,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 500);
       }
       
-      // Note: L'événement storage sera déclenché automatiquement pour les autres onglets
-      // Pour cette page, la vérification se fera lors du prochain chargement ou via portfolioAPI
+      // Déclencher la vérification sur cette page aussi (pour les autres onglets, l'événement storage le fera)
+      // Essayer d'appeler la fonction si elle est disponible (depuis portfolio.js)
+      if (typeof window.verifierModeMaintenance === 'function') {
+        window.verifierModeMaintenance(currentData);
+      }
       
       afficherSucces('Paramètres du portfolio sauvegardés avec succès !');
     } catch (erreur) {
