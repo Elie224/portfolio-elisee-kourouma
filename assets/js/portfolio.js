@@ -203,6 +203,9 @@ document.addEventListener('DOMContentLoaded', function() {
       
       const nouveauHash = calculerHash(nouvellesDonnees);
       
+      // Vérifier le mode maintenance à chaque vérification
+      verifierModeMaintenance(nouvellesDonnees);
+      
       // Si le hash est différent, les données ont changé
       if (nouveauHash !== hashDonneesActuelles) {
         console.log('🔄 Mise à jour automatique détectée !');
