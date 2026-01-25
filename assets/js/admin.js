@@ -404,11 +404,15 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="item-card">
         <input type="checkbox" class="select-checkbox" data-type="projects" data-index="${index}" onchange="toggleItemSelection('projects', ${index}, this.checked)" />
         <h4>${projet.title || 'Projet sans titre'}</h4>
-        <p class="item-meta">${projet.type || ''} ${projet.category ? '· ' + projet.category : ''}</p>
+        <p class="item-meta">${projet.type || ''} ${projet.category ? '· ' + projet.category : ''} ${projet.featured ? '· ⭐ En vedette' : ''}</p>
         <p class="muted">${projet.shortDesc || projet.description || 'Pas de description'}</p>
         <div class="item-actions">
-          <button class="btn-small" onclick="editProject(${index})">Modifier</button>
-          <button class="btn-small btn-secondary" onclick="deleteProject(${index})">Supprimer</button>
+          <button class="btn-small" onclick="editProject(${index})" style="display: inline-flex; align-items: center; gap: 6px;">
+            <span>✏️</span> Modifier
+          </button>
+          <button class="btn-small btn-secondary" onclick="deleteProject(${index})" style="display: inline-flex; align-items: center; gap: 6px;">
+            <span>🗑️</span> Supprimer
+          </button>
         </div>
       </div>
     `).join('');
@@ -437,14 +441,21 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('project-short-desc').value = projet.shortDesc || '';
       document.getElementById('project-description').value = projet.description || '';
       document.getElementById('project-features').value = (projet.features || []).join('\n');
-      document.getElementById('project-tags').value = (projet.tags || []).join(', ');
-      document.getElementById('project-link').value = projet.link || '';
+      document.getElementById('project-tags').value = (projet.tags || projet.technologies || []).join(', ');
+      document.getElementById('project-link').value = projet.link || projet.liveUrl || '';
       document.getElementById('project-demo-link').value = projet.demoLink || '';
       document.getElementById('project-featured').checked = projet.featured || false;
       document.getElementById('project-public').checked = projet.public !== false;
+      
+      // Afficher un message de confirmation
+      if (window.location.hostname === 'localhost') {
+        console.log('✏️ Mode édition activé pour le projet:', projet.title);
+      }
     } else {
       form.reset();
       document.getElementById('project-id').value = '';
+      document.getElementById('project-featured').checked = false;
+      document.getElementById('project-public').checked = true;
     }
     
     modal.style.display = 'block';
