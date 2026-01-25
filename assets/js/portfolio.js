@@ -748,13 +748,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const container = document.getElementById('homepage-projects');
     // Vérifier le container
     if (!container) {
-      exists: !!container,
-      id: container?.id,
-      currentHTML: container?.innerHTML?.substring(0, 100),
-      readyState: document.readyState
-    });
-    
-    if (!container) {
       logWarn('⚠️ Container homepage-projects non trouvé dans le DOM - Réessai dans 500ms...');
       // Réessayer après un court délai au cas où le DOM n'est pas encore prêt
       setTimeout(() => {
@@ -2242,7 +2235,6 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Réessayer une dernière fois après 2 secondes
       setTimeout(() => {
-        log('🔄 Dernière tentative de mise à jour des liens CV');
         const donneesFinales = obtenirMesDonnees();
         mettreAJourLiensCV(donneesFinales?.links);
       }, 2000);
