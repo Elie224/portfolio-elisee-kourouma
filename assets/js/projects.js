@@ -12,9 +12,9 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Utilitaires pour les logs (uniquement en développement)
   const estEnDeveloppement = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const log = estEnDeveloppement ? log.bind(console) : () => {};
-  const logError = estEnDeveloppement ? logError.bind(console) : () => {};
-  const logWarn = estEnDeveloppement ? logWarn.bind(console) : () => {};
+  const log = estEnDeveloppement ? console.log.bind(console) : () => {};
+  const logError = estEnDeveloppement ? console.error.bind(console) : () => {};
+  const logWarn = estEnDeveloppement ? console.warn.bind(console) : () => {};
   
   let allProjects = [];
   let filteredProjects = [];
