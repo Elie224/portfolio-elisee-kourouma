@@ -1875,6 +1875,14 @@ document.addEventListener('DOMContentLoaded', function() {
       currentData.settings = settings;
       localStorage.setItem('portfolioData', JSON.stringify(currentData));
       
+      // Déclencher manuellement l'événement storage pour les autres onglets
+      // (l'événement storage ne se déclenche que pour les autres onglets, pas pour celui qui fait le changement)
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'portfolioData',
+        newValue: JSON.stringify(currentData),
+        oldValue: localStorage.getItem('portfolioData')
+      }));
+      
       // Sauvegarder sur le serveur
       await sauvegarderSurServeur();
       
@@ -1884,6 +1892,9 @@ document.addEventListener('DOMContentLoaded', function() {
           window.portfolioAPI.actualiser();
         }, 500);
       }
+      
+      // Note: L'événement storage sera déclenché automatiquement pour les autres onglets
+      // Pour cette page, la vérification se fera lors du prochain chargement ou via portfolioAPI
       
       afficherSucces('Paramètres du portfolio sauvegardés avec succès !');
     } catch (erreur) {

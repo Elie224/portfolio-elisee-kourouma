@@ -2256,6 +2256,24 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   };
   
+  // Exposer la fonction verifierModeMaintenance globalement pour qu'elle puisse être appelée depuis d'autres scripts
+  window.verifierModeMaintenance = verifierModeMaintenance;
+  
+  // Écouter les changements de localStorage pour synchroniser entre onglets
+  window.addEventListener('storage', function(e) {
+    if (e.key === 'portfolioData' && e.newValue) {
+      try {
+        const nouvellesDonnees = JSON.parse(e.newValue);
+        if (nouvellesDonnees && nouvellesDonnees.settings) {
+          // Vérifier immédiatement le mode maintenance si les données ont changé
+          verifierModeMaintenance(nouvellesDonnees);
+        }
+      } catch (err) {
+        // Ignorer les erreurs de parsing
+      }
+    }
+  });
+  
   // Démarre le portfolio !
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initialiserPortfolio);
