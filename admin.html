@@ -492,7 +492,8 @@
           <button class="admin-tab" data-tab="timeline">📅 Timeline</button>
           <button class="admin-tab" data-tab="services">🛠️ Services</button>
           <button class="admin-tab" data-tab="certifications">🏆 Certifications</button>
-          <button class="admin-tab" data-tab="internships">💼 Stages & Alternances</button>
+          <button class="admin-tab" data-tab="stages">💼 Stages</button>
+          <button class="admin-tab" data-tab="alternances">🔄 Alternances</button>
           <button class="admin-tab" data-tab="tech-events">🚀 Événements Tech</button>
           <button class="admin-tab" data-tab="faq">❓ FAQ</button>
           <button class="admin-tab" data-tab="messages">📧 Messages</button>
@@ -1248,60 +1249,122 @@
           </div>
         </div>
 
-        <!-- Stages & Alternances Tab -->
-        <div id="tab-internships" class="admin-tab-content">
+        <!-- Stages Tab -->
+        <div id="tab-stages" class="admin-tab-content">
           <div class="admin-section">
-            <h2>💼 Gestion des Stages & Alternances</h2>
-            <button class="btn" onclick="showInternshipForm()" style="margin-bottom: 20px;">+ Ajouter un stage/alternance</button>
-            <div id="internships-list" class="item-list"></div>
+            <h2>💼 Gestion des Stages</h2>
+            <button class="btn" onclick="showStageForm()" style="margin-bottom: 20px;">+ Ajouter un stage</button>
+            <div id="stages-list" class="item-list"></div>
             
-            <div id="internship-form-modal" style="display: none;">
+            <div id="stage-form-modal" style="display: none;">
               <div class="admin-section" style="margin-top: 20px; border: 2px solid var(--accent);">
-                <h3 id="internship-form-title">Ajouter un stage/alternance</h3>
-                <form id="internship-form">
-                  <input type="hidden" id="internship-id" />
+                <h3 id="stage-form-title">Ajouter un stage</h3>
+                <form id="stage-form">
+                  <input type="hidden" id="stage-id" />
                   <div class="form-group">
-                    <label for="internship-title">Titre *</label>
-                    <input type="text" id="internship-title" required />
+                    <label for="stage-title">Titre *</label>
+                    <input type="text" id="stage-title" placeholder="Ex: Stage développeur web" required />
                   </div>
                   <div class="form-row">
                     <div class="form-group">
-                      <label for="internship-company">Entreprise *</label>
-                      <input type="text" id="internship-company" required />
+                      <label for="stage-company">Entreprise *</label>
+                      <input type="text" id="stage-company" required />
                     </div>
                     <div class="form-group">
-                      <label for="internship-location">Lieu</label>
-                      <input type="text" id="internship-location" />
+                      <label for="stage-location">Lieu</label>
+                      <input type="text" id="stage-location" placeholder="Ex: Paris, France" />
                     </div>
                   </div>
                   <div class="form-row">
                     <div class="form-group">
-                      <label for="internship-type">Type *</label>
-                      <select id="internship-type" required>
-                        <option value="stage">Stage</option>
-                        <option value="alternance">Alternance</option>
-                      </select>
+                      <label for="stage-date">Date / Période *</label>
+                      <input type="text" id="stage-date" placeholder="Ex: Juin 2024 - Août 2024" required />
                     </div>
                     <div class="form-group">
-                      <label for="internship-date">Date</label>
-                      <input type="text" id="internship-date" placeholder="Ex: 2024" />
+                      <label for="stage-duration">Durée</label>
+                      <input type="text" id="stage-duration" placeholder="Ex: 3 mois" />
                     </div>
                   </div>
                   <div class="form-group">
-                    <label for="internship-description">Description *</label>
-                    <textarea id="internship-description" required></textarea>
+                    <label for="stage-description">Description *</label>
+                    <textarea id="stage-description" placeholder="Décrivez vos missions et responsabilités..." required></textarea>
                   </div>
                   <div class="form-group">
-                    <label for="internship-technologies">Technologies (séparées par des virgules)</label>
-                    <input type="text" id="internship-technologies" placeholder="React, Node.js, MongoDB" />
+                    <label for="stage-technologies">Technologies utilisées (séparées par des virgules)</label>
+                    <input type="text" id="stage-technologies" placeholder="React, Node.js, MongoDB" />
                   </div>
                   <div class="form-group">
-                    <label for="internship-link">Lien (optionnel)</label>
-                    <input type="url" id="internship-link" placeholder="https://..." />
+                    <label for="stage-link">Lien (optionnel)</label>
+                    <input type="url" id="stage-link" placeholder="https://..." />
                   </div>
                   <div style="display: flex; gap: 12px; margin-top: 20px;">
-                    <button type="submit" class="btn">Enregistrer</button>
-                    <button type="button" class="btn secondary" onclick="hideInternshipForm()">Annuler</button>
+                    <button type="submit" class="btn">Enregistrer le stage</button>
+                    <button type="button" class="btn secondary" onclick="hideStageForm()">Annuler</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alternances Tab -->
+        <div id="tab-alternances" class="admin-tab-content">
+          <div class="admin-section">
+            <h2>🔄 Gestion des Alternances</h2>
+            <button class="btn" onclick="showAlternanceForm()" style="margin-bottom: 20px;">+ Ajouter une alternance</button>
+            <div id="alternances-list" class="item-list"></div>
+            
+            <div id="alternance-form-modal" style="display: none;">
+              <div class="admin-section" style="margin-top: 20px; border: 2px solid var(--accent);">
+                <h3 id="alternance-form-title">Ajouter une alternance</h3>
+                <form id="alternance-form">
+                  <input type="hidden" id="alternance-id" />
+                  <div class="form-group">
+                    <label for="alternance-title">Titre / Poste *</label>
+                    <input type="text" id="alternance-title" placeholder="Ex: Alternance développeur full-stack" required />
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="alternance-company">Entreprise *</label>
+                      <input type="text" id="alternance-company" required />
+                    </div>
+                    <div class="form-group">
+                      <label for="alternance-location">Lieu</label>
+                      <input type="text" id="alternance-location" placeholder="Ex: Paris, France" />
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="alternance-date">Date / Période *</label>
+                      <input type="text" id="alternance-date" placeholder="Ex: Septembre 2024 - Août 2025" required />
+                    </div>
+                    <div class="form-group">
+                      <label for="alternance-rhythm">Rythme</label>
+                      <select id="alternance-rhythm">
+                        <option value="">Sélectionner...</option>
+                        <option value="2j/3j">2 jours / 3 jours</option>
+                        <option value="3j/2j">3 jours / 2 jours</option>
+                        <option value="1 semaine/1 semaine">1 semaine / 1 semaine</option>
+                        <option value="2 semaines/2 semaines">2 semaines / 2 semaines</option>
+                        <option value="1 mois/1 mois">1 mois / 1 mois</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="alternance-description">Description *</label>
+                    <textarea id="alternance-description" placeholder="Décrivez vos missions, projets et responsabilités..." required></textarea>
+                  </div>
+                  <div class="form-group">
+                    <label for="alternance-technologies">Technologies utilisées (séparées par des virgules)</label>
+                    <input type="text" id="alternance-technologies" placeholder="React, Node.js, MongoDB" />
+                  </div>
+                  <div class="form-group">
+                    <label for="alternance-link">Lien (optionnel)</label>
+                    <input type="url" id="alternance-link" placeholder="https://..." />
+                  </div>
+                  <div style="display: flex; gap: 12px; margin-top: 20px;">
+                    <button type="submit" class="btn">Enregistrer l'alternance</button>
+                    <button type="button" class="btn secondary" onclick="hideAlternanceForm()">Annuler</button>
                   </div>
                 </form>
               </div>

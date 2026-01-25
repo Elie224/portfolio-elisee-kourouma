@@ -1,12 +1,14 @@
 /*
- * Administration du Portfolio
- * Script admin simplifié et humain pour gérer le contenu
+ * Administration du Portfolio - Version Complète
+ * Gestion complète du portfolio via l'API backend
  * 
  * Fonctionnalités :
- * - Connexion sécurisée
- * - Gestion des projets, compétences, informations
- * - Export/Import des données
- * - Interface intuitive
+ * - Connexion sécurisée avec JWT
+ * - Chargement depuis le serveur
+ * - Sauvegarde sur le serveur
+ * - CRUD complet pour toutes les sections
+ * - Gestion des onglets
+ * - Formulaires complets
  */
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -15,38 +17,48 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Adresse de mon serveur
   const MON_SERVEUR = window.location.hostname === 'localhost'
-    ? 'http://localhost:3000/api'
+    ? 'http://localhost:3001/api'
     : 'https://portfolio-backend-x47u.onrender.com/api';
   
-  // Données par défaut de l'admin
-  const DONNEES_PAR_DEFAUT = {
-    personal: {
-      name: 'Nema Elisée Kourouma',
-      title: 'Développeur Full-Stack IA',
-      description: 'Passionné par l\'IA et le développement web.',
-      email: 'kouroumaelisee@gmail.com',
-      phone: '+33689306432',
-      photo: 'assets/photo.jpeg'
-    },
+  // Données actuelles en cours d'édition
+  let mesDonneesActuelles = {
+    personal: {},
     projects: [],
     skills: [],
     timeline: [],
-    about: {
-      heroDescription: 'Master 1 en IA à l\'ESGI Paris',
-      aboutDescription: 'Je conçois des solutions innovantes.',
-      stats: { projects: 0, experience: 2, technologies: 10 }
-    }
+    certifications: [],
+    stages: [],
+    alternances: [],
+    techEvents: [],
+    services: [],
+    faq: [],
+    links: {},
+    about: {}
   };
   
-  // Données actuelles en cours d'édition
-  let mesDonneesActuelles = JSON.parse(JSON.stringify(DONNEES_PAR_DEFAUT));
+  // État de chargement
+  let isLoading = false;
+  let currentEditingId = null;
+  let selectedItems = {
+    projects: new Set(),
+    skills: new Set(),
+    certifications: new Set(),
+    timeline: new Set(),
+    services: new Set(),
+    faq: new Set()
+  };
   
   
   /* ===== CONNEXION ET AUTHENTIFICATION ===== */
   
+  // Récupère le token JWT
+  function obtenirToken() {
+    return localStorage.getItem('adminToken');
+  }
+  
   // Vérifie si je suis connecté
   function suisJeConnecte() {
-    const token = localStorage.getItem('adminToken');
+    const token = obtenirToken();
     if (!token) return false;
     
     try {
@@ -72,9 +84,19 @@ document.addEventListener('DOMContentLoaded', function() {
   function afficherDashboard() {
     const pageConnexion = document.getElementById('login-container');
     const dashboard = document.getElementById('admin-dashboard');
+    const emailDisplay = document.getElementById('admin-email-display');
     
     if (pageConnexion) pageConnexion.style.display = 'none';
     if (dashboard) dashboard.style.display = 'block';
+    
+    // Afficher l'email de l'admin
+    try {
+      const token = obtenirToken();
+      if (token && emailDisplay) {
+        const tokenData = JSON.parse(atob(token.split('.')[1]));
+        emailDisplay.textContent = tokenData.email || 'Admin';
+      }
+    } catch (e) {}
     
     chargerToutesMesDonnees();
     mettreAJourStatsDashboard();
@@ -94,7 +116,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     try {
-      const reponse = await fetch(`${MON_SERVEUR}/auth/login`, {
+      const reponse = await fetch(`${MON_SERVEUR}/portfolio/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password: motDePasse })
@@ -107,11 +129,11 @@ document.addEventListener('DOMContentLoaded', function() {
         afficherDashboard();
         afficherSucces('Connexion réussie !');
       } else {
-        afficherErreur(messageErreur, resultat.message || 'Email ou mot de passe incorrect');
+        afficherErreur(messageErreur, resultat.error || resultat.message || 'Email ou mot de passe incorrect');
       }
       
     } catch (erreur) {
-      afficherErreur(messageErreur, 'Impossible de se connecter au serveur');
+      afficherErreur(messageErreur, 'Impossible de se connecter au serveur. Vérifiez que le backend est démarré.');
     }
   }
   
@@ -123,193 +145,1537 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   
-  /* ===== GESTION DES DONNÉES ===== */
+  /* ===== GESTION DES DONNÉES - SERVEUR ===== */
   
-  // Charge toutes mes données
+  // Charge toutes mes données depuis le serveur
   async function chargerToutesMesDonnees() {
+    if (isLoading) return;
+    isLoading = true;
+    
     try {
+      // Essayer de charger depuis le serveur
+      const reponse = await fetch(`${MON_SERVEUR}/portfolio`);
+      
+      if (reponse.ok) {
+        const donnees = await reponse.json();
+        mesDonneesActuelles = {
+          personal: donnees.personal || {},
+          projects: donnees.projects || [],
+          skills: donnees.skills || [],
+          timeline: donnees.timeline || [],
+          certifications: donnees.certifications || [],
+          stages: donnees.stages || [],
+          alternances: donnees.alternances || [],
+          techEvents: donnees.techEvents || [],
+          services: donnees.services || [],
+          faq: donnees.faq || [],
+          links: donnees.links || {},
+          about: donnees.about || {}
+        };
+        
+        // Sauvegarder aussi dans localStorage comme backup
+        localStorage.setItem('portfolioData', JSON.stringify(mesDonneesActuelles));
+        
+        afficherToutesMesDonnees();
+        afficherSucces('Données chargées depuis le serveur');
+      } else {
+        // Si erreur serveur, utiliser localStorage
+        const donneesLocales = localStorage.getItem('portfolioData');
+        if (donneesLocales) {
+          mesDonneesActuelles = JSON.parse(donneesLocales);
+          afficherToutesMesDonnees();
+          afficherErreur(null, 'Serveur indisponible, utilisation des données locales');
+        }
+      }
+    } catch (erreur) {
+      console.error('Erreur chargement:', erreur);
+      // Utiliser localStorage en fallback
       const donneesLocales = localStorage.getItem('portfolioData');
       if (donneesLocales) {
         mesDonneesActuelles = JSON.parse(donneesLocales);
+        afficherToutesMesDonnees();
+        afficherErreur(null, 'Serveur indisponible, utilisation des données locales');
       }
-      
-      afficherToutesMesDonnees();
-    } catch (erreur) {
-      afficherErreur(null, 'Erreur lors du chargement des données');
+    } finally {
+      isLoading = false;
     }
   }
   
-  // Sauvegarde mes données
-  function sauvegarderMesDonnees() {
+  // Sauvegarde les données sur le serveur
+  async function sauvegarderSurServeur() {
+    const token = obtenirToken();
+    if (!token) {
+      afficherErreur(null, 'Vous devez être connecté pour sauvegarder');
+      return false;
+    }
+    
+    // Log pour déboguer le CV avant envoi
+    if (mesDonneesActuelles.links) {
+      console.log('📤 CV avant envoi au serveur:', {
+        hasCv: !!mesDonneesActuelles.links.cv,
+        hasCvFile: !!mesDonneesActuelles.links.cvFile,
+        cvType: mesDonneesActuelles.links.cv ? (mesDonneesActuelles.links.cv.startsWith('data:') ? 'base64' : 'path') : 'none',
+        cvFileType: mesDonneesActuelles.links.cvFile ? (mesDonneesActuelles.links.cvFile.startsWith('data:') ? 'base64' : 'path') : 'none',
+        cvFileName: mesDonneesActuelles.links.cvFileName,
+        cvSize: mesDonneesActuelles.links.cvFile ? mesDonneesActuelles.links.cvFile.length : 0
+      });
+    }
+    
     try {
-      localStorage.setItem('portfolioData', JSON.stringify(mesDonneesActuelles));
-      afficherSucces('Données sauvegardées avec succès !');
+      const reponse = await fetch(`${MON_SERVEUR}/portfolio`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(mesDonneesActuelles)
+      });
+      
+      const resultat = await reponse.json();
+      
+      if (reponse.ok) {
+        // Vérifier que le CV a bien été sauvegardé
+        if (resultat.portfolio && resultat.portfolio.links) {
+          const cvSauvegarde = resultat.portfolio.links;
+          console.log('📥 CV retourné par le serveur après sauvegarde:', {
+            hasCv: !!cvSauvegarde.cv,
+            hasCvFile: !!cvSauvegarde.cvFile,
+            cvType: cvSauvegarde.cv ? (cvSauvegarde.cv.startsWith('data:') ? 'base64' : 'path') : 'none',
+            cvFileType: cvSauvegarde.cvFile ? (cvSauvegarde.cvFile.startsWith('data:') ? 'base64' : 'path') : 'none',
+            cvFileName: cvSauvegarde.cvFileName,
+            cvSize: cvSauvegarde.cvFile ? cvSauvegarde.cvFile.length : 0
+          });
+          
+          // Vérifier que le CV base64 a bien été sauvegardé
+          if (mesDonneesActuelles.links && mesDonneesActuelles.links.cvFile && mesDonneesActuelles.links.cvFile.startsWith('data:')) {
+            if (!cvSauvegarde.cvFile || !cvSauvegarde.cvFile.startsWith('data:')) {
+              console.error('❌ ERREUR: Le CV base64 n\'a pas été sauvegardé correctement sur le serveur !');
+              console.error('CV envoyé:', mesDonneesActuelles.links.cvFile.substring(0, 50) + '...');
+              console.error('CV reçu:', cvSauvegarde.cvFile ? cvSauvegarde.cvFile.substring(0, 50) + '...' : 'undefined');
+            } else {
+              console.log('✅ CV base64 confirmé sauvegardé sur le serveur');
+            }
+          }
+          
+          // Mettre à jour mesDonneesActuelles avec les données retournées par le serveur
+          if (resultat.portfolio.links) {
+            mesDonneesActuelles.links = { ...mesDonneesActuelles.links, ...resultat.portfolio.links };
+          }
+        }
+        
+        // Sauvegarder aussi dans localStorage avec les données mises à jour
+        localStorage.setItem('portfolioData', JSON.stringify(mesDonneesActuelles));
+        afficherSucces('Portfolio sauvegardé sur le serveur avec succès !');
+        
+        // Forcer le rechargement des données sur toutes les pages ouvertes
+        if (window.portfolioAPI && window.portfolioAPI.actualiser) {
+          // Attendre un peu pour que le serveur ait fini de sauvegarder
+          setTimeout(() => {
+            console.log('🔄 Actualisation des pages publiques après sauvegarde...');
+            window.portfolioAPI.actualiser();
+          }, 500);
+        }
+        
+        return true;
+      } else {
+        afficherErreur(null, resultat.error || resultat.message || 'Erreur lors de la sauvegarde');
+        return false;
+      }
     } catch (erreur) {
-      afficherErreur(null, 'Erreur lors de la sauvegarde');
+      console.error('Erreur sauvegarde:', erreur);
+      afficherErreur(null, 'Impossible de sauvegarder sur le serveur');
+      // Sauvegarder quand même dans localStorage
+      localStorage.setItem('portfolioData', JSON.stringify(mesDonneesActuelles));
+      return false;
     }
   }
+  
+  
+  /* ===== GESTION DES ONGLETS ===== */
+  
+  // Configure la navigation entre les onglets
+  function configurerOnglets() {
+    const onglets = document.querySelectorAll('.admin-tab');
+    const contenus = document.querySelectorAll('.admin-tab-content');
+    
+    onglets.forEach(onglet => {
+      onglet.addEventListener('click', () => {
+        const tabName = onglet.getAttribute('data-tab');
+        
+        // Désactiver tous les onglets
+        onglets.forEach(t => t.classList.remove('active'));
+        contenus.forEach(c => c.classList.remove('active'));
+        
+        // Activer l'onglet cliqué
+        onglet.classList.add('active');
+        const contenu = document.getElementById(`tab-${tabName}`);
+        if (contenu) contenu.classList.add('active');
+      });
+    });
+  }
+  
+  
+  /* ===== AFFICHAGE DES DONNÉES ===== */
   
   // Affiche toutes les données dans l'interface
   function afficherToutesMesDonnees() {
     afficherMesInfosPersonnelles();
     afficherListeProjets();
     afficherListeCompetences();
+    afficherListeCertifications();
+    afficherListeStages();
+    afficherListeAlternances();
+    afficherListeTechEvents();
+    afficherListeTimeline();
+    afficherListeServices();
+    afficherListeFAQ();
+    afficherInfosAbout();
+    afficherLiens();
     mettreAJourStatsDashboard();
-  }
-  
-  
-  /* ===== GESTION DES PROJETS ===== */
-  
-  // Affiche la liste de mes projets
-  function afficherListeProjets() {
-    const container = document.getElementById('projects-list');
-    if (!container) return;
-    
-    if (!mesDonneesActuelles.projects || mesDonneesActuelles.projects.length === 0) {
-      container.innerHTML = '<p class="muted">Aucun projet pour le moment.</p>';
-      return;
-    }
-    
-    container.innerHTML = mesDonneesActuelles.projects.map(projet => `
-      <div class="card">
-        <h4>${projet.title || 'Projet sans titre'}</h4>
-        <p class="muted">${projet.description || 'Pas de description'}</p>
-        <div class="flex gap-sm" style="margin-top: 12px;">
-          <button class="btn-small" data-edit-project="${projet.id}">Modifier</button>
-          <button class="btn-small btn-secondary" data-delete-project="${projet.id}">Supprimer</button>
-        </div>
-      </div>
-    `).join('');
-  }
-  
-  // Ajoute un nouveau projet
-  function ajouterProjet() {
-    const titre = document.getElementById('project-title').value.trim();
-    const description = document.getElementById('project-description').value.trim();
-    const technologies = document.getElementById('project-tech').value.split(',').map(t => t.trim());
-    
-    if (!titre || !description) {
-      afficherErreur(null, 'Titre et description obligatoires');
-      return;
-    }
-    
-    const nouveauProjet = {
-      id: 'project-' + Date.now(),
-      title: titre,
-      description: description,
-      technologies: technologies.filter(t => t.length > 0),
-      date: new Date().toISOString(),
-      featured: false,
-      type: 'Web App'
-    };
-    
-    mesDonneesActuelles.projects.push(nouveauProjet);
-    sauvegarderMesDonnees();
-    afficherListeProjets();
-    viderFormulaireProjet();
-    afficherSucces('Projet ajouté avec succès !');
-  }
-  
-  // Vide le formulaire de projet
-  function viderFormulaireProjet() {
-    const form = document.getElementById('project-form');
-    if (form) form.reset();
-  }
-  
-  
-  /* ===== GESTION DES COMPÉTENCES ===== */
-  
-  // Affiche la liste de mes compétences
-  function afficherListeCompetences() {
-    const container = document.getElementById('skills-list');
-    if (!container) return;
-    
-    if (!mesDonneesActuelles.skills || mesDonneesActuelles.skills.length === 0) {
-      container.innerHTML = '<p class="muted">Aucune compétence pour le moment.</p>';
-      return;
-    }
-    
-    container.innerHTML = mesDonneesActuelles.skills.map(skill => `
-      <div class="card">
-        <h4>${skill.icon || '🔧'} ${skill.category || 'Compétence'}</h4>
-        <p class="muted">${(skill.items || []).join(', ')}</p>
-        <div class="flex gap-sm" style="margin-top: 12px;">
-          <button class="btn-small" data-edit-skill="${skill.id}">Modifier</button>
-          <button class="btn-small btn-secondary" data-delete-skill="${skill.id}">Supprimer</button>
-        </div>
-      </div>
-    `).join('');
-  }
-  
-  // Ajoute une nouvelle compétence
-  function ajouterCompetence() {
-    const categorie = document.getElementById('skill-category').value.trim();
-    const icone = document.getElementById('skill-icon').value.trim();
-    const items = document.getElementById('skill-items').value.split(',').map(i => i.trim());
-    
-    if (!categorie) {
-      afficherErreur(null, 'Nom de catégorie obligatoire');
-      return;
-    }
-    
-    const nouvelleCompetence = {
-      id: 'skill-' + Date.now(),
-      category: categorie,
-      icon: icone || '🔧',
-      items: items.filter(i => i.length > 0)
-    };
-    
-    mesDonneesActuelles.skills.push(nouvelleCompetence);
-    sauvegarderMesDonnees();
-    afficherListeCompetences();
-    viderFormulaireCompetence();
-    afficherSucces('Compétence ajoutée avec succès !');
-  }
-  
-  // Vide le formulaire de compétence
-  function viderFormulaireCompetence() {
-    const form = document.getElementById('skill-form');
-    if (form) form.reset();
   }
   
   
   /* ===== GESTION DES INFORMATIONS PERSONNELLES ===== */
   
-  // Affiche mes infos personnelles dans le dashboard
+  // Affiche mes infos personnelles
   function afficherMesInfosPersonnelles() {
-    const nom = document.getElementById('personal-name');
-    const titre = document.getElementById('personal-title');
-    const description = document.getElementById('personal-description');
-    const email = document.getElementById('personal-email');
-    const telephone = document.getElementById('personal-phone');
+    const personal = mesDonneesActuelles.personal || {};
     
-    if (nom) nom.value = mesDonneesActuelles.personal?.name || '';
-    if (titre) titre.value = mesDonneesActuelles.personal?.title || '';
-    if (description) description.value = mesDonneesActuelles.personal?.description || '';
-    if (email) email.value = mesDonneesActuelles.personal?.email || '';
-    if (telephone) telephone.value = mesDonneesActuelles.personal?.phone || '';
+    const fullName = document.getElementById('full-name');
+    const email = document.getElementById('email');
+    const phone = document.getElementById('phone');
+    const currentEducation = document.getElementById('current-education');
+    const previousEducation = document.getElementById('previous-education');
+    const photo = document.getElementById('photo');
+    
+    if (fullName) fullName.value = personal.fullName || '';
+    if (email) email.value = personal.email || '';
+    if (phone) phone.value = personal.phone || '';
+    if (currentEducation) currentEducation.value = personal.currentEducation || '';
+    if (previousEducation) previousEducation.value = personal.previousEducation || '';
+    if (photo) photo.value = personal.photo || '';
+    
+    // Afficher la photo si elle existe
+    const photoPreview = document.getElementById('photo-preview');
+    const photoPlaceholder = document.getElementById('photo-preview-placeholder');
+    if (personal.photo) {
+      if (photoPreview) {
+        photoPreview.src = personal.photo;
+        photoPreview.style.display = 'block';
+      }
+      if (photoPlaceholder) photoPlaceholder.style.display = 'none';
+    } else {
+      if (photoPreview) photoPreview.style.display = 'none';
+      if (photoPlaceholder) photoPlaceholder.style.display = 'flex';
+    }
   }
   
-  // Sauvegarde mes infos personnelles
-  function sauvegarderInfosPersonnelles() {
+  // Sauvegarde les infos personnelles
+  async function sauvegarderInfosPersonnelles() {
     mesDonneesActuelles.personal = {
-      ...mesDonneesActuelles.personal,
-      name: document.getElementById('personal-name')?.value || '',
-      title: document.getElementById('personal-title')?.value || '',
-      description: document.getElementById('personal-description')?.value || '',
-      email: document.getElementById('personal-email')?.value || '',
-      phone: document.getElementById('personal-phone')?.value || ''
+      fullName: document.getElementById('full-name')?.value || '',
+      email: document.getElementById('email')?.value || '',
+      phone: document.getElementById('phone')?.value || '',
+      currentEducation: document.getElementById('current-education')?.value || '',
+      previousEducation: document.getElementById('previous-education')?.value || '',
+      photo: document.getElementById('photo')?.value || '',
+      additionalInfo: mesDonneesActuelles.personal?.additionalInfo || []
     };
     
-    sauvegarderMesDonnees();
-    afficherSucces('Informations personnelles sauvegardées !');
+    await sauvegarderSurServeur();
   }
+  
+  
+  /* ===== GESTION DES PROJETS ===== */
+  
+  // Affiche la liste des projets
+  function afficherListeProjets() {
+    const container = document.getElementById('projects-list');
+    if (!container) return;
+    
+    const projets = mesDonneesActuelles.projects || [];
+    
+    if (projets.length === 0) {
+      container.innerHTML = '<p class="muted">Aucun projet pour le moment.</p>';
+      return;
+    }
+    
+    container.innerHTML = projets.map((projet, index) => `
+      <div class="item-card">
+        <input type="checkbox" class="select-checkbox" data-type="projects" data-index="${index}" onchange="toggleItemSelection('projects', ${index}, this.checked)" />
+        <h4>${projet.title || 'Projet sans titre'}</h4>
+        <p class="item-meta">${projet.type || ''} ${projet.category ? '· ' + projet.category : ''}</p>
+        <p class="muted">${projet.shortDesc || projet.description || 'Pas de description'}</p>
+        <div class="item-actions">
+          <button class="btn-small" onclick="editProject(${index})">Modifier</button>
+          <button class="btn-small btn-secondary" onclick="deleteProject(${index})">Supprimer</button>
+        </div>
+      </div>
+    `).join('');
+  }
+  
+  // Affiche le formulaire de projet
+  window.showProjectForm = function(editIndex = null) {
+    const modal = document.getElementById('project-form-modal');
+    const form = document.getElementById('project-form');
+    const title = document.getElementById('project-form-title');
+    
+    if (!modal || !form) return;
+    
+    currentEditingId = editIndex;
+    
+    if (title) {
+      title.textContent = editIndex !== null ? 'Modifier le projet' : 'Ajouter un projet';
+    }
+    
+    if (editIndex !== null) {
+      const projet = mesDonneesActuelles.projects[editIndex];
+      document.getElementById('project-id').value = editIndex;
+      document.getElementById('project-title').value = projet.title || '';
+      document.getElementById('project-type').value = projet.type || 'Projet Personnel';
+      document.getElementById('project-category').value = projet.category || '';
+      document.getElementById('project-short-desc').value = projet.shortDesc || '';
+      document.getElementById('project-description').value = projet.description || '';
+      document.getElementById('project-features').value = (projet.features || []).join('\n');
+      document.getElementById('project-tags').value = (projet.tags || []).join(', ');
+      document.getElementById('project-link').value = projet.link || '';
+      document.getElementById('project-demo-link').value = projet.demoLink || '';
+      document.getElementById('project-featured').checked = projet.featured || false;
+      document.getElementById('project-public').checked = projet.public !== false;
+    } else {
+      form.reset();
+      document.getElementById('project-id').value = '';
+    }
+    
+    modal.style.display = 'block';
+    afficherTagsProjet();
+  };
+  
+  // Cache le formulaire de projet
+  window.hideProjectForm = function() {
+    const modal = document.getElementById('project-form-modal');
+    if (modal) modal.style.display = 'none';
+    currentEditingId = null;
+  };
+  
+  // Affiche les tags du projet
+  function afficherTagsProjet() {
+    const tagsInput = document.getElementById('project-tags');
+    const tagsDisplay = document.getElementById('project-tags-display');
+    if (!tagsInput || !tagsDisplay) return;
+    
+    // Supprimer les anciens listeners pour éviter les doublons
+    const newInput = tagsInput.cloneNode(true);
+    tagsInput.parentNode.replaceChild(newInput, tagsInput);
+    
+    const updatedInput = document.getElementById('project-tags');
+    
+    // Fonction pour mettre à jour l'affichage des tags
+    const updateTagsDisplay = () => {
+      const tags = updatedInput.value.split(',').map(t => t.trim()).filter(t => t);
+      if (tags.length > 0) {
+        tagsDisplay.innerHTML = tags.map(tag => `
+          <span class="tag-item" style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); padding: 6px 12px; border-radius: 20px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; color: var(--accent);">
+            ${tag}
+            <span class="remove-tag" onclick="removeProjectTag('${tag.replace(/'/g, "\\'")}')" style="cursor: pointer; color: var(--muted); font-weight: bold; font-size: 16px; line-height: 1; margin-left: 4px;">×</span>
+          </span>
+        `).join('');
+      } else {
+        tagsDisplay.innerHTML = '';
+      }
+    };
+    
+    // Mettre à jour lors de la saisie
+    updatedInput.addEventListener('input', updateTagsDisplay);
+    
+    // Mettre à jour immédiatement si des tags existent déjà
+    updateTagsDisplay();
+  }
+  
+  // Supprime un tag
+  window.removeProjectTag = function(tag) {
+    const tagsInput = document.getElementById('project-tags');
+    if (!tagsInput) return;
+    const tags = tagsInput.value.split(',').map(t => t.trim()).filter(t => t && t !== tag);
+    tagsInput.value = tags.join(', ');
+    afficherTagsProjet();
+  };
+  
+  // Sauvegarde un projet
+  async function sauvegarderProjet(e) {
+    e.preventDefault();
+    
+    const projet = {
+      title: document.getElementById('project-title').value.trim(),
+      type: document.getElementById('project-type').value,
+      category: document.getElementById('project-category').value.trim(),
+      shortDesc: document.getElementById('project-short-desc').value.trim(),
+      description: document.getElementById('project-description').value.trim(),
+      features: document.getElementById('project-features').value.split('\n').filter(f => f.trim()),
+      tags: document.getElementById('project-tags').value.split(',').map(t => t.trim()).filter(t => t),
+      link: document.getElementById('project-link').value.trim(),
+      demoLink: document.getElementById('project-demo-link').value.trim(),
+      featured: document.getElementById('project-featured').checked,
+      public: document.getElementById('project-public').checked
+    };
+    
+    if (!projet.title) {
+      afficherErreur(null, 'Le titre est obligatoire');
+      return;
+    }
+    
+    const editIndex = currentEditingId;
+    if (editIndex !== null) {
+      mesDonneesActuelles.projects[editIndex] = projet;
+    } else {
+      mesDonneesActuelles.projects.push(projet);
+    }
+    
+    await sauvegarderSurServeur();
+    afficherListeProjets();
+    window.hideProjectForm();
+  }
+  
+  // Édite un projet
+  window.editProject = function(index) {
+    window.showProjectForm(index);
+  };
+  
+  // Supprime un projet
+  window.deleteProject = function(index) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer ce projet ?')) {
+      mesDonneesActuelles.projects.splice(index, 1);
+      sauvegarderSurServeur();
+      afficherListeProjets();
+    }
+  };
+  
+  
+  /* ===== GESTION DES COMPÉTENCES ===== */
+  
+  // Affiche la liste des compétences
+  function afficherListeCompetences() {
+    const container = document.getElementById('skills-list');
+    if (!container) return;
+    
+    const skills = mesDonneesActuelles.skills || [];
+    
+    if (skills.length === 0) {
+      container.innerHTML = '<p class="muted">Aucune compétence pour le moment.</p>';
+      return;
+    }
+    
+    container.innerHTML = skills.map((skill, index) => `
+      <div class="item-card">
+        <input type="checkbox" class="select-checkbox" data-type="skills" data-index="${index}" onchange="toggleItemSelection('skills', ${index}, this.checked)" />
+        <h4>${skill.icon || '🔧'} ${skill.name || 'Compétence'}</h4>
+        <div class="skill-item-container" style="margin-top: 8px;">
+          ${(skill.skills || []).map(s => `<span class="skill-item">${s}</span>`).join('')}
+        </div>
+        <div class="item-actions">
+          <button class="btn-small" onclick="editSkill(${index})">Modifier</button>
+          <button class="btn-small btn-secondary" onclick="deleteSkill(${index})">Supprimer</button>
+        </div>
+      </div>
+    `).join('');
+  }
+  
+  // Sauvegarde une compétence
+  async function sauvegarderCompetence(e) {
+    e.preventDefault();
+    
+    const skill = {
+      icon: document.getElementById('skill-category-icon').value.trim(),
+      name: document.getElementById('skill-category-name').value.trim(),
+      skills: document.getElementById('skill-category-skills').value.split(',').map(s => s.trim()).filter(s => s)
+    };
+    
+    if (!skill.name) {
+      afficherErreur(null, 'Le nom de la catégorie est obligatoire');
+      return;
+    }
+    
+    mesDonneesActuelles.skills.push(skill);
+    await sauvegarderSurServeur();
+    afficherListeCompetences();
+    document.getElementById('skill-category-form').reset();
+  }
+  
+  // Édite une compétence
+  window.editSkill = function(index) {
+    const skill = mesDonneesActuelles.skills[index];
+    document.getElementById('skill-category-icon').value = skill.icon || '';
+    document.getElementById('skill-category-name').value = skill.name || '';
+    document.getElementById('skill-category-skills').value = (skill.skills || []).join(', ');
+    
+    // Supprimer l'ancienne et ajouter la nouvelle
+    mesDonneesActuelles.skills.splice(index, 1);
+    sauvegarderSurServeur();
+    afficherListeCompetences();
+  };
+  
+  // Supprime une compétence
+  window.deleteSkill = function(index) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette compétence ?')) {
+      mesDonneesActuelles.skills.splice(index, 1);
+      sauvegarderSurServeur();
+      afficherListeCompetences();
+    }
+  };
+  
+  
+  /* ===== GESTION DES CERTIFICATIONS ===== */
+  
+  // Affiche la liste des certifications
+  function afficherListeCertifications() {
+    const container = document.getElementById('certifications-list');
+    if (!container) return;
+    
+    const certs = mesDonneesActuelles.certifications || [];
+    
+    if (certs.length === 0) {
+      container.innerHTML = '<p class="muted">Aucune certification pour le moment.</p>';
+      return;
+    }
+    
+    container.innerHTML = certs.map((cert, index) => `
+      <div class="item-card">
+        <input type="checkbox" class="select-checkbox" data-type="certifications" data-index="${index}" onchange="toggleItemSelection('certifications', ${index}, this.checked)" />
+        <h4>${cert.name || 'Certification'}</h4>
+        <p class="item-meta">${cert.issuer || ''} ${cert.date ? '· ' + cert.date : ''}</p>
+        <p class="muted">${cert.description || ''}</p>
+        <div class="item-actions">
+          <button class="btn-small" onclick="editCertification(${index})">Modifier</button>
+          <button class="btn-small btn-secondary" onclick="deleteCertification(${index})">Supprimer</button>
+        </div>
+      </div>
+    `).join('');
+  }
+  
+  // Affiche le formulaire de certification
+  window.showCertificationForm = function(editIndex = null) {
+    const modal = document.getElementById('certification-form-modal');
+    const form = document.getElementById('certification-form');
+    const title = document.getElementById('certification-form-title');
+    
+    if (!modal || !form) return;
+    
+    currentEditingId = editIndex;
+    
+    if (title) {
+      title.textContent = editIndex !== null ? 'Modifier la certification' : 'Ajouter une certification';
+    }
+    
+    if (editIndex !== null) {
+      const cert = mesDonneesActuelles.certifications[editIndex];
+      document.getElementById('certification-id').value = editIndex;
+      document.getElementById('cert-name').value = cert.name || '';
+      document.getElementById('cert-issuer').value = cert.issuer || '';
+      document.getElementById('cert-date').value = cert.date || '';
+      document.getElementById('cert-url').value = cert.link || '';
+    } else {
+      form.reset();
+      document.getElementById('certification-id').value = '';
+    }
+    
+    modal.style.display = 'block';
+  };
+  
+  // Cache le formulaire de certification
+  window.hideCertificationForm = function() {
+    const modal = document.getElementById('certification-form-modal');
+    if (modal) modal.style.display = 'none';
+    currentEditingId = null;
+  };
+  
+  // Sauvegarde une certification
+  async function sauvegarderCertification(e) {
+    e.preventDefault();
+    
+    const cert = {
+      name: document.getElementById('cert-name').value.trim(),
+      issuer: document.getElementById('cert-issuer').value.trim(),
+      date: document.getElementById('cert-date').value,
+      description: '',
+      link: document.getElementById('cert-url').value.trim()
+    };
+    
+    if (!cert.name || !cert.issuer) {
+      afficherErreur(null, 'Le nom et l\'organisme émetteur sont obligatoires');
+      return;
+    }
+    
+    const editIndex = currentEditingId;
+    if (editIndex !== null) {
+      mesDonneesActuelles.certifications[editIndex] = cert;
+    } else {
+      mesDonneesActuelles.certifications.push(cert);
+    }
+    
+    await sauvegarderSurServeur();
+    afficherListeCertifications();
+    window.hideCertificationForm();
+  }
+  
+  // Édite une certification
+  window.editCertification = function(index) {
+    window.showCertificationForm(index);
+  };
+  
+  // Supprime une certification
+  window.deleteCertification = function(index) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette certification ?')) {
+      mesDonneesActuelles.certifications.splice(index, 1);
+      sauvegarderSurServeur();
+      afficherListeCertifications();
+    }
+  };
+  
+  
+  /* ===== GESTION DES STAGES ===== */
+  
+  // Affiche la liste des stages
+  function afficherListeStages() {
+    const container = document.getElementById('stages-list');
+    if (!container) return;
+    
+    const stages = mesDonneesActuelles.stages || [];
+    
+    if (stages.length === 0) {
+      container.innerHTML = '<p class="muted">Aucun stage pour le moment.</p>';
+      return;
+    }
+    
+    container.innerHTML = stages.map((stage, index) => `
+      <div class="item-card">
+        <h4>${stage.title || 'Stage'}</h4>
+        <p class="item-meta">${stage.company || ''} ${stage.location ? '· ' + stage.location : ''} ${stage.date ? '· ' + stage.date : ''}</p>
+        <p class="muted">${stage.description || ''}</p>
+        <div class="item-actions">
+          <button class="btn-small" onclick="editStage(${index})">Modifier</button>
+          <button class="btn-small btn-secondary" onclick="deleteStage(${index})">Supprimer</button>
+        </div>
+      </div>
+    `).join('');
+  }
+  
+  // Affiche le formulaire de stage
+  window.showStageForm = function(editIndex = null) {
+    const modal = document.getElementById('stage-form-modal');
+    const form = document.getElementById('stage-form');
+    const title = document.getElementById('stage-form-title');
+    
+    if (!modal || !form) return;
+    
+    currentEditingId = editIndex;
+    
+    if (title) {
+      title.textContent = editIndex !== null ? 'Modifier le stage' : 'Ajouter un stage';
+    }
+    
+    if (editIndex !== null) {
+      const item = mesDonneesActuelles.stages[editIndex];
+      document.getElementById('stage-id').value = editIndex;
+      document.getElementById('stage-title').value = item.title || '';
+      document.getElementById('stage-company').value = item.company || '';
+      document.getElementById('stage-location').value = item.location || '';
+      document.getElementById('stage-date').value = item.date || '';
+      document.getElementById('stage-duration').value = item.duration || '';
+      document.getElementById('stage-description').value = item.description || '';
+      document.getElementById('stage-technologies').value = (item.technologies || []).join(', ');
+      document.getElementById('stage-link').value = item.link || '';
+    } else {
+      form.reset();
+      document.getElementById('stage-id').value = '';
+    }
+    
+    modal.style.display = 'block';
+  };
+  
+  // Cache le formulaire de stage
+  window.hideStageForm = function() {
+    const modal = document.getElementById('stage-form-modal');
+    if (modal) modal.style.display = 'none';
+    currentEditingId = null;
+  };
+  
+  // Sauvegarde un stage
+  async function sauvegarderStage(e) {
+    e.preventDefault();
+    
+    const item = {
+      title: document.getElementById('stage-title').value.trim(),
+      company: document.getElementById('stage-company').value.trim(),
+      location: document.getElementById('stage-location').value.trim(),
+      date: document.getElementById('stage-date').value.trim(),
+      duration: document.getElementById('stage-duration').value.trim(),
+      description: document.getElementById('stage-description').value.trim(),
+      technologies: document.getElementById('stage-technologies').value.split(',').map(t => t.trim()).filter(t => t),
+      link: document.getElementById('stage-link').value.trim()
+    };
+    
+    if (!item.title || !item.company || !item.description || !item.date) {
+      afficherErreur(null, 'Le titre, l\'entreprise, la date et la description sont obligatoires');
+      return;
+    }
+    
+    const editIndex = currentEditingId;
+    if (editIndex !== null) {
+      mesDonneesActuelles.stages[editIndex] = item;
+    } else {
+      mesDonneesActuelles.stages.push(item);
+    }
+    
+    await sauvegarderSurServeur();
+    afficherListeStages();
+    window.hideStageForm();
+  }
+  
+  // Édite un stage
+  window.editStage = function(index) {
+    window.showStageForm(index);
+  };
+  
+  // Supprime un stage
+  window.deleteStage = function(index) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer ce stage ?')) {
+      mesDonneesActuelles.stages.splice(index, 1);
+      sauvegarderSurServeur();
+      afficherListeStages();
+    }
+  };
+
+  /* ===== GESTION DES ALTERNANCES ===== */
+  
+  // Affiche la liste des alternances
+  function afficherListeAlternances() {
+    const container = document.getElementById('alternances-list');
+    if (!container) return;
+    
+    const alternances = mesDonneesActuelles.alternances || [];
+    
+    if (alternances.length === 0) {
+      container.innerHTML = '<p class="muted">Aucune alternance pour le moment.</p>';
+      return;
+    }
+    
+    container.innerHTML = alternances.map((alternance, index) => `
+      <div class="item-card">
+        <h4>${alternance.title || 'Alternance'}</h4>
+        <p class="item-meta">${alternance.company || ''} ${alternance.location ? '· ' + alternance.location : ''} ${alternance.date ? '· ' + alternance.date : ''}</p>
+        <p class="muted">${alternance.description || ''}</p>
+        <div class="item-actions">
+          <button class="btn-small" onclick="editAlternance(${index})">Modifier</button>
+          <button class="btn-small btn-secondary" onclick="deleteAlternance(${index})">Supprimer</button>
+        </div>
+      </div>
+    `).join('');
+  }
+  
+  // Affiche le formulaire d'alternance
+  window.showAlternanceForm = function(editIndex = null) {
+    const modal = document.getElementById('alternance-form-modal');
+    const form = document.getElementById('alternance-form');
+    const title = document.getElementById('alternance-form-title');
+    
+    if (!modal || !form) return;
+    
+    currentEditingId = editIndex;
+    
+    if (title) {
+      title.textContent = editIndex !== null ? 'Modifier l\'alternance' : 'Ajouter une alternance';
+    }
+    
+    if (editIndex !== null) {
+      const item = mesDonneesActuelles.alternances[editIndex];
+      document.getElementById('alternance-id').value = editIndex;
+      document.getElementById('alternance-title').value = item.title || '';
+      document.getElementById('alternance-company').value = item.company || '';
+      document.getElementById('alternance-location').value = item.location || '';
+      document.getElementById('alternance-date').value = item.date || '';
+      document.getElementById('alternance-rhythm').value = item.rhythm || '';
+      document.getElementById('alternance-description').value = item.description || '';
+      document.getElementById('alternance-technologies').value = (item.technologies || []).join(', ');
+      document.getElementById('alternance-link').value = item.link || '';
+    } else {
+      form.reset();
+      document.getElementById('alternance-id').value = '';
+    }
+    
+    modal.style.display = 'block';
+  };
+  
+  // Cache le formulaire d'alternance
+  window.hideAlternanceForm = function() {
+    const modal = document.getElementById('alternance-form-modal');
+    if (modal) modal.style.display = 'none';
+    currentEditingId = null;
+  };
+  
+  // Sauvegarde une alternance
+  async function sauvegarderAlternance(e) {
+    e.preventDefault();
+    
+    const item = {
+      title: document.getElementById('alternance-title').value.trim(),
+      company: document.getElementById('alternance-company').value.trim(),
+      location: document.getElementById('alternance-location').value.trim(),
+      date: document.getElementById('alternance-date').value.trim(),
+      rhythm: document.getElementById('alternance-rhythm').value.trim(),
+      description: document.getElementById('alternance-description').value.trim(),
+      technologies: document.getElementById('alternance-technologies').value.split(',').map(t => t.trim()).filter(t => t),
+      link: document.getElementById('alternance-link').value.trim()
+    };
+    
+    if (!item.title || !item.company || !item.description || !item.date) {
+      afficherErreur(null, 'Le titre, l\'entreprise, la date et la description sont obligatoires');
+      return;
+    }
+    
+    const editIndex = currentEditingId;
+    if (editIndex !== null) {
+      mesDonneesActuelles.alternances[editIndex] = item;
+    } else {
+      mesDonneesActuelles.alternances.push(item);
+    }
+    
+    await sauvegarderSurServeur();
+    afficherListeAlternances();
+    window.hideAlternanceForm();
+  }
+  
+  // Édite une alternance
+  window.editAlternance = function(index) {
+    window.showAlternanceForm(index);
+  };
+  
+  // Supprime une alternance
+  window.deleteAlternance = function(index) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette alternance ?')) {
+      mesDonneesActuelles.alternances.splice(index, 1);
+      sauvegarderSurServeur();
+      afficherListeAlternances();
+    }
+  };
+  
+  
+  /* ===== GESTION DES ÉVÉNEMENTS TECHNOLOGIQUES ===== */
+  
+  // Affiche la liste des événements technologiques
+  function afficherListeTechEvents() {
+    const container = document.getElementById('tech-events-list');
+    if (!container) return;
+    
+    const events = mesDonneesActuelles.techEvents || [];
+    
+    if (events.length === 0) {
+      container.innerHTML = '<p class="muted">Aucun événement technologique pour le moment.</p>';
+      return;
+    }
+    
+    container.innerHTML = events.map((event, index) => `
+      <div class="item-card">
+        <h4>${event.name || event.title || 'Événement'}</h4>
+        <p class="item-meta">${event.type || ''} ${event.organizer ? '· ' + event.organizer : ''} ${event.location ? '· ' + event.location : ''} ${event.date ? '· ' + event.date : ''}</p>
+        <p class="muted">${event.description || ''}</p>
+        <div class="item-actions">
+          <button class="btn-small" onclick="editTechEvent(${index})">Modifier</button>
+          <button class="btn-small btn-secondary" onclick="deleteTechEvent(${index})">Supprimer</button>
+        </div>
+      </div>
+    `).join('');
+  }
+  
+  // Affiche le formulaire d'événement technologique
+  window.showTechEventForm = function(editIndex = null) {
+    const modal = document.getElementById('tech-event-form-modal');
+    const form = document.getElementById('tech-event-form');
+    const title = document.getElementById('tech-event-form-title');
+    
+    if (!modal || !form) return;
+    
+    currentEditingId = editIndex;
+    
+    if (title) {
+      title.textContent = editIndex !== null ? 'Modifier l\'événement' : 'Ajouter un événement';
+    }
+    
+    if (editIndex !== null) {
+      const item = mesDonneesActuelles.techEvents[editIndex];
+      document.getElementById('tech-event-id').value = editIndex;
+      document.getElementById('tech-event-name').value = item.name || item.title || '';
+      document.getElementById('tech-event-type').value = item.type || 'conference';
+      document.getElementById('tech-event-date').value = item.date || '';
+      document.getElementById('tech-event-organizer').value = item.organizer || '';
+      document.getElementById('tech-event-location').value = item.location || '';
+      document.getElementById('tech-event-description').value = item.description || '';
+      document.getElementById('tech-event-link').value = item.link || '';
+    } else {
+      form.reset();
+      document.getElementById('tech-event-id').value = '';
+    }
+    
+    modal.style.display = 'block';
+  };
+  
+  // Cache le formulaire d'événement technologique
+  window.hideTechEventForm = function() {
+    const modal = document.getElementById('tech-event-form-modal');
+    if (modal) modal.style.display = 'none';
+    currentEditingId = null;
+  };
+  
+  // Sauvegarde un événement technologique
+  async function sauvegarderTechEvent(e) {
+    e.preventDefault();
+    
+    const item = {
+      name: document.getElementById('tech-event-name').value.trim(),
+      title: document.getElementById('tech-event-name').value.trim(),
+      type: document.getElementById('tech-event-type').value,
+      date: document.getElementById('tech-event-date').value.trim(),
+      organizer: document.getElementById('tech-event-organizer').value.trim(),
+      location: document.getElementById('tech-event-location').value.trim(),
+      description: document.getElementById('tech-event-description').value.trim(),
+      link: document.getElementById('tech-event-link').value.trim()
+    };
+    
+    if (!item.name || !item.description) {
+      afficherErreur(null, 'Le nom et la description sont obligatoires');
+      return;
+    }
+    
+    const editIndex = currentEditingId;
+    if (editIndex !== null) {
+      mesDonneesActuelles.techEvents[editIndex] = item;
+    } else {
+      mesDonneesActuelles.techEvents.push(item);
+    }
+    
+    await sauvegarderSurServeur();
+    afficherListeTechEvents();
+    window.hideTechEventForm();
+  }
+  
+  // Édite un événement technologique
+  window.editTechEvent = function(index) {
+    window.showTechEventForm(index);
+  };
+  
+  // Supprime un événement technologique
+  window.deleteTechEvent = function(index) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cet événement ?')) {
+      mesDonneesActuelles.techEvents.splice(index, 1);
+      sauvegarderSurServeur();
+      afficherListeTechEvents();
+    }
+  };
+  
+  
+  /* ===== GESTION DE LA TIMELINE ===== */
+  
+  // Affiche la liste de la timeline
+  function afficherListeTimeline() {
+    const container = document.getElementById('timeline-list');
+    if (!container) return;
+    
+    const timeline = mesDonneesActuelles.timeline || [];
+    
+    if (timeline.length === 0) {
+      container.innerHTML = '<p class="muted">Aucun événement pour le moment.</p>';
+      return;
+    }
+    
+    container.innerHTML = timeline.map((item, index) => `
+      <div class="item-card">
+        <input type="checkbox" class="select-checkbox" data-type="timeline" data-index="${index}" onchange="toggleItemSelection('timeline', ${index}, this.checked)" />
+        <h4>${item.title || 'Événement'}</h4>
+        <p class="item-meta">${item.date || ''} ${item.subtitle ? '· ' + item.subtitle : ''}</p>
+        <p class="muted">${item.description || ''}</p>
+        <div class="item-actions">
+          <button class="btn-small" onclick="editTimeline(${index})">Modifier</button>
+          <button class="btn-small btn-secondary" onclick="deleteTimeline(${index})">Supprimer</button>
+        </div>
+      </div>
+    `).join('');
+  }
+  
+  // Affiche le formulaire de timeline
+  window.showTimelineForm = function(editIndex = null) {
+    const modal = document.getElementById('timeline-form-modal');
+    const form = document.getElementById('timeline-form');
+    const title = document.getElementById('timeline-form-title');
+    
+    if (!modal || !form) return;
+    
+    currentEditingId = editIndex;
+    
+    if (title) {
+      title.textContent = editIndex !== null ? 'Modifier l\'événement' : 'Ajouter un événement';
+    }
+    
+    if (editIndex !== null) {
+      const item = mesDonneesActuelles.timeline[editIndex];
+      document.getElementById('timeline-id').value = editIndex;
+      document.getElementById('timeline-date').value = item.date || '';
+      document.getElementById('timeline-title').value = item.title || '';
+      document.getElementById('timeline-subtitle').value = item.subtitle || '';
+      document.getElementById('timeline-description').value = item.description || '';
+    } else {
+      form.reset();
+      document.getElementById('timeline-id').value = '';
+    }
+    
+    modal.style.display = 'block';
+  };
+  
+  // Cache le formulaire de timeline
+  window.hideTimelineForm = function() {
+    const modal = document.getElementById('timeline-form-modal');
+    if (modal) modal.style.display = 'none';
+    currentEditingId = null;
+  };
+  
+  // Sauvegarde un événement timeline
+  async function sauvegarderTimeline(e) {
+    e.preventDefault();
+    
+    const item = {
+      date: document.getElementById('timeline-date').value.trim(),
+      title: document.getElementById('timeline-title').value.trim(),
+      subtitle: document.getElementById('timeline-subtitle').value.trim(),
+      description: document.getElementById('timeline-description').value.trim()
+    };
+    
+    if (!item.date || !item.title || !item.description) {
+      afficherErreur(null, 'La date, le titre et la description sont obligatoires');
+      return;
+    }
+    
+    const editIndex = currentEditingId;
+    if (editIndex !== null) {
+      mesDonneesActuelles.timeline[editIndex] = item;
+    } else {
+      mesDonneesActuelles.timeline.push(item);
+    }
+    
+    await sauvegarderSurServeur();
+    afficherListeTimeline();
+    window.hideTimelineForm();
+  }
+  
+  // Édite un événement timeline
+  window.editTimeline = function(index) {
+    window.showTimelineForm(index);
+  };
+  
+  // Supprime un événement timeline
+  window.deleteTimeline = function(index) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cet événement ?')) {
+      mesDonneesActuelles.timeline.splice(index, 1);
+      sauvegarderSurServeur();
+      afficherListeTimeline();
+    }
+  };
+  
+  
+  /* ===== GESTION DES SERVICES ===== */
+  
+  // Affiche la liste des services
+  function afficherListeServices() {
+    const container = document.getElementById('services-list');
+    if (!container) return;
+    
+    const services = mesDonneesActuelles.services || [];
+    
+    if (services.length === 0) {
+      container.innerHTML = '<p class="muted">Aucun service pour le moment.</p>';
+      return;
+    }
+    
+    container.innerHTML = services.map((service, index) => `
+      <div class="item-card">
+        <input type="checkbox" class="select-checkbox" data-type="services" data-index="${index}" onchange="toggleItemSelection('services', ${index}, this.checked)" />
+        <h4>${service.icon || '🛠️'} ${service.title || 'Service'}</h4>
+        <p class="muted">${service.description || ''}</p>
+        <div class="item-actions">
+          <button class="btn-small" onclick="editService(${index})">Modifier</button>
+          <button class="btn-small btn-secondary" onclick="deleteService(${index})">Supprimer</button>
+        </div>
+      </div>
+    `).join('');
+  }
+  
+  // Affiche le formulaire de service
+  window.showServiceForm = function(editIndex = null) {
+    const modal = document.getElementById('service-form-modal');
+    const form = document.getElementById('service-form');
+    const title = document.getElementById('service-form-title');
+    
+    if (!modal || !form) return;
+    
+    currentEditingId = editIndex;
+    
+    if (title) {
+      title.textContent = editIndex !== null ? 'Modifier le service' : 'Ajouter un service';
+    }
+    
+    if (editIndex !== null) {
+      const service = mesDonneesActuelles.services[editIndex];
+      document.getElementById('service-id').value = editIndex;
+      document.getElementById('service-icon').value = service.icon || '';
+      document.getElementById('service-title').value = service.title || '';
+      document.getElementById('service-description').value = service.description || '';
+      document.getElementById('service-features').value = (service.features || []).join('\n');
+    } else {
+      form.reset();
+      document.getElementById('service-id').value = '';
+    }
+    
+    modal.style.display = 'block';
+  };
+  
+  // Cache le formulaire de service
+  window.hideServiceForm = function() {
+    const modal = document.getElementById('service-form-modal');
+    if (modal) modal.style.display = 'none';
+    currentEditingId = null;
+  };
+  
+  // Sauvegarde un service
+  async function sauvegarderService(e) {
+    e.preventDefault();
+    
+    const service = {
+      icon: document.getElementById('service-icon').value.trim(),
+      title: document.getElementById('service-title').value.trim(),
+      description: document.getElementById('service-description').value.trim(),
+      features: document.getElementById('service-features').value.split('\n').filter(f => f.trim())
+    };
+    
+    if (!service.icon || !service.title || !service.description) {
+      afficherErreur(null, 'L\'icône, le titre et la description sont obligatoires');
+      return;
+    }
+    
+    const editIndex = currentEditingId;
+    if (editIndex !== null) {
+      mesDonneesActuelles.services[editIndex] = service;
+    } else {
+      mesDonneesActuelles.services.push(service);
+    }
+    
+    await sauvegarderSurServeur();
+    afficherListeServices();
+    window.hideServiceForm();
+  }
+  
+  // Édite un service
+  window.editService = function(index) {
+    window.showServiceForm(index);
+  };
+  
+  // Supprime un service
+  window.deleteService = function(index) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer ce service ?')) {
+      mesDonneesActuelles.services.splice(index, 1);
+      sauvegarderSurServeur();
+      afficherListeServices();
+    }
+  };
+  
+  
+  /* ===== GESTION DE LA FAQ ===== */
+  
+  // Affiche la liste de la FAQ
+  function afficherListeFAQ() {
+    const container = document.getElementById('faq-list');
+    if (!container) return;
+    
+    const faq = mesDonneesActuelles.faq || [];
+    
+    if (faq.length === 0) {
+      container.innerHTML = '<p class="muted">Aucune question pour le moment.</p>';
+      return;
+    }
+    
+    container.innerHTML = faq.map((item, index) => `
+      <div class="item-card">
+        <input type="checkbox" class="select-checkbox" data-type="faq" data-index="${index}" onchange="toggleItemSelection('faq', ${index}, this.checked)" />
+        <h4>${item.question || 'Question'}</h4>
+        <p class="muted">${item.answer || ''}</p>
+        <div class="item-actions">
+          <button class="btn-small" onclick="editFAQ(${index})">Modifier</button>
+          <button class="btn-small btn-secondary" onclick="deleteFAQ(${index})">Supprimer</button>
+        </div>
+      </div>
+    `).join('');
+  }
+  
+  // Affiche le formulaire de FAQ
+  window.showFAQForm = function(editIndex = null) {
+    const modal = document.getElementById('faq-form-modal');
+    const form = document.getElementById('faq-form');
+    const title = document.getElementById('faq-form-title');
+    
+    if (!modal || !form) return;
+    
+    currentEditingId = editIndex;
+    
+    if (title) {
+      title.textContent = editIndex !== null ? 'Modifier la question' : 'Ajouter une question FAQ';
+    }
+    
+    if (editIndex !== null) {
+      const item = mesDonneesActuelles.faq[editIndex];
+      document.getElementById('faq-id').value = editIndex;
+      document.getElementById('faq-question').value = item.question || '';
+      document.getElementById('faq-answer').value = item.answer || '';
+    } else {
+      form.reset();
+      document.getElementById('faq-id').value = '';
+    }
+    
+    modal.style.display = 'block';
+  };
+  
+  // Cache le formulaire de FAQ
+  window.hideFAQForm = function() {
+    const modal = document.getElementById('faq-form-modal');
+    if (modal) modal.style.display = 'none';
+    currentEditingId = null;
+  };
+  
+  // Sauvegarde une FAQ
+  async function sauvegarderFAQ(e) {
+    e.preventDefault();
+    
+    const item = {
+      question: document.getElementById('faq-question').value.trim(),
+      answer: document.getElementById('faq-answer').value.trim()
+    };
+    
+    if (!item.question || !item.answer) {
+      afficherErreur(null, 'La question et la réponse sont obligatoires');
+      return;
+    }
+    
+    const editIndex = currentEditingId;
+    if (editIndex !== null) {
+      mesDonneesActuelles.faq[editIndex] = item;
+    } else {
+      mesDonneesActuelles.faq.push(item);
+    }
+    
+    await sauvegarderSurServeur();
+    afficherListeFAQ();
+    window.hideFAQForm();
+  }
+  
+  // Édite une FAQ
+  window.editFAQ = function(index) {
+    window.showFAQForm(index);
+  };
+  
+  // Supprime une FAQ
+  window.deleteFAQ = function(index) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette question ?')) {
+      mesDonneesActuelles.faq.splice(index, 1);
+      sauvegarderSurServeur();
+      afficherListeFAQ();
+    }
+  };
+  
+  
+  /* ===== GESTION DES DESCRIPTIONS (ABOUT) ===== */
+  
+  // Affiche les infos about
+  function afficherInfosAbout() {
+    const about = mesDonneesActuelles.about || {};
+    
+    const heroDesc = document.getElementById('hero-description');
+    const aboutDesc = document.getElementById('about-description');
+    const statsProjects = document.getElementById('stats-projects');
+    const statsExperience = document.getElementById('stats-experience');
+    const statsTechnologies = document.getElementById('stats-technologies');
+    
+    if (heroDesc) heroDesc.value = about.heroDescription || '';
+    if (aboutDesc) aboutDesc.value = about.aboutDescription || '';
+    if (statsProjects) statsProjects.value = about.stats?.projects || 0;
+    if (statsExperience) statsExperience.value = about.stats?.experience || 0;
+    if (statsTechnologies) statsTechnologies.value = about.stats?.technologies || 0;
+  }
+  
+  // Sauvegarde les infos about
+  window.saveAboutInfo = async function() {
+    mesDonneesActuelles.about = {
+      heroDescription: document.getElementById('hero-description')?.value || '',
+      aboutDescription: document.getElementById('about-description')?.value || '',
+      stats: {
+        projects: parseInt(document.getElementById('stats-projects')?.value || 0),
+        experience: parseInt(document.getElementById('stats-experience')?.value || 0),
+        technologies: parseInt(document.getElementById('stats-technologies')?.value || 0)
+      }
+    };
+    
+    await sauvegarderSurServeur();
+  };
+  
+  
+  /* ===== GESTION DES LIENS ===== */
+  
+  // Affiche les liens
+  function afficherLiens() {
+    const links = mesDonneesActuelles.links || {};
+    
+    const cvPath = document.getElementById('cv-path');
+    if (cvPath) {
+      // Afficher le chemin du CV (ou indiquer qu'un fichier est uploadé)
+      if (links.cvFile) {
+        cvPath.value = 'Fichier uploadé: ' + (links.cvFileName || 'CV.pdf');
+        cvPath.disabled = true;
+        cvPath.style.background = 'rgba(91, 124, 250, 0.1)';
+      } else {
+        cvPath.value = links.cv || '';
+        cvPath.disabled = false;
+        cvPath.style.background = '';
+      }
+    }
+    
+    // Afficher la section de prévisualisation si un fichier est uploadé
+    const previewSection = document.getElementById('cv-preview-section');
+    if (links.cvFile && previewSection) {
+      previewSection.style.display = 'block';
+      const fileName = document.getElementById('cv-file-name');
+      const fileSize = document.getElementById('cv-file-size');
+      const previewLink = document.getElementById('cv-preview-link');
+      
+      if (fileName) fileName.textContent = links.cvFileName || 'CV.pdf';
+      if (fileSize && links.cvFileSize) {
+        fileSize.textContent = `Taille: ${(links.cvFileSize / 1024).toFixed(2)} KB`;
+      }
+      if (previewLink) {
+        previewLink.href = links.cvFile;
+        previewLink.download = links.cvFileName || 'CV.pdf';
+      }
+    } else if (previewSection) {
+      previewSection.style.display = 'none';
+    }
+    
+    afficherLiensSociaux();
+  }
+  
+  // Affiche les liens sociaux
+  function afficherLiensSociaux() {
+    const container = document.getElementById('social-links-list');
+    if (!container) return;
+    
+    const social = (mesDonneesActuelles.links || {}).social || [];
+    
+    if (social.length === 0) {
+      container.innerHTML = '<p class="muted">Aucun lien social pour le moment.</p>';
+      return;
+    }
+    
+    container.innerHTML = social.map((link, index) => `
+      <div class="item-card">
+        <h4>${link.name || 'Lien'}</h4>
+        <p class="muted"><a href="${link.url}" target="_blank">${link.url}</a></p>
+        <div class="item-actions">
+          <button class="btn-small btn-secondary" onclick="deleteSocialLink(${index})">Supprimer</button>
+        </div>
+      </div>
+    `).join('');
+  }
+  
+  // Sauvegarde le CV
+  async function sauvegarderCV(e) {
+    e.preventDefault();
+    
+    if (!mesDonneesActuelles.links) mesDonneesActuelles.links = {};
+    
+    const cvPath = document.getElementById('cv-path').value.trim();
+    
+    // Si un fichier a été uploadé, il est déjà dans mesDonneesActuelles.links.cvFile
+    // Dans ce cas, on ne modifie pas cvFile, seulement cv si c'est un chemin
+    if (cvPath && !cvPath.startsWith('Fichier uploadé:')) {
+      // Si c'est un nouveau chemin (pas un fichier uploadé), mettre à jour
+      // SUPPRIMER L'ANCIEN CV BASE64 : Si on change de méthode (de upload à chemin), supprimer cvFile
+      if (mesDonneesActuelles.links.cvFile) {
+        console.log('🗑️ Suppression de l\'ancien CV base64 (remplacement par chemin)');
+        delete mesDonneesActuelles.links.cvFile;
+        delete mesDonneesActuelles.links.cvFileName;
+        delete mesDonneesActuelles.links.cvFileSize;
+      }
+      // SUPPRIMER L'ANCIEN CV BASE64 DANS cv : Si cv était en base64, le remplacer par le chemin
+      if (mesDonneesActuelles.links.cv && mesDonneesActuelles.links.cv.startsWith('data:')) {
+        console.log('🗑️ Suppression de l\'ancien CV base64 dans cv (remplacement par chemin)');
+      }
+      // Mettre le nouveau chemin
+      mesDonneesActuelles.links.cv = cvPath;
+    }
+    
+    const success = await sauvegarderSurServeur();
+    if (success) {
+      afficherSucces('CV sauvegardé avec succès ! L\'ancien CV a été remplacé. Rechargez les pages d\'accueil et "À propos" (F5 ou Ctrl+Shift+R) pour voir le changement.');
+      // Forcer le rechargement des données sur les autres pages après un délai
+      setTimeout(() => {
+        if (window.portfolioAPI && window.portfolioAPI.actualiser) {
+          window.portfolioAPI.actualiser();
+        }
+      }, 1000);
+      
+      // Recharger aussi les liens dans l'admin
+      afficherLiens();
+    }
+  }
+  
+  // Ajoute un lien social
+  async function ajouterLienSocial(e) {
+    e.preventDefault();
+    
+    const name = document.getElementById('social-name').value.trim();
+    const url = document.getElementById('social-url').value.trim();
+    
+    if (!name || !url) {
+      afficherErreur(null, 'Le nom et l\'URL sont obligatoires');
+      return;
+    }
+    
+    if (!mesDonneesActuelles.links) mesDonneesActuelles.links = {};
+    if (!mesDonneesActuelles.links.social) mesDonneesActuelles.links.social = [];
+    
+    mesDonneesActuelles.links.social.push({ name, url });
+    await sauvegarderSurServeur();
+    afficherLiensSociaux();
+    document.getElementById('social-link-form').reset();
+  }
+  
+  // Supprime un lien social
+  window.deleteSocialLink = function(index) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer ce lien ?')) {
+      mesDonneesActuelles.links.social.splice(index, 1);
+      sauvegarderSurServeur();
+      afficherLiensSociaux();
+    }
+  };
+  
+  
+  /* ===== GESTION DES STATISTIQUES ===== */
+  
+  // Met à jour les statistiques du dashboard
+  function mettreAJourStatsDashboard() {
+    const statProjects = document.getElementById('stat-projects');
+    const statSkills = document.getElementById('stat-skills');
+    const statVisitors = document.getElementById('stat-visitors');
+    const statLastUpdate = document.getElementById('stat-last-update');
+    
+    if (statProjects) statProjects.textContent = mesDonneesActuelles.projects?.length || 0;
+    if (statSkills) statSkills.textContent = mesDonneesActuelles.skills?.length || 0;
+    if (statVisitors) statVisitors.textContent = '-';
+    if (statLastUpdate) statLastUpdate.textContent = new Date().toLocaleDateString('fr-FR');
+    
+    // Stats dans l'onglet stats
+    const dashboardStatProjects = document.getElementById('dashboard-stat-projects');
+    const dashboardStatSkills = document.getElementById('dashboard-stat-skills');
+    const dashboardStatLinks = document.getElementById('dashboard-stat-links');
+    
+    if (dashboardStatProjects) dashboardStatProjects.textContent = mesDonneesActuelles.projects?.length || 0;
+    if (dashboardStatSkills) dashboardStatSkills.textContent = mesDonneesActuelles.skills?.length || 0;
+    if (dashboardStatLinks) dashboardStatLinks.textContent = (mesDonneesActuelles.links?.social || []).length || 0;
+  }
+  
+  // Sauvegarde les statistiques
+  window.saveStatsInfo = async function() {
+    mesDonneesActuelles.about = mesDonneesActuelles.about || {};
+    mesDonneesActuelles.about.stats = {
+      projects: parseInt(document.getElementById('stats-projects-display')?.value || 0),
+      experience: parseInt(document.getElementById('stats-experience-display')?.value || 0),
+      technologies: parseInt(document.getElementById('stats-technologies-display')?.value || 0)
+    };
+    
+    await sauvegarderSurServeur();
+  };
+  
+  
+  /* ===== GESTION DE LA SÉLECTION MULTIPLE ===== */
+  
+  // Toggle la sélection d'un item
+  window.toggleItemSelection = function(type, index, checked) {
+    if (checked) {
+      selectedItems[type].add(index);
+    } else {
+      selectedItems[type].delete(index);
+    }
+    mettreAJourBulkActions(type);
+  };
+  
+  // Met à jour les boutons de sélection multiple
+  function mettreAJourBulkActions(type) {
+    const count = selectedItems[type].size;
+    const bulkActions = document.getElementById(`bulk-actions-${type}`);
+    const selectedCount = document.getElementById(`selected-count-${type}`);
+    
+    if (bulkActions) {
+      if (count > 0) {
+        bulkActions.classList.add('active');
+      } else {
+        bulkActions.classList.remove('active');
+      }
+    }
+    
+    if (selectedCount) {
+      selectedCount.textContent = count > 0 ? `${count} sélectionné(s)` : '';
+    }
+  }
+  
+  // Sélectionne tout
+  window.toggleSelectAllProjects = function() {
+    const checked = document.getElementById('select-all-projects').checked;
+    document.querySelectorAll('[data-type="projects"].select-checkbox').forEach((cb, i) => {
+      cb.checked = checked;
+      toggleItemSelection('projects', i, checked);
+    });
+  };
+  
+  window.toggleSelectAllSkills = function() {
+    const checked = document.getElementById('select-all-skills').checked;
+    document.querySelectorAll('[data-type="skills"].select-checkbox').forEach((cb, i) => {
+      cb.checked = checked;
+      toggleItemSelection('skills', i, checked);
+    });
+  };
+  
+  // Supprime les items sélectionnés
+  window.deleteSelectedProjects = function() {
+    const indices = Array.from(selectedItems.projects).sort((a, b) => b - a);
+    if (indices.length === 0) return;
+    
+    if (confirm(`Êtes-vous sûr de vouloir supprimer ${indices.length} projet(s) ?`)) {
+      indices.forEach(i => mesDonneesActuelles.projects.splice(i, 1));
+      selectedItems.projects.clear();
+      sauvegarderSurServeur();
+      afficherListeProjets();
+    }
+  };
+  
+  window.deleteSelectedSkills = function() {
+    const indices = Array.from(selectedItems.skills).sort((a, b) => b - a);
+    if (indices.length === 0) return;
+    
+    if (confirm(`Êtes-vous sûr de vouloir supprimer ${indices.length} compétence(s) ?`)) {
+      indices.forEach(i => mesDonneesActuelles.skills.splice(i, 1));
+      selectedItems.skills.clear();
+      sauvegarderSurServeur();
+      afficherListeCompetences();
+    }
+  };
   
   
   /* ===== IMPORT/EXPORT ===== */
   
-  // Exporte toutes mes données
-  function exporterMesDonnees() {
+  // Exporte toutes les données
+  window.exportAllData = function() {
     try {
       const donneesJson = JSON.stringify(mesDonneesActuelles, null, 2);
       const fichier = new Blob([donneesJson], { type: 'application/json' });
@@ -328,195 +1694,245 @@ document.addEventListener('DOMContentLoaded', function() {
     } catch (erreur) {
       afficherErreur(null, 'Erreur lors de l\'export');
     }
-  }
+  };
   
   // Importe des données
-  function importerDonnees() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
+  window.handleFileImport = function(event) {
+    const fichier = event.target.files[0];
+    if (!fichier) return;
     
-    input.onchange = function(e) {
-      const fichier = e.target.files[0];
-      if (!fichier) return;
-      
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        try {
-          const donneesImportees = JSON.parse(event.target.result);
-          
-          if (confirm('Voulez-vous vraiment remplacer toutes vos données actuelles ?')) {
-            mesDonneesActuelles = { ...DONNEES_PAR_DEFAUT, ...donneesImportees };
-            sauvegarderMesDonnees();
-            afficherToutesMesDonnees();
-            afficherSucces('Données importées avec succès !');
-          }
-        } catch (erreur) {
-          afficherErreur(null, 'Fichier JSON invalide');
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+      try {
+        const donneesImportees = JSON.parse(e.target.result);
+        
+        if (confirm('Voulez-vous vraiment remplacer toutes vos données actuelles ?')) {
+          mesDonneesActuelles = donneesImportees;
+          await sauvegarderSurServeur();
+          afficherToutesMesDonnees();
+          afficherSucces('Données importées avec succès !');
         }
-      };
-      reader.readAsText(fichier);
+      } catch (erreur) {
+        afficherErreur(null, 'Fichier JSON invalide');
+      }
     };
-    
-    input.click();
-  }
+    reader.readAsText(fichier);
+  };
+  
+  window.importAllData = function() {
+    document.getElementById('import-file').click();
+  };
   
   // Réinitialise toutes les données
-  function reinitialiserDonnees() {
+  window.clearAllData = function() {
     if (confirm('⚠️ ATTENTION : Voulez-vous vraiment supprimer TOUTES vos données ?')) {
       if (confirm('Cette action est IRRÉVERSIBLE. Confirmez-vous ?')) {
-        mesDonneesActuelles = JSON.parse(JSON.stringify(DONNEES_PAR_DEFAUT));
-        sauvegarderMesDonnees();
+        mesDonneesActuelles = {
+          personal: {},
+          projects: [],
+          skills: [],
+          timeline: [],
+          certifications: [],
+          stages: [],
+          alternances: [],
+          techEvents: [],
+          services: [],
+          faq: [],
+          links: {},
+          about: {}
+        };
+        sauvegarderSurServeur();
         afficherToutesMesDonnees();
         afficherSucces('Données réinitialisées');
       }
     }
-  }
+  };
+  
+  // Applique les modifications au portfolio
+  window.applyChangesToPortfolio = async function() {
+    await sauvegarderSurServeur();
+    afficherSucces('Modifications appliquées au portfolio !');
+  };
+  
+  
+  /* ===== AUTRES FONCTIONS ===== */
+  
+  // Gestion de la photo
+  window.clearPhotoPreview = function() {
+    document.getElementById('photo').value = '';
+    document.getElementById('photo-preview').style.display = 'none';
+    document.getElementById('photo-preview-placeholder').style.display = 'flex';
+  };
+  
+  // Gestion du CV
+  window.switchCVMethod = function(method) {
+    const uploadSection = document.getElementById('cv-upload-section');
+    const pathSection = document.getElementById('cv-path-section');
+    const uploadTab = document.getElementById('cv-upload-tab');
+    const pathTab = document.getElementById('cv-path-tab');
+    
+    if (method === 'upload') {
+      if (uploadSection) uploadSection.style.display = 'block';
+      if (pathSection) pathSection.style.display = 'none';
+      if (uploadTab) uploadTab.classList.add('active');
+      if (pathTab) pathTab.classList.remove('active');
+    } else {
+      if (uploadSection) uploadSection.style.display = 'none';
+      if (pathSection) pathSection.style.display = 'block';
+      if (uploadTab) uploadTab.classList.remove('active');
+      if (pathTab) pathTab.classList.add('active');
+    }
+  };
+  
+  window.clearCVUpload = function() {
+    document.getElementById('cv-file-input').value = '';
+    document.getElementById('cv-preview-section').style.display = 'none';
+    
+    // SUPPRIMER L'ANCIEN CV : Supprimer complètement des données
+    if (mesDonneesActuelles.links) {
+      delete mesDonneesActuelles.links.cvFile;
+      delete mesDonneesActuelles.links.cvFileName;
+      delete mesDonneesActuelles.links.cvFileSize;
+      // NE PAS REMETTRE 'assets/CV.pdf' - Laisser vide pour que l'utilisateur choisisse
+      // Si cv était un base64, le supprimer aussi
+      if (mesDonneesActuelles.links.cv && mesDonneesActuelles.links.cv.startsWith('data:')) {
+        delete mesDonneesActuelles.links.cv;
+        console.log('🗑️ CV base64 supprimé');
+      } else if (mesDonneesActuelles.links.cv === 'assets/CV.pdf') {
+        // Supprimer aussi le chemin par défaut
+        delete mesDonneesActuelles.links.cv;
+        console.log('🗑️ Chemin CV par défaut supprimé');
+      }
+      console.log('🗑️ CV uploadé supprimé - Aucun CV défini (l\'utilisateur peut en ajouter un)');
+    }
+    
+    // Réactiver le champ cv-path
+    const cvPath = document.getElementById('cv-path');
+    if (cvPath) {
+      cvPath.value = ''; // Laisser vide au lieu de 'assets/CV.pdf'
+      cvPath.disabled = false;
+      cvPath.style.background = '';
+      cvPath.placeholder = 'assets/CV.pdf ou https://...';
+    }
+  };
+  
+  // Messages de succès
+  window.showSuccess = function(message) {
+    afficherSucces(message);
+  };
+  
+  // Paramètres
+  window.saveSettings = async function() {
+    afficherSucces('Paramètres sauvegardés (fonctionnalité à venir)');
+  };
+  
+  window.toggleMaintenanceModeDisplay = function() {
+    const group = document.getElementById('maintenance-message-group');
+    const checkbox = document.getElementById('maintenance-mode');
+    if (group && checkbox) {
+      group.style.display = checkbox.checked ? 'block' : 'none';
+    }
+  };
+  
+  // Témoignages (placeholder)
+  window.showTestimonialForm = function() {
+    afficherErreur(null, 'Fonctionnalité des témoignages à venir');
+  };
+  
+  window.hideTestimonialForm = function() {};
   
   
   /* ===== INTERFACE ET ÉVÉNEMENTS ===== */
   
   // Affiche un message de succès
   function afficherSucces(message) {
-    // Crée une notification verte temporaire
-    const notification = document.createElement('div');
-    notification.textContent = message;
-    notification.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: var(--couleur-succes);
-      color: white;
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-weight: 500;
-      z-index: 1000;
-      box-shadow: var(--ombre-moyenne);
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-      notification.remove();
-    }, 3000);
+    const successMsg = document.getElementById('success-message');
+    if (successMsg) {
+      successMsg.textContent = message;
+      successMsg.classList.add('active');
+      setTimeout(() => successMsg.classList.remove('active'), 5000);
+    }
   }
   
   // Affiche un message d'erreur
   function afficherErreur(element, message) {
-    // Log d'erreur en développement seulement
     if (window.location.hostname === 'localhost') {
       console.error('Erreur:', message);
     }
     
     if (element) {
       element.textContent = message;
-      element.style.display = 'block';
-      
-      setTimeout(() => {
-        element.style.display = 'none';
-      }, 5000);
+      element.classList.add('active');
+      setTimeout(() => element.classList.remove('active'), 5000);
     } else {
-      // Notification rouge si pas d'élément spécifique
-      const notification = document.createElement('div');
-      notification.textContent = message;
-      notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: var(--couleur-erreur);
-        color: white;
-        padding: 12px 20px;
-        border-radius: 8px;
-        font-weight: 500;
-        z-index: 1000;
-        box-shadow: var(--ombre-moyenne);
-      `;
-      
-      document.body.appendChild(notification);
-      
-      setTimeout(() => {
-        notification.remove();
-      }, 5000);
+      const errorMsg = document.getElementById('login-error');
+      if (errorMsg) {
+        errorMsg.textContent = message;
+        errorMsg.classList.add('active');
+      }
     }
   }
   
-  // Met à jour les statistiques du dashboard
-  function mettreAJourStatsDashboard() {
-    const nbProjets = document.getElementById('dashboard-projects-count');
-    const nbCompetences = document.getElementById('dashboard-skills-count');
-    const nbEvenements = document.getElementById('dashboard-timeline-count');
-    
-    if (nbProjets) {
-      nbProjets.textContent = mesDonneesActuelles.projects?.length || 0;
-    }
-    
-    if (nbCompetences) {
-      nbCompetences.textContent = mesDonneesActuelles.skills?.length || 0;
-    }
-    
-    if (nbEvenements) {
-      nbEvenements.textContent = mesDonneesActuelles.timeline?.length || 0;
-    }
-  }
   
-  // Configure tous les événements de clic
-  function configurerEvenements() {
-    document.addEventListener('click', function(e) {
-      // Bouton export
-      if (e.target.matches('[data-action="export"]')) {
-        e.preventDefault();
-        exporterMesDonnees();
-        return;
-      }
-      
-      // Bouton import
-      if (e.target.matches('[data-action="import"]')) {
-        e.preventDefault();
-        importerDonnees();
-        return;
-      }
-      
-      // Bouton réinitialiser
-      if (e.target.matches('[data-action="reset"]')) {
-        e.preventDefault();
-        reinitialiserDonnees();
-        return;
-      }
-      
-      // Sauvegarde infos personnelles
-      if (e.target.matches('[data-action="save-personal"]')) {
-        e.preventDefault();
-        sauvegarderInfosPersonnelles();
-        return;
-      }
-      
-      // Ajouter projet
-      if (e.target.matches('[data-action="add-project"]')) {
-        e.preventDefault();
-        ajouterProjet();
-        return;
-      }
-      
-      // Ajouter compétence
-      if (e.target.matches('[data-action="add-skill"]')) {
-        e.preventDefault();
-        ajouterCompetence();
-        return;
-      }
-      
-      // Déconnexion
-      if (e.target.matches('[data-action="logout"]')) {
-        e.preventDefault();
-        seDeconnecter();
-        return;
-      }
-    });
-    
+  /* ===== CONFIGURATION DES FORMULAIRES ===== */
+  
+  // Configure tous les formulaires
+  function configurerFormulaires() {
     // Formulaire de connexion
-    const formConnexion = document.getElementById('login-form');
-    if (formConnexion) {
-      formConnexion.addEventListener('submit', seConnecter);
-    }
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) loginForm.addEventListener('submit', seConnecter);
+    
+    // Formulaire infos personnelles
+    const personalForm = document.getElementById('personal-info-form');
+    if (personalForm) personalForm.addEventListener('submit', sauvegarderInfosPersonnelles);
+    
+    // Formulaire projet
+    const projectForm = document.getElementById('project-form');
+    if (projectForm) projectForm.addEventListener('submit', sauvegarderProjet);
+    
+    // Formulaire compétence
+    const skillForm = document.getElementById('skill-category-form');
+    if (skillForm) skillForm.addEventListener('submit', sauvegarderCompetence);
+    
+    // Formulaire certification
+    const certForm = document.getElementById('certification-form');
+    if (certForm) certForm.addEventListener('submit', sauvegarderCertification);
+    
+    // Formulaire timeline
+    const timelineForm = document.getElementById('timeline-form');
+    if (timelineForm) timelineForm.addEventListener('submit', sauvegarderTimeline);
+    
+    // Formulaire service
+    const serviceForm = document.getElementById('service-form');
+    if (serviceForm) serviceForm.addEventListener('submit', sauvegarderService);
+    
+    // Formulaire FAQ
+    const faqForm = document.getElementById('faq-form');
+    if (faqForm) faqForm.addEventListener('submit', sauvegarderFAQ);
+    
+    // Formulaire CV
+    const cvForm = document.getElementById('cv-form');
+    if (cvForm) cvForm.addEventListener('submit', sauvegarderCV);
+    
+    // Formulaire lien social
+    const socialForm = document.getElementById('social-link-form');
+    if (socialForm) socialForm.addEventListener('submit', ajouterLienSocial);
+    
+    // Formulaire stage
+    const stageForm = document.getElementById('stage-form');
+    if (stageForm) stageForm.addEventListener('submit', sauvegarderStage);
+    
+    // Formulaire alternance
+    const alternanceForm = document.getElementById('alternance-form');
+    if (alternanceForm) alternanceForm.addEventListener('submit', sauvegarderAlternance);
+    
+    // Formulaire événement technologique
+    const techEventForm = document.getElementById('tech-event-form');
+    if (techEventForm) techEventForm.addEventListener('submit', sauvegarderTechEvent);
+    
+    // Bouton déconnexion
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) logoutBtn.addEventListener('click', seDeconnecter);
   }
   
   
@@ -530,65 +1946,155 @@ document.addEventListener('DOMContentLoaded', function() {
       afficherConnexion();
     }
     
-    // Configure tous les événements
-    configurerEvenements();
+    // Configure les onglets
+    configurerOnglets();
     
-    // Interface admin initialisée
+    // Configure les formulaires
+    configurerFormulaires();
+    
+    // Gestion de la photo
+    const photoInput = document.getElementById('photo-file-input');
+    if (photoInput) {
+      photoInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(event) {
+            // Convertir en base64 pour stockage
+            const base64 = event.target.result;
+            document.getElementById('photo').value = base64;
+            const preview = document.getElementById('photo-preview');
+            if (preview) {
+              preview.src = base64;
+              preview.style.display = 'block';
+            }
+            const placeholder = document.getElementById('photo-preview-placeholder');
+            if (placeholder) placeholder.style.display = 'none';
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+    
+    // Gestion du CV upload
+    const cvFileInput = document.getElementById('cv-file-input');
+    const cvUploadForm = document.getElementById('cv-upload-form');
+    
+    if (cvFileInput) {
+      cvFileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(event) {
+            const base64 = event.target.result;
+            if (!mesDonneesActuelles.links) mesDonneesActuelles.links = {};
+            
+            // SUPPRIMER L'ANCIEN CV : Remplacer complètement par le nouveau
+            // Supprimer l'ancien cvFile s'il existe
+            if (mesDonneesActuelles.links.cvFile) {
+              console.log('🗑️ Remplacement de l\'ancien CV par le nouveau');
+            }
+            
+            // SUPPRIMER L'ANCIEN CHEMIN : Si cv était un chemin (assets/CV.pdf), le remplacer
+            if (mesDonneesActuelles.links.cv && !mesDonneesActuelles.links.cv.startsWith('data:')) {
+              console.log('🗑️ Suppression de l\'ancien chemin CV:', mesDonneesActuelles.links.cv);
+            }
+            
+            // Mettre le nouveau CV (base64) dans cvFile ET cv
+            mesDonneesActuelles.links.cvFile = base64;
+            mesDonneesActuelles.links.cvFileName = file.name;
+            mesDonneesActuelles.links.cvFileSize = file.size;
+            // REMPLACER l'ancien cv (chemin ou base64) par le nouveau base64
+            mesDonneesActuelles.links.cv = base64;
+            
+            console.log('✅ Nouveau CV base64 enregistré:', {
+              fileName: file.name,
+              size: file.size,
+              base64Length: base64.length,
+              cvIsBase64: mesDonneesActuelles.links.cv.startsWith('data:'),
+              cvFileIsBase64: mesDonneesActuelles.links.cvFile.startsWith('data:')
+            });
+            
+            const previewSection = document.getElementById('cv-preview-section');
+            const fileName = document.getElementById('cv-file-name');
+            const fileSize = document.getElementById('cv-file-size');
+            const previewLink = document.getElementById('cv-preview-link');
+            
+            if (previewSection) previewSection.style.display = 'block';
+            if (fileName) fileName.textContent = file.name;
+            if (fileSize) fileSize.textContent = `Taille: ${(file.size / 1024).toFixed(2)} KB`;
+            if (previewLink) {
+              previewLink.href = base64;
+              previewLink.download = file.name;
+            }
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+    
+    // Formulaire d'upload CV
+    if (cvUploadForm) {
+      cvUploadForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        if (!mesDonneesActuelles.links) mesDonneesActuelles.links = {};
+        
+        // Le fichier est déjà dans cvFile après le change event
+        if (mesDonneesActuelles.links.cvFile && mesDonneesActuelles.links.cvFile.startsWith('data:')) {
+          // SUPPRIMER L'ANCIEN CV : Remplacer complètement par le nouveau
+          // Mettre le nouveau CV base64 dans cvFile ET cv (remplace l'ancien chemin ou base64)
+          const nouveauCvBase64 = mesDonneesActuelles.links.cvFile;
+          
+          // Vérifier si l'ancien cv était un chemin
+          const ancienCv = mesDonneesActuelles.links.cv;
+          if (ancienCv && !ancienCv.startsWith('data:')) {
+            console.log('🗑️ Suppression de l\'ancien chemin CV:', ancienCv);
+          }
+          
+          // S'assurer que cvFile et cv contiennent le même base64
+          mesDonneesActuelles.links.cv = nouveauCvBase64;
+          
+          // Vérification finale avant sauvegarde
+          console.log('✅ Nouveau CV base64 prêt à être sauvegardé:', {
+            fileName: mesDonneesActuelles.links.cvFileName,
+            fileSize: mesDonneesActuelles.links.cvFileSize,
+            cvIsBase64: mesDonneesActuelles.links.cv.startsWith('data:'),
+            cvFileIsBase64: mesDonneesActuelles.links.cvFile.startsWith('data:'),
+            cvLength: mesDonneesActuelles.links.cv.length,
+            cvFileLength: mesDonneesActuelles.links.cvFile.length,
+            cvStartsWith: mesDonneesActuelles.links.cv.substring(0, 20),
+            cvFileStartsWith: mesDonneesActuelles.links.cvFile.substring(0, 20)
+          });
+          
+          // Sauvegarder sur le serveur
+          const success = await sauvegarderSurServeur();
+          if (success) {
+            afficherSucces('✅ CV uploadé et sauvegardé avec succès ! L\'ancien CV a été remplacé. Les pages publiques seront mises à jour automatiquement.');
+            
+            // Forcer le rechargement sur les autres pages après un court délai
+            setTimeout(() => {
+              if (window.portfolioAPI && window.portfolioAPI.actualiser) {
+                console.log('🔄 Actualisation des pages publiques...');
+                window.portfolioAPI.actualiser();
+              }
+            }, 1000);
+            
+            // Recharger aussi les liens dans l'admin
+            afficherLiens();
+          } else {
+            afficherErreur(null, '❌ Erreur lors de la sauvegarde du CV. Vérifiez la console pour plus de détails.');
+          }
+        } else {
+          afficherErreur(null, '❌ Veuillez sélectionner un fichier PDF valide. Le fichier doit être chargé avant de pouvoir être sauvegardé.');
+        }
+      });
+    }
+    
+    console.log('✅ Interface admin initialisée');
   }
   
   // Lance l'admin !
   initialiserAdmin();
   
-});
-
-/*
- * Fonctions globales nécessaires pour certains boutons HTML existants
- * (Compatibilité avec l'HTML actuel)
- */
-
-// Fonctions d'export/import publiques
-window.exportAllData = function() {
-  const event = new CustomEvent('click');
-  const bouton = document.querySelector('[data-action="export"]');
-  if (bouton) bouton.dispatchEvent(event);
-};
-
-window.importAllData = function() {
-  const event = new CustomEvent('click');
-  const bouton = document.querySelector('[data-action="import"]');
-  if (bouton) bouton.dispatchEvent(event);
-};
-
-window.clearAllData = function() {
-  const event = new CustomEvent('click');
-  const bouton = document.querySelector('[data-action="reset"]');
-  if (bouton) bouton.dispatchEvent(event);
-};
-
-// Autres fonctions demandées par l'HTML
-window.showProjectForm = function() { /* Formulaire projet à implémenter */ };
-window.hideProjectForm = function() { /* Fermeture formulaire projet */ };
-window.editProject = function(id) { /* Édition projet: id */ };
-window.deleteProject = function(id) { /* Suppression projet: id */ };
-window.deleteSkill = function(id) { /* Suppression compétence: id */ };
-window.applyChangesToPortfolio = function() { 
-  /* Application des modifications... */
-};
-
-// Autres fonctions administratives
-const adminFunctions = [
-  'clearPhotoPreview', 'showSuccess', 'deleteSelectedPersonalInfo',
-  'toggleSelectAllPersonalInfo', 'showPersonalInfoForm', 'hidePersonalInfoForm',
-  'toggleSelectAllProjects', 'deleteSelectedProjects', 'toggleSelectAllSkills',
-  'deleteSelectedSkills', 'switchCVMethod', 'clearCVUpload', 'saveAboutInfo',
-  'showTestimonialForm', 'hideTestimonialForm', 'showTimelineForm', 'hideTimelineForm',
-  'showServiceForm', 'hideServiceForm', 'showCertificationForm', 'hideCertificationForm',
-  'showFAQForm', 'hideFAQForm', 'saveSettings', 'saveStatsInfo',
-  'toggleMaintenanceModeDisplay', 'handleFileImport'
-];
-
-adminFunctions.forEach(funcName => {
-  window[funcName] = function() {
-    // Fonction appelée - à implémenter si nécessaire
-  };
 });
