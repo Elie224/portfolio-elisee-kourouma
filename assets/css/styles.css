@@ -2711,7 +2711,7 @@ header.scrolled {
     align-items: flex-start;
     padding: calc(var(--espacement-3xl) + 60px) var(--espacement-xl) var(--espacement-xl);
     gap: var(--espacement-sm);
-    transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.4s, opacity 0.4s;
+    transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.4s, opacity 0.4s, transform 0.4s;
     overflow-y: auto;
     box-shadow: 8px 0 48px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
     -webkit-overflow-scrolling: touch;
@@ -2720,8 +2720,10 @@ header.scrolled {
     pointer-events: none !important;
     opacity: 0 !important;
     transform: translateX(-100%) !important;
-    /* Forcer le menu complètement hors écran */
-    clip-path: inset(0 0 0 100%);
+    /* Forcer le menu complètement hors écran avec plusieurs méthodes */
+    clip-path: inset(0 0 0 100%) !important;
+    /* Réduire le z-index quand il est caché pour éviter qu'il masque le contenu */
+    z-index: -1 !important;
   }
   
   .nav-links.active {
@@ -2730,7 +2732,9 @@ header.scrolled {
     pointer-events: all !important;
     opacity: 1 !important;
     transform: translateX(0) !important;
-    clip-path: inset(0 0 0 0);
+    clip-path: inset(0 0 0 0) !important;
+    /* Restaurer le z-index quand le menu est actif */
+    z-index: var(--z-mobile-menu) !important;
   }
   
   /* Bordure animée avec gradient en haut */

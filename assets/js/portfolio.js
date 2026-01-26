@@ -1814,6 +1814,8 @@ document.addEventListener('DOMContentLoaded', function() {
     navigation.style.setProperty('pointer-events', 'none', 'important');
     navigation.style.setProperty('opacity', '0', 'important');
     navigation.style.setProperty('transform', 'translateX(-100%)', 'important');
+    navigation.style.setProperty('clip-path', 'inset(0 0 0 100%)', 'important');
+    navigation.style.setProperty('z-index', '-1', 'important');
     
     function basculerMenu() {
       const estOuvert = navigation.classList.contains('active');
@@ -1838,6 +1840,8 @@ document.addEventListener('DOMContentLoaded', function() {
         navigation.style.setProperty('pointer-events', 'none', 'important');
         navigation.style.setProperty('opacity', '0', 'important');
         navigation.style.setProperty('transform', 'translateX(-100%)', 'important');
+        navigation.style.setProperty('clip-path', 'inset(0 0 0 100%)', 'important');
+        navigation.style.setProperty('z-index', '-1', 'important');
       } else {
         // Ouvre le menu
         navigation.classList.add('active');
@@ -1858,6 +1862,8 @@ document.addEventListener('DOMContentLoaded', function() {
         navigation.style.setProperty('pointer-events', 'all', 'important');
         navigation.style.setProperty('opacity', '1', 'important');
         navigation.style.setProperty('transform', 'translateX(0)', 'important');
+        navigation.style.setProperty('clip-path', 'inset(0 0 0 0)', 'important');
+        navigation.style.setProperty('z-index', 'var(--z-mobile-menu)', 'important');
       }
     }
     
@@ -1915,9 +1921,11 @@ document.addEventListener('DOMContentLoaded', function() {
       navigation.style.setProperty('pointer-events', 'none', 'important');
       navigation.style.setProperty('opacity', '0', 'important');
       navigation.style.setProperty('transform', 'translateX(-100%)', 'important');
+      navigation.style.setProperty('clip-path', 'inset(0 0 0 100%)', 'important');
+      navigation.style.setProperty('z-index', '-1', 'important');
       // Log pour debug
       if (estEnDeveloppement) {
-        log('🔧 Menu mobile forcé à left: -100%');
+        log('🔧 Menu mobile forcé à left: -100% avec z-index: -1');
       }
     }
     
