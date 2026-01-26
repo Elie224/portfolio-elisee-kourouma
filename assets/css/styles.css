@@ -422,6 +422,13 @@ p {
   pointer-events: auto !important;
   user-select: none;
   -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.carousel-btn span {
+  pointer-events: none;
+  user-select: none;
 }
 
 .carousel-btn:hover {

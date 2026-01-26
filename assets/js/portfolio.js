@@ -1348,47 +1348,62 @@ document.addEventListener('DOMContentLoaded', function() {
       }, 600);
     }
     
-    // Event listeners pour les boutons - avec gestion d'erreur et logs
+    // Event listeners pour les boutons - approche simplifiée et directe
     function handleNextClick(e) {
       e.preventDefault();
       e.stopPropagation();
-      log('🔄 Clic sur bouton suivant');
+      e.stopImmediatePropagation();
+      log('🔄 Clic sur bouton suivant détecté');
       slideSuivant();
+      return false;
     }
     
     function handlePrevClick(e) {
       e.preventDefault();
       e.stopPropagation();
-      log('🔄 Clic sur bouton précédent');
+      e.stopImmediatePropagation();
+      log('🔄 Clic sur bouton précédent détecté');
       slidePrecedent();
+      return false;
     }
     
-    // S'assurer que les boutons sont cliquables et ajouter les event listeners
+    // S'assurer que les boutons sont cliquables
     nextBtn.style.pointerEvents = 'auto';
     prevBtn.style.pointerEvents = 'auto';
     nextBtn.style.cursor = 'pointer';
     prevBtn.style.cursor = 'pointer';
     nextBtn.style.zIndex = '100';
     prevBtn.style.zIndex = '100';
+    nextBtn.disabled = false;
+    prevBtn.disabled = false;
     
-    // Retirer les anciens event listeners s'ils existent en clonant les boutons
-    const newNextBtn = nextBtn.cloneNode(true);
-    nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
-    const newPrevBtn = prevBtn.cloneNode(true);
-    prevBtn.parentNode.replaceChild(newPrevBtn, prevBtn);
+    // Retirer tous les anciens event listeners en clonant les boutons
+    const nextBtnClone = nextBtn.cloneNode(true);
+    const prevBtnClone = prevBtn.cloneNode(true);
+    nextBtn.parentNode.replaceChild(nextBtnClone, nextBtn);
+    prevBtn.parentNode.replaceChild(prevBtnClone, prevBtn);
     
     // Référencer les nouveaux boutons
     const actualNextBtn = document.getElementById('carousel-next');
     const actualPrevBtn = document.getElementById('carousel-prev');
     
     if (!actualNextBtn || !actualPrevBtn) {
-      logWarn('❌ Impossible de trouver les boutons après clonage');
+      logWarn('❌ Impossible de trouver les boutons après clonage', {
+        nextBtn: !!actualNextBtn,
+        prevBtn: !!actualPrevBtn
+      });
       return;
     }
     
-    // Ajouter les nouveaux event listeners
-    actualNextBtn.addEventListener('click', handleNextClick, { passive: false });
-    actualPrevBtn.addEventListener('click', handlePrevClick, { passive: false });
+    // Ajouter les event listeners avec capture pour s'assurer qu'ils sont bien déclenchés
+    actualNextBtn.addEventListener('click', handleNextClick, true);
+    actualNextBtn.addEventListener('click', handleNextClick, false);
+    actualPrevBtn.addEventListener('click', handlePrevClick, true);
+    actualPrevBtn.addEventListener('click', handlePrevClick, false);
+    
+    // Ajouter aussi via onclick comme fallback
+    actualNextBtn.onclick = handleNextClick;
+    actualPrevBtn.onclick = handlePrevClick;
     
     // S'assurer que les boutons sont cliquables
     actualNextBtn.style.pointerEvents = 'auto';
@@ -1397,15 +1412,28 @@ document.addEventListener('DOMContentLoaded', function() {
     actualPrevBtn.style.cursor = 'pointer';
     actualNextBtn.style.zIndex = '100';
     actualPrevBtn.style.zIndex = '100';
+    actualNextBtn.disabled = false;
+    actualPrevBtn.disabled = false;
     
     // Mettre à jour les références globales pour mettreAJourCarrousel
     getNextBtn = () => document.getElementById('carousel-next');
     getPrevBtn = () => document.getElementById('carousel-prev');
     
+    // Test de clic pour vérifier que les boutons fonctionnent
     log('✅ Event listeners attachés aux boutons carousel', {
       nextBtn: !!actualNextBtn,
-      prevBtn: !!actualPrevBtn
+      prevBtn: !!actualPrevBtn,
+      nextBtnId: actualNextBtn.id,
+      prevBtnId: actualPrevBtn.id
     });
+    
+    // Vérifier que les boutons sont bien dans le DOM
+    if (actualNextBtn.offsetParent === null && actualNextBtn.style.display !== 'none') {
+      logWarn('⚠️ Bouton suivant peut être masqué ou hors du viewport');
+    }
+    if (actualPrevBtn.offsetParent === null && actualPrevBtn.style.display !== 'none') {
+      logWarn('⚠️ Bouton précédent peut être masqué ou hors du viewport');
+    }
     
     // Support du swipe tactile pour mobile
     let touchStartX = 0;
