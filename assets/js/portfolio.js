@@ -1997,12 +1997,23 @@ document.addEventListener('DOMContentLoaded', function() {
         
         try {
           // Envoyer au backend (endpoint: /api/portfolio/contact)
-          const reponse = await fetch(`${MON_SERVEUR}/portfolio/contact`, {
+          const url = `${MON_SERVEUR}/portfolio/contact`;
+          log('📤 Envoi du message à:', url);
+          log('📤 Données:', { name, email, subject: subject || 'Sans objet', messageLength: message.length });
+          
+          const reponse = await fetch(url, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
             },
             body: JSON.stringify({ name, email, subject, message })
+          });
+          
+          log('📥 Réponse reçue:', {
+            status: reponse.status,
+            statusText: reponse.statusText,
+            ok: reponse.ok,
+            headers: Object.fromEntries(reponse.headers.entries())
           });
           
           // Vérifier si la réponse est OK avant de parser JSON
@@ -2067,16 +2078,28 @@ document.addEventListener('DOMContentLoaded', function() {
           
         } catch (erreur) {
           logError('Erreur lors de l\'envoi du message:', erreur);
+          logError('Détails de l\'erreur:', {
+            message: erreur.message,
+            name: erreur.name,
+            stack: erreur.stack
+          });
           
           // Message d'erreur plus détaillé
           let errorMessage = '❌ Erreur lors de l\'envoi du message. ';
           
           if (erreur.message) {
-            if (erreur.message.includes('Failed to fetch') || erreur.message.includes('network')) {
-              errorMessage += 'Problème de connexion au serveur. ';
+            if (erreur.message.includes('Failed to fetch') || erreur.message.includes('network') || erreur.message.includes('CORS')) {
+              errorMessage += 'Problème de connexion au serveur ou configuration CORS. ';
+              logError('⚠️ Problème réseau/CORS détecté. Vérifiez que le backend est accessible et que CORS est configuré.');
+            } else if (erreur.message.includes('400')) {
+              errorMessage += 'Données invalides. Vérifiez que tous les champs sont remplis correctement. ';
+            } else if (erreur.message.includes('500')) {
+              errorMessage += 'Erreur serveur. Le serveur a rencontré un problème. ';
             } else {
               errorMessage += erreur.message + ' ';
             }
+          } else {
+            errorMessage += 'Erreur inconnue. ';
           }
           
           errorMessage += 'Veuillez réessayer ou m\'envoyer un email directement à ' + MES_CONTACTS.email;
