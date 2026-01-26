@@ -2774,15 +2774,36 @@ document.addEventListener('DOMContentLoaded', function() {
     // S'assurer que le contenu principal est visible (fallback pour éviter l'écran noir)
     const mainContent = document.querySelector('main');
     if (mainContent) {
-      mainContent.style.display = '';
-      mainContent.style.visibility = 'visible';
-      mainContent.style.opacity = '1';
+      mainContent.style.cssText = `
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: relative !important;
+        z-index: var(--z-base) !important;
+      `;
     }
     const header = document.querySelector('header');
     if (header) {
-      header.style.display = '';
-      header.style.visibility = 'visible';
+      header.style.cssText = `
+        display: block !important;
+        visibility: visible !important;
+        position: relative !important;
+        z-index: var(--z-sticky) !important;
+      `;
     }
+    
+    // S'assurer que body et html ne sont pas masqués
+    document.body.style.cssText = `
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      overflow-x: hidden !important;
+    `;
+    document.documentElement.style.cssText = `
+      display: block !important;
+      visibility: visible !important;
+      overflow-x: hidden !important;
+    `;
     
     // Vérifier IMMÉDIATEMENT le mode maintenance avec les données du localStorage
     // (avant même le chargement depuis le serveur)
