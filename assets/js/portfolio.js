@@ -438,9 +438,12 @@ document.addEventListener('DOMContentLoaded', function() {
         donnees.timeline = donneesParDefaut.timeline;
       }
       
-      // Charger Google Analytics si configuré
+      // Charger Google Analytics si configuré (priorité haute pour un suivi fiable)
       if (donnees.settings?.analytics?.googleAnalytics) {
-        chargerGoogleAnalytics(donnees.settings.analytics.googleAnalytics);
+        // Charger immédiatement, ne pas attendre
+        setTimeout(() => {
+          chargerGoogleAnalytics(donnees.settings.analytics.googleAnalytics);
+        }, 0);
       }
       
       return donnees;
@@ -648,7 +651,12 @@ document.addEventListener('DOMContentLoaded', function() {
       afficherEvenementsTech(mesDonnees.techEvents || []);
       
       // Charger Google Analytics si configuré
-      chargerGoogleAnalytics(mesDonnees.settings?.analytics?.googleAnalytics);
+      // Charger Google Analytics immédiatement (priorité haute)
+      if (mesDonnees.settings?.analytics?.googleAnalytics) {
+        setTimeout(() => {
+          chargerGoogleAnalytics(mesDonnees.settings.analytics.googleAnalytics);
+        }, 0);
+      }
       
       // Vérifier le mode maintenance après affichage (répétition pour être sûr)
       setTimeout(() => {
@@ -727,7 +735,12 @@ document.addEventListener('DOMContentLoaded', function() {
     afficherMesStats(donnees.about?.stats);
     
     // Charger Google Analytics si configuré
-    chargerGoogleAnalytics(donnees.settings?.analytics?.googleAnalytics);
+    // Charger Google Analytics immédiatement (priorité haute)
+    if (donnees.settings?.analytics?.googleAnalytics) {
+      setTimeout(() => {
+        chargerGoogleAnalytics(donnees.settings.analytics.googleAnalytics);
+      }, 0);
+    }
     
       // Mettre à jour les liens CV (une seule fois avec debounce)
     mettreAJourLiensCV(donnees?.links);
@@ -1494,56 +1507,125 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 100);
   }
   
-  // Charge Google Analytics si un ID est configuré
+  // Charge Google Analytics si un ID est configuré - Version améliorée et plus fiable
   function chargerGoogleAnalytics(gaId) {
     if (!gaId || gaId.trim() === '') {
-      log('📊 Google Analytics non configuré');
+      log('📊 Google Analytics non configuré - ID manquant');
+      return;
+    }
+    
+    // Nettoyer l'ID (enlever les espaces, etc.)
+    gaId = gaId.trim();
+    
+    // Vérifier le format de l'ID (doit commencer par G-)
+    if (!gaId.match(/^G-[A-Z0-9]+$/i)) {
+      logError('❌ Format ID Google Analytics invalide. Format attendu: G-XXXXXXXXXX');
       return;
     }
     
     // Vérifier si Google Analytics est déjà chargé
-    if (window.gtag || document.querySelector('script[src*="googletagmanager.com"]')) {
-      log('📊 Google Analytics déjà chargé');
+    if (window.gtag && window.dataLayer) {
+      log('📊 Google Analytics déjà chargé, envoi de page_view...');
+      // Envoyer un événement page_view même si déjà chargé
+      try {
+        window.gtag('config', gaId, {
+          page_path: window.location.pathname + window.location.search,
+          page_title: document.title,
+          page_location: window.location.href
+        });
+        log('✅ Événement page_view envoyé');
+      } catch (e) {
+        logError('Erreur lors de l\'envoi de page_view:', e);
+      }
       return;
     }
     
     log('📊 Chargement de Google Analytics:', gaId);
     
-    // Injecter le script Google Analytics (GA4)
-    const script1 = document.createElement('script');
-    script1.async = true;
-    script1.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
-    document.head.appendChild(script1);
+    // Initialiser dataLayer AVANT tout
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){window.dataLayer.push(arguments);}
+    window.gtag = gtag;
+    gtag('js', new Date());
     
-    // Injecter la configuration gtag
+    // Injecter la configuration gtag IMMÉDIATEMENT (avant le script externe)
     const script2 = document.createElement('script');
     script2.innerHTML = `
       window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
+      function gtag(){window.dataLayer.push(arguments);}
+      window.gtag = gtag;
       gtag('js', new Date());
       gtag('config', '${gaId}', {
-        page_path: window.location.pathname,
-        page_title: document.title
+        page_path: window.location.pathname + window.location.search,
+        page_title: document.title,
+        page_location: window.location.href,
+        send_page_view: true
       });
     `;
-    document.head.appendChild(script2);
+    document.head.insertBefore(script2, document.head.firstChild);
     
-    // Suivre les changements de page pour les SPA
+    // Injecter le script Google Analytics (GA4) - Chargement asynchrone
+    const script1 = document.createElement('script');
+    script1.async = true;
+    script1.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
+    script1.onload = function() {
+      log('✅ Script Google Analytics chargé');
+      // S'assurer qu'un page_view est envoyé après le chargement
+      if (window.gtag) {
+        setTimeout(() => {
+          try {
+            window.gtag('event', 'page_view', {
+              page_path: window.location.pathname + window.location.search,
+              page_title: document.title,
+              page_location: window.location.href
+            });
+            log('✅ Événement page_view envoyé après chargement');
+          } catch (e) {
+            logError('Erreur lors de l\'envoi de page_view:', e);
+          }
+        }, 100);
+      }
+    };
+    script1.onerror = function() {
+      logError('❌ Erreur lors du chargement du script Google Analytics');
+    };
+    document.head.appendChild(script1);
+    
+    // Suivre les changements de page pour les SPA (navigation côté client)
     let lastUrl = location.href;
-    new MutationObserver(() => {
+    const observer = new MutationObserver(() => {
       const url = location.href;
       if (url !== lastUrl) {
         lastUrl = url;
         if (window.gtag) {
-          gtag('config', gaId, {
-            page_path: window.location.pathname,
-            page_title: document.title
-          });
+          try {
+            window.gtag('config', gaId, {
+              page_path: window.location.pathname + window.location.search,
+              page_title: document.title,
+              page_location: window.location.href
+            });
+            log('📊 Page view envoyé pour:', window.location.pathname);
+          } catch (e) {
+            logError('Erreur lors de l\'envoi de page view:', e);
+          }
         }
       }
-    }).observe(document, { subtree: true, childList: true });
+    });
+    observer.observe(document, { subtree: true, childList: true });
     
-    log('✅ Google Analytics chargé avec succès');
+    // Envoyer un page_view immédiatement (même si le script n'est pas encore chargé, il sera dans la queue)
+    try {
+      gtag('event', 'page_view', {
+        page_path: window.location.pathname + window.location.search,
+        page_title: document.title,
+        page_location: window.location.href
+      });
+      log('✅ Événement page_view initial envoyé');
+    } catch (e) {
+      logError('Erreur lors de l\'envoi initial de page_view:', e);
+    }
+    
+    log('✅ Google Analytics initialisé avec succès');
   }
   
   // Affiche mon parcours (timeline)
