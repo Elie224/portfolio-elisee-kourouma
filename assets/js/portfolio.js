@@ -632,6 +632,19 @@ document.addEventListener('DOMContentLoaded', function() {
       });
       
       
+      // S'assurer que le contenu est visible (fallback pour éviter l'écran noir)
+      const mainContent = document.querySelector('main');
+      if (mainContent) {
+        mainContent.style.display = '';
+        mainContent.style.visibility = 'visible';
+        mainContent.style.opacity = '1';
+      }
+      const header = document.querySelector('header');
+      if (header) {
+        header.style.display = '';
+        header.style.visibility = 'visible';
+      }
+      
       // S'assurer que le DOM est prêt avant d'afficher
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
@@ -679,9 +692,37 @@ document.addEventListener('DOMContentLoaded', function() {
       
     } catch (erreur) {
       // En cas d'erreur, utilise les données par défaut
+      logError('❌ Erreur lors du chargement, utilisation des données par défaut:', erreur);
+      
+      // S'assurer que le contenu est visible même en cas d'erreur
+      const mainContent = document.querySelector('main');
+      if (mainContent) {
+        mainContent.style.display = '';
+        mainContent.style.visibility = 'visible';
+        mainContent.style.opacity = '1';
+      }
+      const header = document.querySelector('header');
+      if (header) {
+        header.style.display = '';
+        header.style.visibility = 'visible';
+      }
+      
       const donnees = obtenirMesDonnees();
       donneesActuelles = donnees;
       hashDonneesActuelles = calculerHash(donnees);
+      
+      // S'assurer que le contenu est visible même en cas d'erreur
+      const mainContent = document.querySelector('main');
+      if (mainContent) {
+        mainContent.style.display = '';
+        mainContent.style.visibility = 'visible';
+        mainContent.style.opacity = '1';
+      }
+      const header = document.querySelector('header');
+      if (header) {
+        header.style.display = '';
+        header.style.visibility = 'visible';
+      }
       
       afficherMesDonnees(donnees);
       afficherCertifications(donnees.certifications || []);
@@ -2649,6 +2690,19 @@ document.addEventListener('DOMContentLoaded', function() {
     mettreAJourAnnee();
     nettoyerDonnees();
     
+    // S'assurer que le contenu principal est visible (fallback pour éviter l'écran noir)
+    const mainContent = document.querySelector('main');
+    if (mainContent) {
+      mainContent.style.display = '';
+      mainContent.style.visibility = 'visible';
+      mainContent.style.opacity = '1';
+    }
+    const header = document.querySelector('header');
+    if (header) {
+      header.style.display = '';
+      header.style.visibility = 'visible';
+    }
+    
     // Vérifier IMMÉDIATEMENT le mode maintenance avec les données du localStorage
     // (avant même le chargement depuis le serveur)
     const donneesLocales = localStorage.getItem('portfolioData');
@@ -2663,7 +2717,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
     
-    // Chargement des données
+    // Chargement des données avec gestion d'erreur améliorée
     chargerEtAfficherDonnees().then(() => {
       // Initialiser le hash après le premier chargement
       const donnees = obtenirMesDonnees();
@@ -2704,6 +2758,26 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Démarrer la vérification automatique
       demarrerVerificationAutomatique();
+    }).catch((erreur) => {
+      // Gestion d'erreur pour éviter l'écran noir
+      logError('❌ Erreur lors du chargement des données:', erreur);
+      
+      // S'assurer que le contenu est visible même en cas d'erreur
+      const mainContent = document.querySelector('main');
+      if (mainContent) {
+        mainContent.style.display = '';
+        mainContent.style.visibility = 'visible';
+        mainContent.style.opacity = '1';
+      }
+      const header = document.querySelector('header');
+      if (header) {
+        header.style.display = '';
+        header.style.visibility = 'visible';
+      }
+      
+      // Charger les données par défaut en cas d'erreur
+      const donnees = obtenirMesDonnees();
+      afficherMesDonnees(donnees);
     });
     
     // Configuration de l'interface
