@@ -1733,7 +1733,22 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (statProjects) statProjects.textContent = mesDonneesActuelles.projects?.length || 0;
     if (statSkills) statSkills.textContent = mesDonneesActuelles.skills?.length || 0;
-    if (statVisitors) statVisitors.textContent = '-';
+    
+    // Afficher le statut Google Analytics
+    if (statVisitors) {
+      const hasAnalytics = mesDonneesActuelles.settings?.analytics?.googleAnalytics;
+      if (hasAnalytics && hasAnalytics.trim() !== '') {
+        // Google Analytics est configuré - afficher un indicateur actif
+        statVisitors.innerHTML = '<span style="color: var(--success);">✓</span> Actif';
+        statVisitors.title = `Google Analytics configuré (ID: ${hasAnalytics}). Voir les données sur analytics.google.com`;
+      } else {
+        // Google Analytics non configuré
+        statVisitors.textContent = 'Non configuré';
+        statVisitors.style.color = 'var(--muted)';
+        statVisitors.title = 'Configurez Google Analytics dans l\'onglet Paramètres > Analytics';
+      }
+    }
+    
     if (statLastUpdate) statLastUpdate.textContent = new Date().toLocaleDateString('fr-FR');
     
     // Stats dans l'onglet stats
