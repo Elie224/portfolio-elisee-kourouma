@@ -1347,7 +1347,7 @@ document.addEventListener('DOMContentLoaded', function() {
       setTimeout(() => {
         isTransitioning = false;
         console.log('✅ Transition terminée');
-      }, 500);
+      }, 600);
     }
     
     // Slide précédent
@@ -1366,7 +1366,7 @@ document.addEventListener('DOMContentLoaded', function() {
       setTimeout(() => {
         isTransitioning = false;
         console.log('✅ Transition terminée');
-      }, 500);
+      }, 600);
     }
     
     // Event listeners pour les boutons - approche directe sans clonage
