@@ -190,10 +190,23 @@ app.use((req, res, next) => {
   next();
 });
 
-// Appliquer CORS avec le chemin stocké
+// Appliquer CORS avec le chemin stocké et gestion d'erreurs
 app.use((req, res, next) => {
   global.currentPath = req.path;
-  cors(corsOptions)(req, res, next);
+  
+  // Wrapper CORS pour capturer les erreurs avant qu'elles n'atteignent le middleware global
+  cors(corsOptions)(req, res, (err) => {
+    // Si erreur CORS, répondre directement sans passer au middleware suivant
+    if (err) {
+      // Ne pas logger comme erreur serveur - c'est normal pour les requêtes bloquées
+      return res.status(403).json({ 
+        error: 'Accès refusé',
+        message: 'Origine non autorisée',
+        code: 'CORS_ERROR'
+      });
+    }
+    next();
+  });
 });
 
 app.use(express.json({ limit: '10mb' })); // Augmenter la limite pour les gros objets
@@ -204,7 +217,17 @@ app.options('*', (req, res, next) => {
   if (req.path === '/health') {
     return res.status(200).end();
   }
-  return cors(corsOptions)(req, res, next);
+  // Wrapper CORS pour capturer les erreurs
+  cors(corsOptions)(req, res, (err) => {
+    if (err) {
+      // Erreur CORS - répondre silencieusement
+      return res.status(403).json({ 
+        error: 'Accès refusé',
+        code: 'CORS_ERROR'
+      });
+    }
+    next();
+  });
 });
 
 // Routes
@@ -330,9 +353,20 @@ mongoose.connect(process.env.MONGODB_URI)
 
 // Gestion globale des erreurs (middleware de fin)
 app.use((err, req, res, next) => {
-  // Ignorer les erreurs CORS (gérées silencieusement par le middleware CORS)
-  if (err.message && (err.message.includes('CORS') || err.message.includes('cors') || err.message.includes('Origine'))) {
-    // Erreur CORS - répondre avec un statut approprié mais ne pas logger comme erreur serveur
+  // Ignorer complètement les erreurs CORS (déjà gérées par le middleware CORS)
+  // Vérifier plusieurs patterns pour détecter les erreurs CORS
+  const isCorsError = err.message && (
+    err.message.includes('CORS') || 
+    err.message.includes('cors') || 
+    err.message.includes('Origine') ||
+    err.message.includes('Origin') ||
+    err.message.includes('non autorisée') ||
+    err.message.includes('not allowed')
+  );
+  
+  if (isCorsError) {
+    // Erreur CORS - répondre silencieusement sans logger
+    // (déjà gérée par le middleware CORS, mais au cas où)
     return res.status(403).json({ 
       error: 'Accès refusé',
       message: 'Origine non autorisée',
