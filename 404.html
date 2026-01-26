@@ -3,7 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>404 - Page non trouvée</title>
+    <title>404 - Page non trouvée | Portfolio Nema Elisée Kourouma</title>
+    <meta name="description" content="La page que vous recherchez n'existe pas. Retournez à l'accueil pour explorer mon portfolio." />
+    <meta name="robots" content="noindex,nofollow" />
+    <link rel="canonical" href="https://elisee-kourouma.fr/404.html" />
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💼</text></svg>" />
     <link rel="stylesheet" href="assets/css/styles.css" />
   </head>
   <body class="dark">
@@ -11,13 +15,23 @@
     <a href="#main-content" class="skip-link">Aller au contenu principal</a>
     
     <header class="container">
-      <nav class="nav">
+      <nav class="nav" role="navigation" aria-label="Navigation principale" id="nav-menu">
         <a class="brand" href="index.html">Mon Portfolio</a>
-        <div class="nav-links">
+        <button id="mobile-menu-toggle" class="menu-mobile-toggle" aria-label="Menu" aria-expanded="false">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <div class="menu-mobile-overlay" id="mobile-menu-overlay"></div>
+        <div class="nav-links" id="nav-links">
           <a href="index.html">Accueil</a>
           <a href="about.html">À propos</a>
           <a href="projects.html">Projets</a>
           <a href="contact.html">Contact</a>
+          <a href="#" target="_blank" rel="noopener noreferrer" data-cv-link="true">CV</a>
+          <a href="admin.html" class="admin-nav-link admin-nav-hidden">
+            <span>🔐</span> <span class="admin-text">Admin</span>
+          </a>
         </div>
       </nav>
     </header>

@@ -238,7 +238,7 @@ mongoose.connect(process.env.MONGODB_URI)
           email: process.env.ADMIN_EMAIL,
           phone: "",
           photo: "assets/photo.jpeg",
-          currentEducation: "Master 1 en Intelligence Artificielle à l'École Supérieure d'Informatique de Paris",
+          currentEducation: "Master en Intelligence Artificielle",
           previousEducation: "Licence en mathématiques et informatique (USMBA Fès)",
           additionalInfo: []
         },
@@ -246,7 +246,7 @@ mongoose.connect(process.env.MONGODB_URI)
         skills: [],
         links: { cv: "", cvFile: "", cvFileName: "", cvFileSize: 0, social: [] },
         about: { 
-          heroDescription: "Master 1 en Intelligence Artificielle",
+          heroDescription: "Master en Intelligence Artificielle",
           stats: { projects: 0, experience: 2, technologies: 10 }
         },
         timeline: [],

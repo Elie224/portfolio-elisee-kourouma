@@ -442,8 +442,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const donneesParDefaut = {
       personal: {
         name: 'Nema Elisée Kourouma',
-        title: 'Étudiant en Master 1 Intelligence Artificielle',
-        description: 'Actuellement en Master 1 Intelligence Artificielle à l\'École Supérieure d\'Informatique de Paris (ESGI), je me spécialise dans le développement d\'applications intelligentes. Mon parcours académique, enrichi par une licence en mathématiques et informatique obtenue à l\'USMBA de Fès, me permet d\'allier rigueur mathématique et créativité technique.',
+        title: 'Étudiant en Master Intelligence Artificielle',
+        description: 'Actuellement en Master Intelligence Artificielle. Mon parcours académique, enrichi par une licence en mathématiques et informatique obtenue à l\'USMBA de Fès, me permet d\'allier rigueur mathématique et créativité technique.',
         email: MES_CONTACTS.email,
         phone: MES_CONTACTS.telephone,
         photo: 'assets/photo.jpeg'
@@ -1352,11 +1352,12 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Affiche mes compétences avec design moderne
   function afficherMesCompetences(competences) {
-    const container = document.getElementById('homepage-skills');
-    if (!container || !competences || !Array.isArray(competences)) return;
+    // Chercher d'abord sur la page about, sinon homepage
+    const container = document.getElementById('about-skills') || document.getElementById('homepage-skills');
+    if (!container) return;
     
-    if (competences.length === 0) {
-      container.innerHTML = '<p class="text-center muted">Compétences en cours de chargement...</p>';
+    if (!competences || !Array.isArray(competences) || competences.length === 0) {
+      container.innerHTML = '<p class="muted" style="text-align: center; padding: 40px 20px; grid-column: 1 / -1;">Aucune compétence disponible pour le moment.</p>';
       return;
     }
     
@@ -1405,10 +1406,14 @@ document.addEventListener('DOMContentLoaded', function() {
   // Affiche mon parcours (timeline)
   function afficherMonParcours(parcours) {
     // Cette fonction sera utilisée sur la page À propos
-    if (!parcours || !Array.isArray(parcours)) return;
-    
-    const container = document.getElementById('timeline-container');
+    // Chercher d'abord sur la page about, sinon timeline-container
+    const container = document.getElementById('about-timeline') || document.getElementById('timeline-container');
     if (!container) return;
+    
+    if (!parcours || !Array.isArray(parcours) || parcours.length === 0) {
+      container.innerHTML = '<p class="muted" style="text-align: center; padding: 40px 20px;">Aucun élément de parcours disponible pour le moment.</p>';
+      return;
+    }
     
     container.innerHTML = parcours.map(etape => `
       <div class="timeline-item">

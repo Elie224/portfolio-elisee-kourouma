@@ -1,7 +1,7 @@
 # 💼 Portfolio de Nema Elisée Kourouma
 
-> **Étudiant en Master 1 Intelligence Artificielle**  
-> Master 1 IA à l'École Supérieure d'Informatique de Paris  
+> **Étudiant en Master Intelligence Artificielle**  
+> Master Intelligence Artificielle  
 > 🌐 Site web : [elisee-kourouma.fr](https://elisee-kourouma.fr)
 
 ## 🚀 Ce que vous trouverez ici
