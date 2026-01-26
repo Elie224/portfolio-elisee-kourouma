@@ -646,16 +646,16 @@ document.addEventListener('DOMContentLoaded', function() {
       
       
       // S'assurer que le contenu est visible (fallback pour éviter l'écran noir)
-      const mainContent = document.querySelector('main');
-      if (mainContent) {
-        mainContent.style.display = '';
-        mainContent.style.visibility = 'visible';
-        mainContent.style.opacity = '1';
+      const mainContentDisplay = document.querySelector('main');
+      if (mainContentDisplay) {
+        mainContentDisplay.style.display = '';
+        mainContentDisplay.style.visibility = 'visible';
+        mainContentDisplay.style.opacity = '1';
       }
-      const header = document.querySelector('header');
-      if (header) {
-        header.style.display = '';
-        header.style.visibility = 'visible';
+      const headerDisplay = document.querySelector('header');
+      if (headerDisplay) {
+        headerDisplay.style.display = '';
+        headerDisplay.style.visibility = 'visible';
       }
       
       // S'assurer que le DOM est prêt avant d'afficher
