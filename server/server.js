@@ -40,13 +40,18 @@ app.get('/health', (req, res) => {
 
 // Démarrer le serveur IMMÉDIATEMENT après la route health check
 // Cela permet au health check d'être disponible dès que possible
-const PORT = process.env.PORT || 3000;
+// Le PORT est déjà défini plus haut
 console.log(`📡 Démarrage du serveur sur le port ${PORT}...`);
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Serveur démarré avec succès sur le port ${PORT}`);
-  console.log(`📡 API disponible sur http://0.0.0.0:${PORT}/api/portfolio`);
-  console.log(`🌐 Health check disponible sur http://0.0.0.0:${PORT}/health`);
-});
+try {
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Serveur démarré avec succès sur le port ${PORT}`);
+    console.log(`📡 API disponible sur http://0.0.0.0:${PORT}/api/portfolio`);
+    console.log(`🌐 Health check disponible sur http://0.0.0.0:${PORT}/health`);
+  });
+} catch (error) {
+  console.error('❌ Erreur lors du démarrage du serveur:', error);
+  process.exit(1);
+}
 
 // Configuration de sécurité avec Helmet
 app.use(helmet({
