@@ -235,13 +235,15 @@ const portfolioRoutes = require('./routes/portfolio');
 app.use('/api/portfolio', portfolioRoutes);
 
 // Validation des variables d'environnement obligatoires
+// Note: Ne pas bloquer le démarrage, mais logger un avertissement
 const requiredEnvVars = ['MONGODB_URI', 'JWT_SECRET', 'ADMIN_EMAIL', 'ADMIN_PASSWORD_HASH'];
 const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
 
 if (missingVars.length > 0) {
   console.error('❌ Variables d\'environnement manquantes:', missingVars.join(', '));
-  console.error('💡 Vérifiez votre fichier .env');
-  process.exit(1);
+  console.error('💡 Vérifiez vos secrets Fly.io avec: flyctl secrets list -a portfolio-backend-elisee');
+  console.warn('⚠️ Le serveur démarre quand même, mais certaines fonctionnalités peuvent ne pas fonctionner');
+  // Ne pas faire process.exit(1) - laisser le serveur démarrer pour le diagnostic
 }
 
 // Démarrer le serveur IMMÉDIATEMENT (même si MongoDB n'est pas connecté)
