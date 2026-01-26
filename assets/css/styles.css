@@ -833,7 +833,7 @@ header.scrolled {
 
 /* Overlay du menu mobile - Design moderne */
 .menu-mobile-overlay {
-  display: none;
+  display: none !important;
   position: fixed;
   top: 0;
   left: 0;
@@ -844,7 +844,8 @@ header.scrolled {
   -webkit-backdrop-filter: blur(12px) saturate(180%);
   z-index: var(--z-mobile-overlay);
   opacity: 0;
-  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  visibility: hidden;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.4s;
   pointer-events: none;
 }
 
@@ -861,8 +862,9 @@ header.scrolled {
 }
 
 .menu-mobile-overlay.active {
-  display: block;
+  display: block !important;
   opacity: 1;
+  visibility: visible;
   pointer-events: all;
 }
 

@@ -1782,7 +1782,31 @@ document.addEventListener('DOMContentLoaded', function() {
     const navigation = document.getElementById('nav-links');
     const overlay = document.getElementById('mobile-menu-overlay');
     
-    if (!boutonMenu || !navigation || !overlay) return;
+    if (!boutonMenu || !navigation || !overlay) {
+      // Si les éléments n'existent pas, essayer de forcer la fermeture de l'overlay quand même
+      const overlayFallback = document.querySelector('.menu-mobile-overlay');
+      if (overlayFallback) {
+        overlayFallback.classList.remove('active');
+        overlayFallback.style.display = 'none';
+        overlayFallback.style.visibility = 'hidden';
+        overlayFallback.style.opacity = '0';
+        overlayFallback.style.pointerEvents = 'none';
+      }
+      return;
+    }
+    
+    // FORCER la fermeture de l'overlay au chargement (sécurité)
+    overlay.classList.remove('active');
+    navigation.classList.remove('active');
+    boutonMenu.classList.remove('active');
+    boutonMenu.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+    
+    // Forcer aussi via le style inline pour être sûr
+    overlay.style.display = 'none';
+    overlay.style.visibility = 'hidden';
+    overlay.style.opacity = '0';
+    overlay.style.pointerEvents = 'none';
     
     function basculerMenu() {
       const estOuvert = navigation.classList.contains('active');
@@ -1794,6 +1818,12 @@ document.addEventListener('DOMContentLoaded', function() {
         boutonMenu.classList.remove('active');
         boutonMenu.setAttribute('aria-expanded', 'false');
         document.body.style.overflow = '';
+        
+        // Forcer la fermeture via style inline
+        overlay.style.display = 'none';
+        overlay.style.visibility = 'hidden';
+        overlay.style.opacity = '0';
+        overlay.style.pointerEvents = 'none';
       } else {
         // Ouvre le menu
         navigation.classList.add('active');
@@ -1801,6 +1831,12 @@ document.addEventListener('DOMContentLoaded', function() {
         boutonMenu.classList.add('active');
         boutonMenu.setAttribute('aria-expanded', 'true');
         document.body.style.overflow = 'hidden';
+        
+        // Forcer l'ouverture via style inline
+        overlay.style.display = 'block';
+        overlay.style.visibility = 'visible';
+        overlay.style.opacity = '1';
+        overlay.style.pointerEvents = 'all';
       }
     }
     
@@ -1826,6 +1862,32 @@ document.addEventListener('DOMContentLoaded', function() {
         basculerMenu();
       }
     });
+  }
+  
+  // Fonction pour forcer la fermeture de l'overlay au chargement (appelée immédiatement)
+  function forcerFermetureOverlay() {
+    const overlay = document.getElementById('mobile-menu-overlay') || document.querySelector('.menu-mobile-overlay');
+    const navigation = document.getElementById('nav-links');
+    const boutonMenu = document.getElementById('mobile-menu-toggle');
+    
+    if (overlay) {
+      overlay.classList.remove('active');
+      overlay.style.display = 'none';
+      overlay.style.visibility = 'hidden';
+      overlay.style.opacity = '0';
+      overlay.style.pointerEvents = 'none';
+    }
+    
+    if (navigation) {
+      navigation.classList.remove('active');
+    }
+    
+    if (boutonMenu) {
+      boutonMenu.classList.remove('active');
+      boutonMenu.setAttribute('aria-expanded', 'false');
+    }
+    
+    document.body.style.overflow = '';
   }
   
   // Configure le bouton retour en haut et la barre de progression
@@ -2686,6 +2748,9 @@ document.addEventListener('DOMContentLoaded', function() {
   /* ===== INITIALISATION ===== */
   
   function initialiserPortfolio() {
+    // FORCER la fermeture de l'overlay AVANT toute autre initialisation
+    forcerFermetureOverlay();
+    
     // Fonctions de base
     mettreAJourAnnee();
     nettoyerDonnees();
