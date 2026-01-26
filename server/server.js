@@ -250,10 +250,17 @@ if (missingVars.length > 0) {
 
 // Démarrer le serveur IMMÉDIATEMENT (même si MongoDB n'est pas connecté)
 // Écouter sur 0.0.0.0 pour être accessible depuis Fly.io
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Serveur démarré sur le port ${PORT}`);
-  console.log(`📡 API disponible sur http://0.0.0.0:${PORT}/api/portfolio`);
-});
+console.log(`📡 Tentative de démarrage du serveur sur le port ${PORT}...`);
+try {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Serveur démarré avec succès sur le port ${PORT}`);
+    console.log(`📡 API disponible sur http://0.0.0.0:${PORT}/api/portfolio`);
+    console.log(`🌐 Health check disponible sur http://0.0.0.0:${PORT}/health`);
+  });
+} catch (error) {
+  console.error('❌ Erreur lors du démarrage du serveur:', error);
+  process.exit(1);
+}
 
 // Connexion à MongoDB (en arrière-plan, ne bloque pas le démarrage du serveur)
 mongoose.connect(process.env.MONGODB_URI)
