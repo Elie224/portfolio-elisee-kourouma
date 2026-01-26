@@ -406,10 +406,10 @@ p {
 
 /* Boutons de navigation du carrousel */
 .carousel-btn {
-  position: absolute;
+  position: absolute !important;
   top: 50%;
   transform: translateY(-50%);
-  z-index: 100 !important;
+  z-index: 1000 !important;
   width: 48px;
   height: 48px;
   border-radius: 50%;
@@ -431,7 +431,7 @@ p {
 }
 
 .carousel-btn span {
-  pointer-events: none;
+  pointer-events: none !important;
   user-select: none;
 }
 

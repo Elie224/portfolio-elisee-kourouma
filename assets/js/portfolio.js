@@ -1272,18 +1272,19 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Mettre à jour la position du slider
     function mettreAJourCarrousel(smooth = true) {
-      if (isTransitioning) return;
-      
       calculerLargeurCarte();
       const offset = currentIndex * (cardWidth + gap);
       
+      console.log('🎯 mettreAJourCarrousel', { currentIndex, cardWidth, gap, offset, smooth });
+      
       if (smooth) {
-        track.style.transition = 'transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        track.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
       } else {
         track.style.transition = 'none';
       }
       
       track.style.transform = `translateX(-${offset}px)`;
+      console.log('✅ Transform appliqué:', track.style.transform);
       
       // Mettre à jour les indicateurs
       if (indicators) {
@@ -1326,69 +1327,124 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Slide suivant
     function slideSuivant() {
-      if (isTransitioning) return;
+      console.log('📊 slideSuivant appelé', { isTransitioning, currentIndex, nombreProjets });
+      if (isTransitioning) {
+        console.log('⏸️ Transition en cours, ignoré');
+        return;
+      }
       
       currentIndex = (currentIndex + 1) % nombreProjets;
+      console.log('➡️ Nouvel index:', currentIndex);
       isTransitioning = true;
       mettreAJourCarrousel(true);
       
       setTimeout(() => {
         isTransitioning = false;
+        console.log('✅ Transition terminée');
       }, 400);
     }
     
     // Slide précédent
     function slidePrecedent() {
-      if (isTransitioning) return;
+      console.log('📊 slidePrecedent appelé', { isTransitioning, currentIndex, nombreProjets });
+      if (isTransitioning) {
+        console.log('⏸️ Transition en cours, ignoré');
+        return;
+      }
       
       currentIndex = (currentIndex - 1 + nombreProjets) % nombreProjets;
+      console.log('⬅️ Nouvel index:', currentIndex);
       isTransitioning = true;
       mettreAJourCarrousel(true);
       
       setTimeout(() => {
         isTransitioning = false;
+        console.log('✅ Transition terminée');
       }, 400);
     }
     
     // Event listeners pour les boutons - approche directe sans clonage
     function handleNextClick(e) {
-      if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      console.log('🔄 Clic sur bouton suivant - slideSuivant appelé');
       slideSuivant();
+      return false;
     }
     
     function handlePrevClick(e) {
-      if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      console.log('🔄 Clic sur bouton précédent - slidePrecedent appelé');
       slidePrecedent();
+      return false;
     }
     
-    // S'assurer que les boutons sont cliquables
+    // S'assurer que les boutons sont cliquables et au-dessus de tout
     nextBtn.style.pointerEvents = 'auto';
     prevBtn.style.pointerEvents = 'auto';
     nextBtn.style.cursor = 'pointer';
     prevBtn.style.cursor = 'pointer';
-    nextBtn.style.zIndex = '100';
-    prevBtn.style.zIndex = '100';
+    nextBtn.style.zIndex = '1000';
+    prevBtn.style.zIndex = '1000';
+    nextBtn.style.position = 'absolute';
+    prevBtn.style.position = 'absolute';
     nextBtn.disabled = false;
     prevBtn.disabled = false;
-    nextBtn.type = 'button'; // Important pour éviter les soumissions de formulaire
+    nextBtn.type = 'button';
+    prevBtn.type = 'button';
     
-    // Attacher directement les event listeners (sans clonage)
-    nextBtn.onclick = handleNextClick;
-    prevBtn.onclick = handlePrevClick;
-    nextBtn.addEventListener('click', handleNextClick, false);
-    prevBtn.addEventListener('click', handlePrevClick, false);
+    // Retirer tous les anciens event listeners en remplaçant les boutons
+    const nextBtnParent = nextBtn.parentNode;
+    const prevBtnParent = prevBtn.parentNode;
+    const nextBtnClone = nextBtn.cloneNode(true);
+    const prevBtnClone = prevBtn.cloneNode(true);
+    nextBtnParent.replaceChild(nextBtnClone, nextBtn);
+    prevBtnParent.replaceChild(prevBtnClone, prevBtn);
+    
+    // Référencer les nouveaux boutons
+    const actualNextBtn = document.getElementById('carousel-next');
+    const actualPrevBtn = document.getElementById('carousel-prev');
+    
+    if (!actualNextBtn || !actualPrevBtn) {
+      logWarn('❌ Impossible de trouver les boutons après remplacement');
+      return;
+    }
+    
+    // Réappliquer les styles
+    actualNextBtn.style.pointerEvents = 'auto';
+    actualPrevBtn.style.pointerEvents = 'auto';
+    actualNextBtn.style.cursor = 'pointer';
+    actualPrevBtn.style.cursor = 'pointer';
+    actualNextBtn.style.zIndex = '1000';
+    actualPrevBtn.style.zIndex = '1000';
+    actualNextBtn.style.position = 'absolute';
+    actualPrevBtn.style.position = 'absolute';
+    actualNextBtn.disabled = false;
+    actualPrevBtn.disabled = false;
+    actualNextBtn.type = 'button';
+    actualPrevBtn.type = 'button';
+    
+    // Attacher les event listeners avec capture pour être sûr qu'ils sont déclenchés en premier
+    actualNextBtn.addEventListener('click', handleNextClick, true);
+    actualNextBtn.addEventListener('click', handleNextClick, false);
+    actualPrevBtn.addEventListener('click', handlePrevClick, true);
+    actualPrevBtn.addEventListener('click', handlePrevClick, false);
+    actualNextBtn.onclick = handleNextClick;
+    actualPrevBtn.onclick = handlePrevClick;
     
     // Mettre à jour les références globales pour mettreAJourCarrousel
-    getNextBtn = () => nextBtn;
-    getPrevBtn = () => prevBtn;
+    getNextBtn = () => actualNextBtn;
+    getPrevBtn = () => actualPrevBtn;
     
-    log('✅ Event listeners attachés directement aux boutons carousel');
+    console.log('✅ Event listeners attachés aux boutons carousel', {
+      nextBtn: !!actualNextBtn,
+      prevBtn: !!actualPrevBtn,
+      nextBtnZIndex: actualNextBtn.style.zIndex,
+      prevBtnZIndex: actualPrevBtn.style.zIndex
+    });
     
     // Support du swipe tactile pour mobile
     let touchStartX = 0;
@@ -1434,6 +1490,10 @@ document.addEventListener('DOMContentLoaded', function() {
     let mouseIsDown = false;
     
     track.addEventListener('mousedown', (e) => {
+      // Ne pas capturer si on clique sur un bouton
+      if (e.target.closest('.carousel-btn')) {
+        return;
+      }
       mouseStartX = e.clientX;
       mouseIsDown = true;
       arreterAutoScroll();
@@ -1442,11 +1502,21 @@ document.addEventListener('DOMContentLoaded', function() {
     
     track.addEventListener('mousemove', (e) => {
       if (!mouseIsDown) return;
+      // Ne pas capturer si on survole un bouton
+      if (e.target.closest('.carousel-btn')) {
+        return;
+      }
       e.preventDefault();
     });
     
     track.addEventListener('mouseup', (e) => {
       if (!mouseIsDown) return;
+      // Ne pas capturer si on relâche sur un bouton
+      if (e.target.closest('.carousel-btn')) {
+        mouseIsDown = false;
+        track.style.cursor = 'grab';
+        return;
+      }
       mouseIsDown = false;
       track.style.cursor = 'grab';
       
