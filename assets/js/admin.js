@@ -2264,6 +2264,16 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Paramètres du portfolio
     const settings = mesDonneesActuelles.settings || {};
+    
+    // Log pour debug
+    if (estEnDeveloppement) {
+      log('🔍 Chargement des paramètres:', {
+        hasSettings: !!mesDonneesActuelles.settings,
+        hasAnalytics: !!settings.analytics,
+        googleAnalytics: settings.analytics?.googleAnalytics || '(vide)'
+      });
+    }
+    
     if (document.getElementById('maintenance-mode')) {
       document.getElementById('maintenance-mode').checked = settings.maintenance?.enabled || false;
       toggleMaintenanceModeDisplay();
@@ -2280,8 +2290,22 @@ document.addEventListener('DOMContentLoaded', function() {
     if (document.getElementById('meta-keywords')) {
       document.getElementById('meta-keywords').value = settings.seo?.keywords || '';
     }
-    if (document.getElementById('google-analytics')) {
-      document.getElementById('google-analytics').value = settings.analytics?.googleAnalytics || '';
+    
+    // Charger l'ID Google Analytics
+    const googleAnalyticsInput = document.getElementById('google-analytics');
+    if (googleAnalyticsInput) {
+      const gaId = settings.analytics?.googleAnalytics || '';
+      googleAnalyticsInput.value = gaId;
+      // Log pour debug
+      if (estEnDeveloppement) {
+        log('📊 Google Analytics ID chargé dans le champ:', gaId || '(vide)');
+      }
+    } else {
+      // Log si le champ n'existe pas
+      if (estEnDeveloppement) {
+        logError('❌ Champ google-analytics introuvable dans le DOM');
+      }
+      console.error('❌ Champ google-analytics introuvable - Vérifiez que l\'onglet Paramètres est chargé');
     }
   }
   
