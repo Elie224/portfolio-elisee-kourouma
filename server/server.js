@@ -320,13 +320,13 @@ mongoose.connect(process.env.MONGODB_URI)
         },
         timeline: [
           {
-            date: '2024 - Présent',
+            date: '2025 - Présent',
             title: 'Master Intelligence Artificielle',
             subtitle: 'Formation en cours',
             description: 'Spécialisation en Intelligence Artificielle, Machine Learning et Deep Learning. Développement de projets avancés en IA et applications intelligentes.'
           },
           {
-            date: '2021 - 2024',
+            date: '2021 - 2025',
             title: 'Licence en Mathématiques et Informatique',
             subtitle: 'USMBA Fès',
             description: 'Formation fondamentale en mathématiques appliquées et informatique. Acquisition de solides bases théoriques et pratiques en algorithmique, structures de données et programmation.'
