@@ -1129,95 +1129,81 @@ document.addEventListener('DOMContentLoaded', function() {
     const autresProjets = projetsAFiltrer.filter(p => !p.featured);
     const tousLesProjets = [...projetsFeatured, ...autresProjets];
     
-    // Créer toutes les cartes
-    container.innerHTML = tousLesProjets.map((projet, index) => {
+    // Optimisation : utiliser DocumentFragment pour un rendu plus rapide
+    const fragment = document.createDocumentFragment();
+    const typeColors = {
+      'Projet Majeur': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      'PFE Master 1': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+      'PFE Licence': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+      'PFA': 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+      'Projet Personnel': 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+    };
+    
+    // Créer toutes les cartes de manière optimisée
+    tousLesProjets.forEach((projet, index) => {
       const tags = projet.tags || [];
       const shortDesc = projet.shortDesc || (projet.description ? projet.description.substring(0, 100) + '...' : 'Aucune description');
       const type = projet.type || 'Projet Personnel';
-      
-      // Couleurs selon le type
-      const typeColors = {
-        'Projet Majeur': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        'PFE Master 1': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-        'PFE Licence': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-        'PFA': 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-        'Projet Personnel': 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
-      };
       const typeColor = typeColors[type] || typeColors['Projet Personnel'];
+      const projectTitle = projet.title || 'Projet';
+      const encodedTitle = encodeURIComponent(projectTitle);
       
-      return `
-        <article class="project-card-modern" style="animation-delay: ${index * 0.1}s; --card-index: ${index};">
-          <div class="project-card-header">
-            <div class="project-type-badge" style="background: ${typeColor}">
-              ${type} ${projet.featured ? '⭐' : ''}
-            </div>
-            ${projet.featured ? '<span class="featured-badge">⭐ En vedette</span>' : ''}
+      const article = document.createElement('article');
+      article.className = 'project-card-modern';
+      article.style.opacity = '1';
+      article.style.transform = 'translateY(0)';
+      
+      article.innerHTML = `
+        <div class="project-card-header">
+          <div class="project-type-badge" style="background: ${typeColor}">
+            ${type} ${projet.featured ? '⭐' : ''}
           </div>
-          
-          <div class="project-card-content">
-            <h3 class="project-title">
-              <a href="project-details.html?project=${encodeURIComponent(projet.title)}" class="project-link">
-                ${projet.title || 'Projet'}
+          ${projet.featured ? '<span class="featured-badge">⭐ En vedette</span>' : ''}
+        </div>
+        
+        <div class="project-card-content">
+          <h3 class="project-title">
+            <a href="project-details.html?project=${encodedTitle}" class="project-link">
+              ${projectTitle}
+            </a>
+          </h3>
+          <p class="project-description">${shortDesc}</p>
+          ${tags.length > 0 ? `
+            <div class="project-tags">
+              ${tags.slice(0, 4).map(tag => `<span class="project-tag">${tag}</span>`).join('')}
+            </div>
+          ` : ''}
+        </div>
+        
+        <div class="project-card-footer">
+          <div class="project-actions">
+            <a href="project-details.html?project=${encodedTitle}" class="btn-project btn-details">
+              📖 Voir les détails
+            </a>
+            ${projet.link || projet.liveUrl ? `
+              <a href="${projet.link || projet.liveUrl}" target="_blank" rel="noopener noreferrer" class="btn-project btn-live">
+                🌐 Voir le projet
               </a>
-            </h3>
-            <p class="project-description">${shortDesc}</p>
-            ${tags.length > 0 ? `
-              <div class="project-tags">
-                ${tags.slice(0, 4).map(tag => `<span class="project-tag">${tag}</span>`).join('')}
-              </div>
             ` : ''}
           </div>
-          
-          <div class="project-card-footer">
-            <div class="project-actions">
-              <a href="project-details.html?project=${encodeURIComponent(projet.title)}" class="btn-project btn-details">
-                📖 Voir les détails
-              </a>
-              ${projet.link || projet.liveUrl ? `
-                <a href="${projet.link || projet.liveUrl}" target="_blank" rel="noopener noreferrer" class="btn-project btn-live">
-                  🌐 Voir le projet
-                </a>
-              ` : ''}
-            </div>
-          </div>
-        </article>
+        </div>
       `;
-    }).join('');
+      
+      fragment.appendChild(article);
+    });
     
-    // Animer l'apparition
-    setTimeout(() => {
-      const cards = container.querySelectorAll('.project-card-modern');
-      cards.forEach((card, i) => {
-        setTimeout(() => {
-          card.style.opacity = '1';
-          card.style.transform = 'translateY(0)';
-        }, i * 50);
-      });
-    }, 100);
+    // Insérer tout d'un coup pour un meilleur rendu
+    container.innerHTML = '';
+    container.appendChild(fragment);
     
-    // Initialiser le carrousel après un court délai pour s'assurer que le DOM est prêt
-    setTimeout(() => {
-      if (tousLesProjets.length > 0) {
+    // Initialiser le carrousel immédiatement (plus besoin d'attendre)
+    if (tousLesProjets.length > 0) {
+      // Utiliser requestAnimationFrame pour s'assurer que le DOM est prêt
+      requestAnimationFrame(() => {
         log('🎠 Initialisation du carrousel avec', tousLesProjets.length, 'projets');
         initialiserCarrousel(tousLesProjets.length);
-        
-        // Test direct des boutons après initialisation
-        setTimeout(() => {
-          const testNextBtn = document.getElementById('carousel-next');
-          const testPrevBtn = document.getElementById('carousel-prev');
-          if (testNextBtn && testPrevBtn) {
-            log('✅ Boutons carousel trouvés après initialisation', {
-              nextBtn: testNextBtn.offsetWidth > 0 && testNextBtn.offsetHeight > 0,
-              prevBtn: testPrevBtn.offsetWidth > 0 && testPrevBtn.offsetHeight > 0,
-              nextBtnZIndex: window.getComputedStyle(testNextBtn).zIndex,
-              prevBtnZIndex: window.getComputedStyle(testPrevBtn).zIndex
-            });
-          } else {
-            logWarn('❌ Boutons carousel non trouvés après initialisation');
-          }
-        }, 500);
-      }
-    }, 300);
+      });
+    }
   }
   
   // Carousel/Slider moderne - Un projet à la fois avec défilement horizontal
@@ -1335,7 +1321,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       setTimeout(() => {
         isTransitioning = false;
-      }, 600);
+      }, 400);
     }
     
     // Slide suivant
@@ -1348,7 +1334,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       setTimeout(() => {
         isTransitioning = false;
-      }, 600);
+      }, 400);
     }
     
     // Slide précédent
@@ -1361,26 +1347,24 @@ document.addEventListener('DOMContentLoaded', function() {
       
       setTimeout(() => {
         isTransitioning = false;
-      }, 600);
+      }, 400);
     }
     
-    // Event listeners pour les boutons - approche simplifiée et directe
+    // Event listeners pour les boutons - approche directe sans clonage
     function handleNextClick(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      e.stopImmediatePropagation();
-      log('🔄 Clic sur bouton suivant détecté');
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
       slideSuivant();
-      return false;
     }
     
     function handlePrevClick(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      e.stopImmediatePropagation();
-      log('🔄 Clic sur bouton précédent détecté');
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
       slidePrecedent();
-      return false;
     }
     
     // S'assurer que les boutons sont cliquables
@@ -1392,64 +1376,19 @@ document.addEventListener('DOMContentLoaded', function() {
     prevBtn.style.zIndex = '100';
     nextBtn.disabled = false;
     prevBtn.disabled = false;
+    nextBtn.type = 'button'; // Important pour éviter les soumissions de formulaire
     
-    // Retirer tous les anciens event listeners en clonant les boutons
-    const nextBtnClone = nextBtn.cloneNode(true);
-    const prevBtnClone = prevBtn.cloneNode(true);
-    nextBtn.parentNode.replaceChild(nextBtnClone, nextBtn);
-    prevBtn.parentNode.replaceChild(prevBtnClone, prevBtn);
-    
-    // Référencer les nouveaux boutons
-    const actualNextBtn = document.getElementById('carousel-next');
-    const actualPrevBtn = document.getElementById('carousel-prev');
-    
-    if (!actualNextBtn || !actualPrevBtn) {
-      logWarn('❌ Impossible de trouver les boutons après clonage', {
-        nextBtn: !!actualNextBtn,
-        prevBtn: !!actualPrevBtn
-      });
-      return;
-    }
-    
-    // Ajouter les event listeners avec capture pour s'assurer qu'ils sont bien déclenchés
-    actualNextBtn.addEventListener('click', handleNextClick, true);
-    actualNextBtn.addEventListener('click', handleNextClick, false);
-    actualPrevBtn.addEventListener('click', handlePrevClick, true);
-    actualPrevBtn.addEventListener('click', handlePrevClick, false);
-    
-    // Ajouter aussi via onclick comme fallback
-    actualNextBtn.onclick = handleNextClick;
-    actualPrevBtn.onclick = handlePrevClick;
-    
-    // S'assurer que les boutons sont cliquables
-    actualNextBtn.style.pointerEvents = 'auto';
-    actualPrevBtn.style.pointerEvents = 'auto';
-    actualNextBtn.style.cursor = 'pointer';
-    actualPrevBtn.style.cursor = 'pointer';
-    actualNextBtn.style.zIndex = '100';
-    actualPrevBtn.style.zIndex = '100';
-    actualNextBtn.disabled = false;
-    actualPrevBtn.disabled = false;
+    // Attacher directement les event listeners (sans clonage)
+    nextBtn.onclick = handleNextClick;
+    prevBtn.onclick = handlePrevClick;
+    nextBtn.addEventListener('click', handleNextClick, false);
+    prevBtn.addEventListener('click', handlePrevClick, false);
     
     // Mettre à jour les références globales pour mettreAJourCarrousel
-    getNextBtn = () => document.getElementById('carousel-next');
-    getPrevBtn = () => document.getElementById('carousel-prev');
+    getNextBtn = () => nextBtn;
+    getPrevBtn = () => prevBtn;
     
-    // Test de clic pour vérifier que les boutons fonctionnent
-    log('✅ Event listeners attachés aux boutons carousel', {
-      nextBtn: !!actualNextBtn,
-      prevBtn: !!actualPrevBtn,
-      nextBtnId: actualNextBtn.id,
-      prevBtnId: actualPrevBtn.id
-    });
-    
-    // Vérifier que les boutons sont bien dans le DOM
-    if (actualNextBtn.offsetParent === null && actualNextBtn.style.display !== 'none') {
-      logWarn('⚠️ Bouton suivant peut être masqué ou hors du viewport');
-    }
-    if (actualPrevBtn.offsetParent === null && actualPrevBtn.style.display !== 'none') {
-      logWarn('⚠️ Bouton précédent peut être masqué ou hors du viewport');
-    }
+    log('✅ Event listeners attachés directement aux boutons carousel');
     
     // Support du swipe tactile pour mobile
     let touchStartX = 0;
@@ -1532,16 +1471,18 @@ document.addEventListener('DOMContentLoaded', function() {
       track.style.cursor = 'grab';
     });
     
-    // Auto-scroll avec pause au survol
+    // Auto-scroll avec pause au survol - DÉSACTIVÉ pour améliorer les performances
     let autoScrollInterval = null;
-    let isPaused = false;
+    let isPaused = true; // Désactivé par défaut
     
     function demarrerAutoScroll() {
+      // Auto-scroll désactivé pour améliorer les performances
+      return;
       if (isPaused || autoScrollInterval) return;
       
       autoScrollInterval = setInterval(() => {
         slideSuivant();
-      }, 4000); // Défilement toutes les 4 secondes
+      }, 5000); // Augmenté à 5 secondes si réactivé
     }
     
     function arreterAutoScroll() {
