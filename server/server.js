@@ -312,30 +312,57 @@ mongoose.connect(process.env.MONGODB_URI)
   });
 })
 .catch((error) => {
-  console.error('❌ Erreur de connexion à MongoDB:', error);
+  console.error('❌ Erreur de connexion à MongoDB:', {
+    message: error.message,
+    name: error.name,
+    code: error.code,
+    stack: error.stack,
+    timestamp: new Date().toISOString()
+  });
   console.log('💡 Assurez-vous que MongoDB est démarré ou utilisez MongoDB Atlas');
+  console.log('💡 Vérifiez la variable MONGODB_URI dans les secrets Fly.io');
+  
+  // Ne pas arrêter le processus, permettre au serveur de démarrer
+  // Le serveur pourra toujours répondre avec des données par défaut
+  console.log('⚠️ Le serveur démarre quand même, mais MongoDB n\'est pas disponible');
 });
 
-// Gestion des erreurs
+// Gestion globale des erreurs (middleware de fin)
 app.use((err, req, res, next) => {
-  console.error('❌ Erreur serveur:', {
+  // Log détaillé de l'erreur
+  console.error('❌ Erreur serveur non gérée:', {
     message: err.message,
+    name: err.name,
+    code: err.code,
     stack: err.stack,
     path: req.path,
     method: req.method,
-    origin: req.headers.origin,
+    origin: req.headers.origin || 'none',
+    ip: req.ip,
+    userAgent: req.headers['user-agent'],
     timestamp: new Date().toISOString()
   });
   
-  // En développement, envoyer plus de détails
-  if (process.env.NODE_ENV === 'development') {
-    res.status(err.status || 500).json({ 
-      error: 'Erreur serveur interne',
-      message: err.message,
-      stack: err.stack
-    });
+  // Ne pas logger les erreurs CORS (déjà gérées)
+  if (err.message && !err.message.includes('CORS') && !err.message.includes('cors')) {
+    // En développement, envoyer plus de détails
+    if (process.env.NODE_ENV === 'development') {
+      res.status(err.status || 500).json({ 
+        error: 'Erreur serveur interne',
+        message: err.message,
+        stack: err.stack,
+        code: 'SERVER_ERROR'
+      });
+    } else {
+      // En production, message générique pour la sécurité
+      res.status(err.status || 500).json({ 
+        error: 'Erreur serveur interne',
+        code: 'SERVER_ERROR'
+      });
+    }
   } else {
-    res.status(err.status || 500).json({ error: 'Erreur serveur interne' });
+    // Erreur CORS - déjà gérée par le middleware CORS
+    next();
   }
 });
 

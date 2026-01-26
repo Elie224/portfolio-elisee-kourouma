@@ -65,11 +65,41 @@ router.get('/', async (req, res) => {
     
     res.json(portfolio);
   } catch (error) {
-    console.error('❌ Erreur lors de la récupération du portfolio:', error);
-    console.error('Stack trace:', error.stack);
+    // Log détaillé de l'erreur pour diagnostic
+    console.error('❌ Erreur lors de la récupération du portfolio:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+      path: req.path,
+      method: req.method,
+      origin: req.headers.origin,
+      timestamp: new Date().toISOString()
+    });
     
-    // En cas d'erreur, retourner un objet vide plutôt qu'une erreur 500
-    // pour éviter que le frontend écrase localStorage avec une erreur
+    // Gestion d'erreurs spécifiques MongoDB
+    if (error.name === 'MongoServerError' || error.message.includes('MongoDB') || error.message.includes('connection')) {
+      console.error('❌ Erreur MongoDB - Retour d\'un objet vide pour éviter l\'écrasement du localStorage');
+      // Retourner un objet vide plutôt qu'une erreur 500 pour éviter que le frontend écrase localStorage
+      return res.json({
+        personal: {},
+        projects: [],
+        skills: [],
+        links: {},
+        about: {},
+        timeline: [],
+        services: [],
+        certifications: [],
+        contactMessages: [],
+        faq: [],
+        settings: {
+          maintenance: { enabled: false, message: 'Le site est actuellement en maintenance. Nous serons bientôt de retour !' },
+          seo: { title: '', description: '', keywords: '' },
+          analytics: { googleAnalytics: '' }
+        }
+      });
+    }
+    
+    // Pour les autres erreurs, retourner un objet vide aussi (fallback)
     console.log('⚠️ Retour d\'un objet vide en cas d\'erreur pour éviter l\'écrasement du localStorage');
     res.json({
       personal: {},
@@ -81,7 +111,12 @@ router.get('/', async (req, res) => {
       services: [],
       certifications: [],
       contactMessages: [],
-      faq: []
+      faq: [],
+      settings: {
+        maintenance: { enabled: false, message: 'Le site est actuellement en maintenance. Nous serons bientôt de retour !' },
+        seo: { title: '', description: '', keywords: '' },
+        analytics: { googleAnalytics: '' }
+      }
     });
   }
 });
@@ -369,9 +404,18 @@ router.post('/',
     });
     
   } catch (error) {
-    console.error('❌ Erreur lors de la mise à jour:', error.message);
-    console.error('Type:', error.name);
-    console.error('Stack:', error.stack);
+    // Log détaillé de l'erreur pour diagnostic
+    console.error('❌ Erreur lors de la mise à jour:', {
+      message: error.message,
+      name: error.name,
+      code: error.code,
+      stack: error.stack,
+      path: req.path,
+      method: req.method,
+      origin: req.headers.origin,
+      adminEmail: req.admin?.email,
+      timestamp: new Date().toISOString()
+    });
     
     // Gestion d'erreurs spécifiques
     if (error.name === 'ValidationError') {
@@ -388,19 +432,28 @@ router.post('/',
         field: error.path,
         code: 'CAST_ERROR'
       });
-    } else if (error.name === 'MongoServerError' && error.code === 11000) {
-      return res.status(409).json({
-        error: 'Conflit de données',
-        message: 'Une entrée avec ces données existe déjà',
-        code: 'DUPLICATE_ERROR'
-      });
-    } else {
-      return res.status(500).json({
-        error: 'Erreur serveur lors de la mise à jour',
-        message: 'Une erreur inattendue s\'est produite',
-        code: 'SERVER_ERROR'
-      });
+    } else if (error.name === 'MongoServerError') {
+      if (error.code === 11000) {
+        return res.status(409).json({
+          error: 'Conflit de données',
+          message: 'Une entrée avec ces données existe déjà',
+          code: 'DUPLICATE_ERROR'
+        });
+      } else if (error.message.includes('connection') || error.message.includes('timeout')) {
+        return res.status(503).json({
+          error: 'Service temporairement indisponible',
+          message: 'La base de données est temporairement indisponible. Veuillez réessayer dans quelques instants.',
+          code: 'DATABASE_ERROR'
+        });
+      }
     }
+    
+    // Erreur générique
+    return res.status(500).json({
+      error: 'Erreur serveur lors de la mise à jour',
+      message: 'Une erreur inattendue s\'est produite',
+      code: 'SERVER_ERROR'
+    });
   }
 });
 
@@ -613,10 +666,41 @@ router.post('/contact',
     });
     
   } catch (error) {
-    console.error('❌ Erreur lors de l\'envoi du message:', error.message);
+    // Log détaillé de l'erreur pour diagnostic
+    console.error('❌ Erreur lors de l\'envoi du message:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+      path: req.path,
+      method: req.method,
+      origin: req.headers.origin,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Gestion d'erreurs spécifiques
+    if (error.name === 'MongoServerError' || error.message.includes('MongoDB') || error.message.includes('connection')) {
+      console.error('❌ Erreur MongoDB détectée');
+      return res.status(503).json({ 
+        error: 'Service temporairement indisponible',
+        message: 'La base de données est temporairement indisponible. Veuillez réessayer dans quelques instants.',
+        code: 'DATABASE_ERROR'
+      });
+    }
+    
+    // Erreur de validation MongoDB
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ 
+        error: 'Données invalides',
+        message: 'Les données du message ne sont pas valides',
+        code: 'VALIDATION_ERROR'
+      });
+    }
+    
+    // Erreur générique
     res.status(500).json({ 
       error: 'Erreur serveur lors de l\'envoi du message',
-      message: 'Une erreur est survenue. Veuillez réessayer plus tard.'
+      message: 'Une erreur est survenue. Veuillez réessayer plus tard.',
+      code: 'SERVER_ERROR'
     });
   }
 });
