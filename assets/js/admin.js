@@ -2322,18 +2322,34 @@ document.addEventListener('DOMContentLoaded', function() {
     // Charger l'ID Google Analytics
     const googleAnalyticsInput = document.getElementById('google-analytics');
     if (googleAnalyticsInput) {
-      const gaId = settings.analytics?.googleAnalytics || '';
+      // Récupérer l'ID depuis settings.analytics.googleAnalytics
+      const gaId = (settings.analytics && settings.analytics.googleAnalytics) 
+        ? settings.analytics.googleAnalytics 
+        : '';
+      
       googleAnalyticsInput.value = gaId;
-      // Log pour debug
-      if (estEnDeveloppement) {
-        log('📊 Google Analytics ID chargé dans le champ:', gaId || '(vide)');
-      }
+      
+      // Log pour debug (toujours logger en production pour diagnostic)
+      console.log('📊 Google Analytics ID chargé:', {
+        found: !!googleAnalyticsInput,
+        value: gaId || '(vide)',
+        hasSettings: !!settings,
+        hasAnalytics: !!settings.analytics,
+        fullSettings: settings
+      });
     } else {
       // Log si le champ n'existe pas
-      if (estEnDeveloppement) {
-        logError('❌ Champ google-analytics introuvable dans le DOM');
-      }
-      console.error('❌ Champ google-analytics introuvable - Vérifiez que l\'onglet Paramètres est chargé');
+      console.error('❌ Champ google-analytics introuvable dans le DOM');
+      console.error('💡 Vérifiez que l\'onglet Paramètres est chargé et que le champ existe dans admin.html');
+      
+      // Essayer de trouver le champ après un court délai (au cas où l'onglet n'est pas encore chargé)
+      setTimeout(() => {
+        const retryInput = document.getElementById('google-analytics');
+        if (retryInput && settings.analytics) {
+          retryInput.value = settings.analytics.googleAnalytics || '';
+          console.log('✅ Google Analytics ID chargé après délai');
+        }
+      }, 500);
     }
   }
   
