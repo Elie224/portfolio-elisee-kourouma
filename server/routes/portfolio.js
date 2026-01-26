@@ -584,9 +584,21 @@ router.post('/auth/change-password',
       });
       
     } catch (error) {
-      console.error('Erreur lors du changement de mot de passe:', error.message);
+      // Log détaillé de l'erreur pour diagnostic
+      console.error('❌ Erreur lors du changement de mot de passe:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack,
+        path: req.path,
+        method: req.method,
+        origin: req.headers.origin,
+        adminEmail: req.admin?.email,
+        timestamp: new Date().toISOString()
+      });
+      
       res.status(500).json({ 
-        error: 'Erreur serveur lors du changement de mot de passe' 
+        error: 'Erreur serveur lors du changement de mot de passe',
+        code: 'PASSWORD_CHANGE_ERROR'
       });
     }
   }
