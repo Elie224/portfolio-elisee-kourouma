@@ -2714,6 +2714,14 @@ header.scrolled {
     box-shadow: 8px 0 48px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
     -webkit-overflow-scrolling: touch;
     position: relative;
+    /* S'assurer que le menu est caché quand il n'est pas actif */
+    visibility: hidden;
+    pointer-events: none;
+  }
+  
+  .nav-links.active {
+    visibility: visible;
+    pointer-events: all;
   }
   
   /* Bordure animée avec gradient en haut */
@@ -3791,6 +3799,14 @@ header.scrolled {
   /* Amélioration des espacements pour le contenu */
   main {
     padding-top: var(--espacement-sm);
+    position: relative;
+    z-index: var(--z-base);
+  }
+  
+  /* S'assurer que le contenu reste en dessous du menu mobile */
+  body > main,
+  body > .container > main {
+    z-index: var(--z-base);
   }
   
   /* Amélioration des sections avec espacement vertical */
