@@ -1872,14 +1872,29 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (overlay) {
       overlay.classList.remove('active');
-      overlay.style.display = 'none';
-      overlay.style.visibility = 'hidden';
-      overlay.style.opacity = '0';
-      overlay.style.pointerEvents = 'none';
+      overlay.style.cssText = `
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        z-index: -1 !important;
+      `;
     }
     
     if (navigation) {
       navigation.classList.remove('active');
+      navigation.style.cssText = `
+        left: -100% !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+        opacity: 0 !important;
+        transform: translateX(-100%) !important;
+      `;
     }
     
     if (boutonMenu) {
@@ -1888,6 +1903,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
   }
   
   // Configure le bouton retour en haut et la barre de progression
