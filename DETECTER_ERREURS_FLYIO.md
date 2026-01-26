@@ -35,14 +35,17 @@ flyctl logs -a portfolio-backend-elisee | Select-String "2026-01-26"
 ### 3. Voir les logs avec filtres
 
 ```powershell
-# Voir uniquement les erreurs
-flyctl logs -a portfolio-backend-elisee | Select-String "❌|ERROR|Error|500|400"
+# Voir uniquement les VRAIES erreurs serveur (exclut les erreurs CORS normales)
+flyctl logs -a portfolio-backend-elisee | Select-String "❌ Erreur serveur non gérée|❌ Erreur lors|❌ Erreur MongoDB|DATABASE_ERROR|SERVER_ERROR" | Select-String -NotMatch "CORS|cors|Origine requise"
 
-# Voir les requêtes
-flyctl logs -a portfolio-backend-elisee | Select-String "GET|POST|PUT|DELETE"
+# Voir uniquement les erreurs critiques (500, erreurs MongoDB, etc.)
+flyctl logs -a portfolio-backend-elisee | Select-String "❌ Erreur serveur non gérée|DATABASE_ERROR|MongoDB.*erreur|connection.*failed"
+
+# Voir les requêtes API
+flyctl logs -a portfolio-backend-elisee | Select-String "📥.*GET|📥.*POST"
 
 # Voir les connexions MongoDB
-flyctl logs -a portfolio-backend-elisee | Select-String "MongoDB|connect"
+flyctl logs -a portfolio-backend-elisee | Select-String "MongoDB|connect|✅ Connecté"
 ```
 
 ### 4. Voir les métriques et statistiques
@@ -101,14 +104,18 @@ flyctl logs -a portfolio-backend-elisee | Select-String "401|403|Token|auth"
 flyctl logs -a portfolio-backend-elisee | Select-String "429|Rate limit|Trop de"
 ```
 
-### 5. Erreurs CORS
+### 5. Erreurs CORS (maintenant gérées silencieusement)
 **Causes possibles :**
 - Origine non autorisée
 - Headers manquants
+- Requêtes sans origin (health checks, curl, etc.) - **NORMAL, ne pas considérer comme erreur**
 
-**Comment détecter :**
+**Note importante** : Les erreurs CORS pour les requêtes sans origin (comme les health checks) sont maintenant gérées silencieusement et ne sont plus loggées comme erreurs serveur. C'est normal et attendu.
+
+**Comment détecter les vraies erreurs CORS :**
 ```powershell
-flyctl logs -a portfolio-backend-elisee | Select-String "CORS|cors|Origin"
+# Voir uniquement les erreurs CORS avec une vraie origine (pas les health checks)
+flyctl logs -a portfolio-backend-elisee | Select-String "🚫 CORS.*Origine non autorisée"
 ```
 
 ## 🔧 Commandes de diagnostic
