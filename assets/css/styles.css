@@ -2698,7 +2698,7 @@ header.scrolled {
   }
   
   .nav-links {
-    /* FORCER le positionnement fixed sur mobile */
+    /* FORCER le positionnement fixed sur mobile UNIQUEMENT */
     position: fixed !important;
     top: 0 !important;
     left: -100% !important;
@@ -3834,6 +3834,62 @@ header.scrolled {
   /* Amélioration des sections avec espacement vertical */
   section {
     scroll-margin-top: 80px; /* Pour la navigation sticky */
+  }
+}
+
+/* ===== STYLES DESKTOP - S'assurer que le menu est visible sur desktop ===== */
+@media (min-width: 769px) {
+  .nav-links {
+    /* Restaurer les styles desktop - annuler les styles mobile */
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    width: auto !important;
+    max-width: none !important;
+    height: auto !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-right: none !important;
+    z-index: auto !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    padding: 0 !important;
+    gap: var(--espacement-xl) !important;
+    transition: all var(--transition-base) !important;
+    overflow-y: visible !important;
+    box-shadow: none !important;
+    -webkit-overflow-scrolling: auto !important;
+    visibility: visible !important;
+    pointer-events: all !important;
+    opacity: 1 !important;
+    transform: none !important;
+    clip-path: none !important;
+    display: flex !important;
+  }
+  
+  .nav-links.active {
+    /* Sur desktop, .active ne change rien */
+    position: relative !important;
+    left: auto !important;
+    visibility: visible !important;
+    pointer-events: all !important;
+    opacity: 1 !important;
+    transform: none !important;
+    clip-path: none !important;
+    z-index: auto !important;
+  }
+  
+  .nav-links:not(.active) {
+    /* Sur desktop, même sans .active, le menu est visible */
+    position: relative !important;
+    left: auto !important;
+    visibility: visible !important;
+    pointer-events: all !important;
+    opacity: 1 !important;
+    transform: none !important;
+    clip-path: none !important;
+    z-index: auto !important;
   }
 }
 
