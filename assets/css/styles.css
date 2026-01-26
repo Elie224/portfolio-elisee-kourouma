@@ -448,11 +448,11 @@ p {
 }
 
 .carousel-btn-prev {
-  left: 20px;
+  left: 20px !important;
 }
 
 .carousel-btn-next {
-  right: 20px;
+  right: 20px !important;
 }
 
 .carousel-btn:disabled {

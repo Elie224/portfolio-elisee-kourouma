@@ -1240,17 +1240,23 @@ document.addEventListener('DOMContentLoaded', function() {
     let cardWidth = 0;
     let gap = 24; // Espacement entre les cartes
     
-    // Calculer la largeur d'une carte
+    // Calculer la largeur d'une carte de manière plus précise
     function calculerLargeurCarte() {
       const cards = track.querySelectorAll('.project-card-modern');
       if (cards.length > 0) {
         const firstCard = cards[0];
+        const cardRect = firstCard.getBoundingClientRect();
         const cardStyle = window.getComputedStyle(firstCard);
-        cardWidth = firstCard.offsetWidth + parseInt(cardStyle.marginLeft || 0) + parseInt(cardStyle.marginRight || 0);
+        const marginLeft = parseInt(cardStyle.marginLeft || 0);
+        const marginRight = parseInt(cardStyle.marginRight || 0);
+        // Utiliser la largeur réelle de la carte + les marges + le gap
+        cardWidth = cardRect.width + marginLeft + marginRight;
       } else {
-        // Largeur par défaut
-        cardWidth = window.innerWidth < 768 ? 280 : 350;
+        // Largeur par défaut basée sur la taille de l'écran
+        const containerWidth = container.offsetWidth || window.innerWidth;
+        cardWidth = window.innerWidth < 768 ? Math.min(280, containerWidth - 40) : Math.min(500, containerWidth - 160);
       }
+      console.log('📏 Largeur carte calculée:', { cardWidth, gap, total: cardWidth + gap });
       return cardWidth;
     }
     
@@ -1413,7 +1419,7 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     
-    // Réappliquer les styles
+    // Réappliquer les styles - S'assurer que les deux boutons sont visibles
     actualNextBtn.style.pointerEvents = 'auto';
     actualPrevBtn.style.pointerEvents = 'auto';
     actualNextBtn.style.cursor = 'pointer';
@@ -1422,10 +1428,32 @@ document.addEventListener('DOMContentLoaded', function() {
     actualPrevBtn.style.zIndex = '1000';
     actualNextBtn.style.position = 'absolute';
     actualPrevBtn.style.position = 'absolute';
+    actualNextBtn.style.display = 'flex';
+    actualPrevBtn.style.display = 'flex';
+    actualNextBtn.style.visibility = 'visible';
+    actualPrevBtn.style.visibility = 'visible';
+    actualNextBtn.style.opacity = '1';
+    actualPrevBtn.style.opacity = '1';
     actualNextBtn.disabled = false;
     actualPrevBtn.disabled = false;
     actualNextBtn.type = 'button';
     actualPrevBtn.type = 'button';
+    
+    // Vérifier que les boutons sont bien positionnés
+    console.log('📍 Position des boutons:', {
+      nextBtn: {
+        right: actualNextBtn.style.right || window.getComputedStyle(actualNextBtn).right,
+        display: window.getComputedStyle(actualNextBtn).display,
+        visibility: window.getComputedStyle(actualNextBtn).visibility,
+        opacity: window.getComputedStyle(actualNextBtn).opacity
+      },
+      prevBtn: {
+        left: actualPrevBtn.style.left || window.getComputedStyle(actualPrevBtn).left,
+        display: window.getComputedStyle(actualPrevBtn).display,
+        visibility: window.getComputedStyle(actualPrevBtn).visibility,
+        opacity: window.getComputedStyle(actualPrevBtn).opacity
+      }
+    });
     
     // Attacher les event listeners avec capture pour être sûr qu'ils sont déclenchés en premier
     actualNextBtn.addEventListener('click', handleNextClick, true);
