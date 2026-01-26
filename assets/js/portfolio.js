@@ -427,8 +427,21 @@ document.addEventListener('DOMContentLoaded', function() {
   function obtenirMesDonnees() {
     try {
       const donneesLocales = localStorage.getItem('portfolioData');
-      const donnees = donneesLocales ? JSON.parse(donneesLocales) : creerDonneesParDefaut();
+      let donnees = donneesLocales ? JSON.parse(donneesLocales) : creerDonneesParDefaut();
       
+      // Remplir les données vides avec les données par défaut
+      const donneesParDefaut = creerDonneesParDefaut();
+      if (!donnees.skills || donnees.skills.length === 0) {
+        donnees.skills = donneesParDefaut.skills;
+      }
+      if (!donnees.timeline || donnees.timeline.length === 0) {
+        donnees.timeline = donneesParDefaut.timeline;
+      }
+      
+      // Charger Google Analytics si configuré
+      if (donnees.settings?.analytics?.googleAnalytics) {
+        chargerGoogleAnalytics(donnees.settings.analytics.googleAnalytics);
+      }
       
       return donnees;
     } catch (erreur) {
@@ -449,8 +462,47 @@ document.addEventListener('DOMContentLoaded', function() {
         photo: 'assets/photo.jpeg'
       },
       projects: [],
-      skills: [],
-      timeline: [],
+      skills: [
+        {
+          category: 'Langages de programmation',
+          icon: '💻',
+          items: ['Python', 'JavaScript', 'TypeScript', 'Java', 'C++']
+        },
+        {
+          category: 'Développement Web',
+          icon: '🌐',
+          items: ['React', 'Node.js', 'Express', 'HTML5', 'CSS3']
+        },
+        {
+          category: 'Bases de données',
+          icon: '🗄️',
+          items: ['MongoDB', 'MySQL', 'PostgreSQL']
+        },
+        {
+          category: 'Intelligence Artificielle',
+          icon: '🤖',
+          items: ['Machine Learning', 'Deep Learning', 'TensorFlow', 'Scikit-learn']
+        },
+        {
+          category: 'Outils & Technologies',
+          icon: '🛠️',
+          items: ['Git', 'Docker', 'REST API', 'GraphQL', 'Linux']
+        }
+      ],
+      timeline: [
+        {
+          date: '2024 - Présent',
+          title: 'Master Intelligence Artificielle',
+          subtitle: 'Formation en cours',
+          description: 'Spécialisation en Intelligence Artificielle, Machine Learning et Deep Learning. Développement de projets avancés en IA et applications intelligentes.'
+        },
+        {
+          date: '2021 - 2024',
+          title: 'Licence en Mathématiques et Informatique',
+          subtitle: 'USMBA Fès',
+          description: 'Formation fondamentale en mathématiques appliquées et informatique. Acquisition de solides bases théoriques et pratiques en algorithmique, structures de données et programmation.'
+        }
+      ],
       certifications: [],
       stages: [],
       alternances: [],
@@ -529,6 +581,15 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         }
         
+        // Remplir les données vides avec les données par défaut
+        const donneesParDefaut = creerDonneesParDefaut();
+        if (!donneesServeur.skills || donneesServeur.skills.length === 0) {
+          donneesServeur.skills = donneesParDefaut.skills;
+        }
+        if (!donneesServeur.timeline || donneesServeur.timeline.length === 0) {
+          donneesServeur.timeline = donneesParDefaut.timeline;
+        }
+        
         localStorage.setItem('portfolioData', JSON.stringify(donneesServeur));
         mesDonnees = donneesServeur;
       } else {
@@ -582,6 +643,9 @@ document.addEventListener('DOMContentLoaded', function() {
       afficherStages(mesDonnees.stages || []);
       afficherAlternances(mesDonnees.alternances || []);
       afficherEvenementsTech(mesDonnees.techEvents || []);
+      
+      // Charger Google Analytics si configuré
+      chargerGoogleAnalytics(mesDonnees.settings?.analytics?.googleAnalytics);
       
       // Vérifier le mode maintenance après affichage (répétition pour être sûr)
       setTimeout(() => {
@@ -648,6 +712,9 @@ document.addEventListener('DOMContentLoaded', function() {
     afficherMesCompetences(donnees.skills);
     afficherMonParcours(donnees.timeline);
     afficherMesStats(donnees.about?.stats);
+    
+    // Charger Google Analytics si configuré
+    chargerGoogleAnalytics(donnees.settings?.analytics?.googleAnalytics);
     
       // Mettre à jour les liens CV (une seule fois avec debounce)
     mettreAJourLiensCV(donnees?.links);
@@ -1401,6 +1468,58 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 200 + (i * 30));
       });
     }, 100);
+  }
+  
+  // Charge Google Analytics si un ID est configuré
+  function chargerGoogleAnalytics(gaId) {
+    if (!gaId || gaId.trim() === '') {
+      log('📊 Google Analytics non configuré');
+      return;
+    }
+    
+    // Vérifier si Google Analytics est déjà chargé
+    if (window.gtag || document.querySelector('script[src*="googletagmanager.com"]')) {
+      log('📊 Google Analytics déjà chargé');
+      return;
+    }
+    
+    log('📊 Chargement de Google Analytics:', gaId);
+    
+    // Injecter le script Google Analytics (GA4)
+    const script1 = document.createElement('script');
+    script1.async = true;
+    script1.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
+    document.head.appendChild(script1);
+    
+    // Injecter la configuration gtag
+    const script2 = document.createElement('script');
+    script2.innerHTML = `
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '${gaId}', {
+        page_path: window.location.pathname,
+        page_title: document.title
+      });
+    `;
+    document.head.appendChild(script2);
+    
+    // Suivre les changements de page pour les SPA
+    let lastUrl = location.href;
+    new MutationObserver(() => {
+      const url = location.href;
+      if (url !== lastUrl) {
+        lastUrl = url;
+        if (window.gtag) {
+          gtag('config', gaId, {
+            page_path: window.location.pathname,
+            page_title: document.title
+          });
+        }
+      }
+    }).observe(document, { subtree: true, childList: true });
+    
+    log('✅ Google Analytics chargé avec succès');
   }
   
   // Affiche mon parcours (timeline)

@@ -243,13 +243,52 @@ mongoose.connect(process.env.MONGODB_URI)
           additionalInfo: []
         },
         projects: [],
-        skills: [],
+        skills: [
+          {
+            category: 'Langages de programmation',
+            icon: '💻',
+            items: ['Python', 'JavaScript', 'TypeScript', 'Java', 'C++']
+          },
+          {
+            category: 'Développement Web',
+            icon: '🌐',
+            items: ['React', 'Node.js', 'Express', 'HTML5', 'CSS3']
+          },
+          {
+            category: 'Bases de données',
+            icon: '🗄️',
+            items: ['MongoDB', 'MySQL', 'PostgreSQL']
+          },
+          {
+            category: 'Intelligence Artificielle',
+            icon: '🤖',
+            items: ['Machine Learning', 'Deep Learning', 'TensorFlow', 'Scikit-learn']
+          },
+          {
+            category: 'Outils & Technologies',
+            icon: '🛠️',
+            items: ['Git', 'Docker', 'REST API', 'GraphQL', 'Linux']
+          }
+        ],
         links: { cv: "", cvFile: "", cvFileName: "", cvFileSize: 0, social: [] },
         about: { 
           heroDescription: "Master en Intelligence Artificielle",
           stats: { projects: 0, experience: 2, technologies: 10 }
         },
-        timeline: [],
+        timeline: [
+          {
+            date: '2024 - Présent',
+            title: 'Master Intelligence Artificielle',
+            subtitle: 'Formation en cours',
+            description: 'Spécialisation en Intelligence Artificielle, Machine Learning et Deep Learning. Développement de projets avancés en IA et applications intelligentes.'
+          },
+          {
+            date: '2021 - 2024',
+            title: 'Licence en Mathématiques et Informatique',
+            subtitle: 'USMBA Fès',
+            description: 'Formation fondamentale en mathématiques appliquées et informatique. Acquisition de solides bases théoriques et pratiques en algorithmique, structures de données et programmation.'
+          }
+        ],
         services: [],
         certifications: [],
         contactMessages: [],
