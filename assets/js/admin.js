@@ -175,6 +175,7 @@ document.addEventListener('DOMContentLoaded', function() {
           techEvents: donnees.techEvents || [],
           services: donnees.services || [],
           faq: donnees.faq || [],
+          contactMessages: donnees.contactMessages || [],
           links: donnees.links || {},
           about: donnees.about || {},
           settings: donnees.settings || {
@@ -386,6 +387,7 @@ document.addEventListener('DOMContentLoaded', function() {
     afficherListeTimeline();
     afficherListeServices();
     afficherListeFAQ();
+    afficherListeMessages();
     chargerInfosParametres();
     afficherInfosAbout();
     afficherLiens();
@@ -1452,6 +1454,96 @@ document.addEventListener('DOMContentLoaded', function() {
       mesDonneesActuelles.faq.splice(index, 1);
       sauvegarderSurServeur();
       afficherListeFAQ();
+    }
+  };
+  
+  
+  /* ===== GESTION DES MESSAGES DE CONTACT ===== */
+  
+  // Affiche la liste des messages de contact
+  function afficherListeMessages() {
+    const container = document.getElementById('messages-list');
+    if (!container) return;
+    
+    const messages = mesDonneesActuelles.contactMessages || [];
+    
+    if (messages.length === 0) {
+      container.innerHTML = '<p class="muted">Aucun message reçu pour le moment.</p>';
+      return;
+    }
+    
+    // Trier les messages par date (plus récents en premier)
+    const messagesTries = [...messages].sort((a, b) => {
+      const dateA = new Date(a.date || 0);
+      const dateB = new Date(b.date || 0);
+      return dateB - dateA;
+    });
+    
+    container.innerHTML = messagesTries.map((msg, index) => {
+      const date = msg.date ? new Date(msg.date).toLocaleString('fr-FR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }) : 'Date inconnue';
+      
+      const isRead = msg.read ? 'read' : 'unread';
+      const readBadge = msg.read ? '<span style="color: var(--muted); font-size: 0.85rem;">✓ Lu</span>' : '<span style="color: var(--accent); font-size: 0.85rem; font-weight: bold;">● Non lu</span>';
+      
+      return `
+        <div class="item-card" style="border-left: 4px solid ${msg.read ? 'var(--muted)' : 'var(--accent)'};">
+          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+            <div>
+              <h4 style="margin: 0 0 4px;">${msg.name || 'Anonyme'}</h4>
+              <p style="margin: 0; color: var(--accent); font-size: 0.9rem;">${msg.email || ''}</p>
+            </div>
+            <div style="text-align: right;">
+              ${readBadge}
+              <p style="margin: 4px 0 0; color: var(--muted); font-size: 0.85rem;">${date}</p>
+            </div>
+          </div>
+          <div style="margin-bottom: 12px;">
+            <strong style="color: var(--text);">Sujet:</strong> ${msg.subject || 'Sans objet'}
+          </div>
+          <div style="background: var(--bg); padding: 12px; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--line);">
+            <p style="margin: 0; white-space: pre-wrap; line-height: 1.6;">${msg.message || ''}</p>
+          </div>
+          <div class="item-actions">
+            <a href="mailto:${msg.email}?subject=Re: ${encodeURIComponent(msg.subject || 'Votre message')}" class="btn-small" style="text-decoration: none;">📧 Répondre</a>
+            <button class="btn-small ${msg.read ? 'btn-secondary' : ''}" onclick="toggleMessageRead(${msg.id})">
+              ${msg.read ? 'Marquer non lu' : 'Marquer lu'}
+            </button>
+            <button class="btn-small btn-secondary" onclick="deleteMessage(${msg.id})">🗑️ Supprimer</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+  
+  // Marque un message comme lu/non lu
+  window.toggleMessageRead = async function(messageId) {
+    const messages = mesDonneesActuelles.contactMessages || [];
+    const message = messages.find(m => m.id === messageId);
+    if (message) {
+      message.read = !message.read;
+      await sauvegarderSurServeur();
+      afficherListeMessages();
+      afficherSucces(`Message ${message.read ? 'marqué comme lu' : 'marqué comme non lu'}`);
+    }
+  };
+  
+  // Supprime un message
+  window.deleteMessage = async function(messageId) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer ce message ?')) {
+      const messages = mesDonneesActuelles.contactMessages || [];
+      const index = messages.findIndex(m => m.id === messageId);
+      if (index !== -1) {
+        messages.splice(index, 1);
+        await sauvegarderSurServeur();
+        afficherListeMessages();
+        afficherSucces('Message supprimé');
+      }
     }
   };
   

@@ -579,22 +579,37 @@ router.post('/contact',
     };
     
     // Ajouter le message au portfolio
-    await Portfolio.findOneAndUpdate(
+    const portfolioUpdate = await Portfolio.findOneAndUpdate(
       {},
       { $push: { contactMessages: newMessage } },
       { new: true, upsert: true }
     );
     
-    console.log('✅ Message de contact reçu:', {
+    // Vérification que le message a bien été ajouté
+    if (!portfolioUpdate) {
+      throw new Error('Impossible de sauvegarder le message dans la base de données');
+    }
+    
+    // Vérifier que le message est bien présent
+    const portfolioVerifie = await Portfolio.findOne();
+    const messageVerifie = portfolioVerifie?.contactMessages?.find(m => m.id === newMessageId);
+    
+    if (!messageVerifie) {
+      throw new Error('Le message n\'a pas été correctement sauvegardé');
+    }
+    
+    console.log('✅ Message de contact reçu et sauvegardé:', {
       id: newMessageId,
       email: email,
-      subject: subject || 'Sans objet'
+      subject: subject || 'Sans objet',
+      totalMessages: portfolioVerifie.contactMessages?.length || 0
     });
     
     res.json({ 
       success: true, 
-      message: 'Message envoyé avec succès',
-      messageId: newMessageId
+      message: 'Message envoyé et sauvegardé avec succès',
+      messageId: newMessageId,
+      saved: true
     });
     
   } catch (error) {

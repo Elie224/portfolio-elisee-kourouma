@@ -2019,12 +2019,30 @@ document.addEventListener('DOMContentLoaded', function() {
           
           const resultat = await reponse.json();
           
-          if (resultat.success) {
-            // Succès
+          if (resultat.success && resultat.messageId) {
+            // Succès - Le message a été sauvegardé avec un ID
+            log('✅ Message sauvegardé avec succès - ID:', resultat.messageId);
+            
             if (messageDiv) {
-              messageDiv.textContent = '✅ Message envoyé avec succès ! Je vous répondrai dans les plus brefs délais.';
+              messageDiv.textContent = `✅ Message envoyé et sauvegardé avec succès (ID: ${resultat.messageId}) ! Je vous répondrai dans les plus brefs délais.`;
               messageDiv.className = 'form-message success';
               messageDiv.style.display = 'block';
+            }
+            
+            // Vérification supplémentaire : confirmer que le message est bien dans la base
+            // (optionnel, pour rassurer l'utilisateur)
+            try {
+              const verification = await fetch(`${MON_SERVEUR}/portfolio`);
+              if (verification.ok) {
+                const donnees = await verification.json();
+                const messageVerifie = donnees.contactMessages?.find(m => m.id === resultat.messageId);
+                if (messageVerifie) {
+                  log('✅ Vérification : Message confirmé dans la base de données');
+                }
+              }
+            } catch (e) {
+              // Ignorer les erreurs de vérification, le message est déjà sauvegardé
+              log('⚠️ Vérification non disponible, mais le message est sauvegardé');
             }
             
             // Réinitialiser le formulaire
@@ -2044,7 +2062,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
           } else {
-            throw new Error(resultat.message || resultat.error || 'Erreur lors de l\'envoi');
+            throw new Error(resultat.message || resultat.error || 'Erreur lors de l\'envoi - Le message n\'a pas été sauvegardé');
           }
           
         } catch (erreur) {
