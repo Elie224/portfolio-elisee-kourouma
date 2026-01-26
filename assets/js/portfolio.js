@@ -1200,6 +1200,22 @@ document.addEventListener('DOMContentLoaded', function() {
       if (tousLesProjets.length > 0) {
         log('🎠 Initialisation du carrousel avec', tousLesProjets.length, 'projets');
         initialiserCarrousel(tousLesProjets.length);
+        
+        // Test direct des boutons après initialisation
+        setTimeout(() => {
+          const testNextBtn = document.getElementById('carousel-next');
+          const testPrevBtn = document.getElementById('carousel-prev');
+          if (testNextBtn && testPrevBtn) {
+            log('✅ Boutons carousel trouvés après initialisation', {
+              nextBtn: testNextBtn.offsetWidth > 0 && testNextBtn.offsetHeight > 0,
+              prevBtn: testPrevBtn.offsetWidth > 0 && testPrevBtn.offsetHeight > 0,
+              nextBtnZIndex: window.getComputedStyle(testNextBtn).zIndex,
+              prevBtnZIndex: window.getComputedStyle(testPrevBtn).zIndex
+            });
+          } else {
+            logWarn('❌ Boutons carousel non trouvés après initialisation');
+          }
+        }, 500);
       }
     }, 300);
   }
