@@ -24,7 +24,9 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Activer trust proxy pour Fly.io (nécessaire pour rate limiting et IP correcte)
-app.set('trust proxy', true);
+// Utiliser 1 au lieu de true pour éviter l'avertissement express-rate-limit
+// Fly.io utilise un seul proxy, donc 1 est suffisant
+app.set('trust proxy', 1);
 
 // Middleware pour stocker le chemin de la requête (pour CORS - doit être avant /health)
 app.use((req, res, next) => {
