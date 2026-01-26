@@ -585,11 +585,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const donneesParDefaut = creerDonneesParDefaut();
         if (!donneesServeur.skills || donneesServeur.skills.length === 0) {
           donneesServeur.skills = donneesParDefaut.skills;
+          log('📋 Skills vides, utilisation des données par défaut');
         }
         if (!donneesServeur.timeline || donneesServeur.timeline.length === 0) {
           donneesServeur.timeline = donneesParDefaut.timeline;
+          log('📋 Timeline vide, utilisation des données par défaut');
         }
         
+        // Sauvegarder dans localStorage avec les données par défaut si nécessaire
         localStorage.setItem('portfolioData', JSON.stringify(donneesServeur));
         mesDonnees = donneesServeur;
       } else {
@@ -709,6 +712,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // S'assurer que projects est toujours un tableau
     const projets = Array.isArray(donnees?.projects) ? donnees.projects : (donnees?.projects ? [donnees.projects] : []);
     afficherMesProjets(projets);
+    
+    // Log pour debug
+    log('📊 Affichage timeline et compétences:', {
+      timeline: donnees.timeline,
+      timelineLength: donnees.timeline?.length || 0,
+      skills: donnees.skills,
+      skillsLength: donnees.skills?.length || 0,
+      isAboutPage: window.location.pathname.includes('about.html')
+    });
+    
     afficherMesCompetences(donnees.skills);
     afficherMonParcours(donnees.timeline);
     afficherMesStats(donnees.about?.stats);
@@ -1421,11 +1434,22 @@ document.addEventListener('DOMContentLoaded', function() {
   function afficherMesCompetences(competences) {
     // Chercher d'abord sur la page about, sinon homepage
     const container = document.getElementById('about-skills') || document.getElementById('homepage-skills');
-    if (!container) return;
-    
-    if (!competences || !Array.isArray(competences) || competences.length === 0) {
-      container.innerHTML = '<p class="muted" style="text-align: center; padding: 40px 20px; grid-column: 1 / -1;">Aucune compétence disponible pour le moment.</p>';
+    if (!container) {
+      log('⚠️ Container skills non trouvé');
       return;
+    }
+    
+    // Si pas de données, utiliser les données par défaut
+    if (!competences || !Array.isArray(competences) || competences.length === 0) {
+      log('📋 Compétences vides, utilisation des données par défaut');
+      const donneesParDefaut = creerDonneesParDefaut();
+      competences = donneesParDefaut.skills;
+      
+      // Si toujours vide après données par défaut, afficher message
+      if (!competences || competences.length === 0) {
+        container.innerHTML = '<p class="muted" style="text-align: center; padding: 40px 20px; grid-column: 1 / -1;">Aucune compétence disponible pour le moment.</p>';
+        return;
+      }
     }
     
     container.innerHTML = competences.map((skill, index) => {
@@ -1527,11 +1551,27 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cette fonction sera utilisée sur la page À propos
     // Chercher d'abord sur la page about, sinon timeline-container
     const container = document.getElementById('about-timeline') || document.getElementById('timeline-container');
-    if (!container) return;
-    
-    if (!parcours || !Array.isArray(parcours) || parcours.length === 0) {
-      container.innerHTML = '<p class="muted" style="text-align: center; padding: 40px 20px;">Aucun élément de parcours disponible pour le moment.</p>';
+    if (!container) {
+      log('⚠️ Container timeline non trouvé');
       return;
+    }
+    
+    // Si pas de données, utiliser les données par défaut
+    if (!parcours || !Array.isArray(parcours) || parcours.length === 0) {
+      log('📋 Timeline vide, utilisation des données par défaut');
+      const donneesParDefaut = creerDonneesParDefaut();
+      parcours = donneesParDefaut.timeline;
+      
+      // Si toujours vide après données par défaut, afficher message
+      if (!parcours || parcours.length === 0) {
+        container.innerHTML = '<p class="muted" style="text-align: center; padding: 40px 20px;">Aucun élément de parcours disponible pour le moment.</p>';
+        return;
+      }
+    }
+    
+    // Ajouter la classe timeline au conteneur si elle n'existe pas
+    if (!container.classList.contains('timeline')) {
+      container.classList.add('timeline');
     }
     
     container.innerHTML = parcours.map(etape => `
@@ -1542,6 +1582,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <h3 class="timeline-title">${etape.title || 'Étape'}</h3>
             <span class="timeline-date">${etape.date || ''}</span>
           </div>
+          ${etape.subtitle ? `<p class="timeline-subtitle" style="color: var(--couleur-texte-muted); font-size: 0.9rem; margin-bottom: var(--espacement-sm);">${etape.subtitle}</p>` : ''}
           <p class="timeline-description">${etape.description || ''}</p>
         </div>
       </div>
@@ -2445,6 +2486,24 @@ document.addEventListener('DOMContentLoaded', function() {
       const donnees = obtenirMesDonnees();
       donneesActuelles = donnees;
       hashDonneesActuelles = calculerHash(donnees);
+      
+      // Forcer l'affichage sur la page about si nécessaire
+      if (window.location.pathname.includes('about.html')) {
+        setTimeout(() => {
+          log('🔄 Vérification affichage timeline et compétences sur page about');
+          log('📊 Données timeline:', donnees.timeline);
+          log('📊 Données skills:', donnees.skills);
+          afficherMonParcours(donnees.timeline);
+          afficherMesCompetences(donnees.skills);
+        }, 500);
+        
+        // Essayer aussi après un délai plus long au cas où
+        setTimeout(() => {
+          log('🔄 Deuxième tentative affichage timeline et compétences');
+          afficherMonParcours(donnees.timeline);
+          afficherMesCompetences(donnees.skills);
+        }, 1500);
+      }
       
       // Vérifier le mode maintenance au chargement initial (plusieurs fois pour être sûr)
       // Immédiatement
