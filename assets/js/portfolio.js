@@ -1739,6 +1739,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 100);
   }
   
+  // Variable globale pour tracker l'ID GA déjà configuré (évite les configurations multiples)
+  window._gaConfiguredId = window._gaConfiguredId || null;
+  
   // Charge Google Analytics si un ID est configuré - Version améliorée et plus fiable
   function chargerGoogleAnalytics(gaId) {
     if (!gaId || gaId.trim() === '') {
@@ -1755,75 +1758,103 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     
-    // Vérifier si Google Analytics est déjà chargé
-    if (window.gtag && window.dataLayer) {
-      log('📊 Google Analytics déjà chargé, envoi de page_view...');
-      // Envoyer un événement page_view même si déjà chargé
-      try {
-        window.gtag('config', gaId, {
-          page_path: window.location.pathname + window.location.search,
-          page_title: document.title,
-          page_location: window.location.href
-        });
-        log('✅ Événement page_view envoyé');
-      } catch (e) {
-        logError('Erreur lors de l\'envoi de page_view:', e);
+    // Vérifier si le même ID est déjà configuré (évite les configurations multiples)
+    if (window._gaConfiguredId === gaId) {
+      log('📊 Google Analytics déjà configuré avec cet ID, envoi de page_view uniquement...');
+      // Envoyer uniquement un événement page_view, pas de config pour éviter l'écrasement des cookies
+      if (window.gtag) {
+        try {
+          window.gtag('event', 'page_view', {
+            page_path: window.location.pathname + window.location.search,
+            page_title: document.title,
+            page_location: window.location.href
+          });
+          log('✅ Événement page_view envoyé');
+        } catch (e) {
+          logError('Erreur lors de l\'envoi de page_view:', e);
+        }
       }
       return;
     }
     
+    // Vérifier si Google Analytics est déjà chargé avec un autre ID
+    if (window.gtag && window.dataLayer && window._gaConfiguredId && window._gaConfiguredId !== gaId) {
+      log('⚠️ Google Analytics déjà configuré avec un autre ID. Ignorant la nouvelle configuration.');
+      return;
+    }
+    
+    // Marquer cet ID comme configuré
+    window._gaConfiguredId = gaId;
+    
     log('📊 Chargement de Google Analytics:', gaId);
     
-    // Initialiser dataLayer AVANT tout
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){window.dataLayer.push(arguments);}
-    window.gtag = gtag;
-    gtag('js', new Date());
+    // Initialiser dataLayer AVANT tout (une seule fois)
+    if (!window.dataLayer) {
+      window.dataLayer = [];
+    }
     
-    // Injecter la configuration gtag IMMÉDIATEMENT (avant le script externe)
-    const script2 = document.createElement('script');
-    script2.innerHTML = `
-      window.dataLayer = window.dataLayer || [];
+    // Définir gtag une seule fois
+    if (!window.gtag) {
       function gtag(){window.dataLayer.push(arguments);}
       window.gtag = gtag;
       gtag('js', new Date());
-      gtag('config', '${gaId}', {
-        page_path: window.location.pathname + window.location.search,
-        page_title: document.title,
-        page_location: window.location.href,
-        send_page_view: true
-      });
-    `;
-    document.head.insertBefore(script2, document.head.firstChild);
+    }
+    
+    // Injecter la configuration gtag IMMÉDIATEMENT (avant le script externe)
+    // Mais seulement si pas déjà configuré pour éviter les configurations multiples
+    if (!document.querySelector(`script[data-ga-id="${gaId}"]`)) {
+      const script2 = document.createElement('script');
+      script2.setAttribute('data-ga-id', gaId);
+      script2.innerHTML = `
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){window.dataLayer.push(arguments);}
+        window.gtag = window.gtag || gtag;
+        gtag('js', new Date());
+        gtag('config', '${gaId}', {
+          page_path: window.location.pathname + window.location.search,
+          page_title: document.title,
+          page_location: window.location.href,
+          send_page_view: true
+        });
+      `;
+      document.head.insertBefore(script2, document.head.firstChild);
+    }
     
     // Injecter le script Google Analytics (GA4) - Chargement asynchrone
-    const script1 = document.createElement('script');
-    script1.async = true;
-    script1.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
-    script1.onload = function() {
-      log('✅ Script Google Analytics chargé');
-      // S'assurer qu'un page_view est envoyé après le chargement
-      if (window.gtag) {
-        setTimeout(() => {
-          try {
-            window.gtag('event', 'page_view', {
-              page_path: window.location.pathname + window.location.search,
-              page_title: document.title,
-              page_location: window.location.href
-            });
-            log('✅ Événement page_view envoyé après chargement');
-          } catch (e) {
-            logError('Erreur lors de l\'envoi de page_view:', e);
-          }
-        }, 100);
-      }
-    };
-    script1.onerror = function() {
-      logError('❌ Erreur lors du chargement du script Google Analytics');
-    };
-    document.head.appendChild(script1);
+    // Vérifier qu'on ne charge pas le script plusieurs fois
+    const existingScript = document.querySelector(`script[src*="googletagmanager.com/gtag/js?id=${gaId}"]`);
+    if (!existingScript) {
+      const script1 = document.createElement('script');
+      script1.async = true;
+      script1.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
+      script1.onload = function() {
+        log('✅ Script Google Analytics chargé');
+        // Envoyer un événement page_view après le chargement (pas de config pour éviter l'écrasement)
+        if (window.gtag) {
+          setTimeout(() => {
+            try {
+              window.gtag('event', 'page_view', {
+                page_path: window.location.pathname + window.location.search,
+                page_title: document.title,
+                page_location: window.location.href
+              });
+              log('✅ Événement page_view envoyé après chargement');
+            } catch (e) {
+              logError('Erreur lors de l\'envoi de page_view:', e);
+            }
+          }, 100);
+        }
+      };
+      script1.onerror = function() {
+        logError('❌ Erreur lors du chargement du script Google Analytics');
+      };
+      document.head.appendChild(script1);
+    } else {
+      log('📊 Script Google Analytics déjà chargé, ignoré');
+    }
     
     // Suivre les changements de page pour les SPA (navigation côté client)
+    // Utiliser des événements au lieu de config pour éviter l'écrasement des cookies
     let lastUrl = location.href;
     const observer = new MutationObserver(() => {
       const url = location.href;
@@ -1831,7 +1862,8 @@ document.addEventListener('DOMContentLoaded', function() {
         lastUrl = url;
         if (window.gtag) {
           try {
-            window.gtag('config', gaId, {
+            // Utiliser 'event' au lieu de 'config' pour éviter l'écrasement des cookies
+            window.gtag('event', 'page_view', {
               page_path: window.location.pathname + window.location.search,
               page_title: document.title,
               page_location: window.location.href
@@ -1846,13 +1878,20 @@ document.addEventListener('DOMContentLoaded', function() {
     observer.observe(document, { subtree: true, childList: true });
     
     // Envoyer un page_view immédiatement (même si le script n'est pas encore chargé, il sera dans la queue)
+    // Note: Le script inline a déjà envoyé un page_view via send_page_view: true, donc on peut éviter un doublon
+    // Mais on le garde pour être sûr en cas de problème avec le script inline
     try {
-      gtag('event', 'page_view', {
-        page_path: window.location.pathname + window.location.search,
-        page_title: document.title,
-        page_location: window.location.href
-      });
-      log('✅ Événement page_view initial envoyé');
+      // Attendre un peu pour éviter les doublons avec le script inline
+      setTimeout(() => {
+        if (window.gtag) {
+          window.gtag('event', 'page_view', {
+            page_path: window.location.pathname + window.location.search,
+            page_title: document.title,
+            page_location: window.location.href
+          });
+          log('✅ Événement page_view initial envoyé');
+        }
+      }, 50);
     } catch (e) {
       logError('Erreur lors de l\'envoi initial de page_view:', e);
     }
