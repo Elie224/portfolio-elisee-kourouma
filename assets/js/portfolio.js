@@ -1671,24 +1671,44 @@ document.addEventListener('DOMContentLoaded', function() {
     `).join('');
   }
   
-  // Met à jour les statistiques
+  // Met à jour les statistiques (page d'accueil ET page À propos)
   function afficherMesStats(stats) {
     if (!stats) return;
     
+    // Statistiques page d'accueil
     const statProjets = document.getElementById('stat-projects');
     const statExperience = document.getElementById('stat-experience');
     const statTechnologies = document.getElementById('stat-technologies');
     
+    // Statistiques page À propos
+    const aboutStatProjets = document.getElementById('about-stat-projects');
+    const aboutStatExperience = document.getElementById('about-stat-experience');
+    const aboutStatTechnologies = document.getElementById('about-stat-technologies');
+    
+    // Mettre à jour la page d'accueil
     if (statProjets && stats.projects !== undefined) {
       animerCompteur(statProjets, stats.projects);
     }
     
     if (statExperience && stats.experience !== undefined) {
-      statExperience.textContent = stats.experience + '+';
+      statExperience.textContent = stats.experience;
     }
     
     if (statTechnologies && stats.technologies !== undefined) {
-      statTechnologies.textContent = stats.technologies + '+';
+      statTechnologies.textContent = stats.technologies;
+    }
+    
+    // Mettre à jour la page À propos (mêmes valeurs)
+    if (aboutStatProjets && stats.projects !== undefined) {
+      animerCompteur(aboutStatProjets, stats.projects);
+    }
+    
+    if (aboutStatExperience && stats.experience !== undefined) {
+      aboutStatExperience.textContent = stats.experience;
+    }
+    
+    if (aboutStatTechnologies && stats.technologies !== undefined) {
+      aboutStatTechnologies.textContent = stats.technologies;
     }
   }
   
