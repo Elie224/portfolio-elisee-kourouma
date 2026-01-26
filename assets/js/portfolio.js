@@ -2925,6 +2925,40 @@ document.addEventListener('DOMContentLoaded', function() {
     initialiserPortfolio();
   }
   
+  // Gestion globale des erreurs JavaScript pour éviter les erreurs client
+  window.addEventListener('error', function(event) {
+    // Ignorer les erreurs de ressources (images, CSS, etc.) qui ne sont pas critiques
+    if (event.target && event.target.tagName) {
+      return; // Erreur de ressource, ne pas logger
+    }
+    
+    // Logger uniquement les vraies erreurs JavaScript en développement
+    if (estEnDeveloppement) {
+      logError('❌ Erreur JavaScript:', {
+        message: event.message,
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno,
+        error: event.error
+      });
+    }
+    
+    // Empêcher l'affichage de l'erreur dans la console du navigateur en production
+    // mais ne pas bloquer l'exécution
+    event.preventDefault();
+  });
+  
+  // Gestion des promesses rejetées non gérées
+  window.addEventListener('unhandledrejection', function(event) {
+    // Logger uniquement en développement
+    if (estEnDeveloppement) {
+      logError('❌ Promesse rejetée non gérée:', event.reason);
+    }
+    
+    // Empêcher l'affichage de l'erreur dans la console
+    event.preventDefault();
+  });
+  
   // Forcer la mise à jour des liens CV après le chargement complet de la page
   window.addEventListener('load', function() {
     log('🔄 Page complètement chargée - Vérification finale des liens CV');

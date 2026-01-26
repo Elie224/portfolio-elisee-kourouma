@@ -3,11 +3,13 @@
 [build]
   publish = "."
 
-# Redirections pour SPA
+# Redirections pour SPA - rediriger uniquement les routes qui n'existent pas
+# Ne pas forcer la redirection pour les fichiers existants
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+  force = false
 
 # Headers pour les assets (cache long)
 [[headers]]
