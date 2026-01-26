@@ -1808,6 +1808,13 @@ document.addEventListener('DOMContentLoaded', function() {
     overlay.style.opacity = '0';
     overlay.style.pointerEvents = 'none';
     
+    // FORCER explicitement left: -100% sur le menu avec setProperty pour !important
+    navigation.style.setProperty('left', '-100%', 'important');
+    navigation.style.setProperty('visibility', 'hidden', 'important');
+    navigation.style.setProperty('pointer-events', 'none', 'important');
+    navigation.style.setProperty('opacity', '0', 'important');
+    navigation.style.setProperty('transform', 'translateX(-100%)', 'important');
+    
     function basculerMenu() {
       const estOuvert = navigation.classList.contains('active');
       
@@ -1819,11 +1826,18 @@ document.addEventListener('DOMContentLoaded', function() {
         boutonMenu.setAttribute('aria-expanded', 'false');
         document.body.style.overflow = '';
         
-        // Forcer la fermeture via style inline
-        overlay.style.display = 'none';
-        overlay.style.visibility = 'hidden';
-        overlay.style.opacity = '0';
-        overlay.style.pointerEvents = 'none';
+        // Forcer la fermeture via style inline avec !important
+        overlay.style.setProperty('display', 'none', 'important');
+        overlay.style.setProperty('visibility', 'hidden', 'important');
+        overlay.style.setProperty('opacity', '0', 'important');
+        overlay.style.setProperty('pointer-events', 'none', 'important');
+        
+        // Forcer le menu à left: -100%
+        navigation.style.setProperty('left', '-100%', 'important');
+        navigation.style.setProperty('visibility', 'hidden', 'important');
+        navigation.style.setProperty('pointer-events', 'none', 'important');
+        navigation.style.setProperty('opacity', '0', 'important');
+        navigation.style.setProperty('transform', 'translateX(-100%)', 'important');
       } else {
         // Ouvre le menu
         navigation.classList.add('active');
@@ -1832,11 +1846,18 @@ document.addEventListener('DOMContentLoaded', function() {
         boutonMenu.setAttribute('aria-expanded', 'true');
         document.body.style.overflow = 'hidden';
         
-        // Forcer l'ouverture via style inline
-        overlay.style.display = 'block';
-        overlay.style.visibility = 'visible';
-        overlay.style.opacity = '1';
-        overlay.style.pointerEvents = 'all';
+        // Forcer l'ouverture via style inline avec !important
+        overlay.style.setProperty('display', 'block', 'important');
+        overlay.style.setProperty('visibility', 'visible', 'important');
+        overlay.style.setProperty('opacity', '1', 'important');
+        overlay.style.setProperty('pointer-events', 'all', 'important');
+        
+        // Forcer le menu à left: 0
+        navigation.style.setProperty('left', '0', 'important');
+        navigation.style.setProperty('visibility', 'visible', 'important');
+        navigation.style.setProperty('pointer-events', 'all', 'important');
+        navigation.style.setProperty('opacity', '1', 'important');
+        navigation.style.setProperty('transform', 'translateX(0)', 'important');
       }
     }
     
@@ -1888,13 +1909,16 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (navigation) {
       navigation.classList.remove('active');
-      navigation.style.cssText = `
-        left: -100% !important;
-        visibility: hidden !important;
-        pointer-events: none !important;
-        opacity: 0 !important;
-        transform: translateX(-100%) !important;
-      `;
+      // Forcer explicitement left: -100% avec !important
+      navigation.style.setProperty('left', '-100%', 'important');
+      navigation.style.setProperty('visibility', 'hidden', 'important');
+      navigation.style.setProperty('pointer-events', 'none', 'important');
+      navigation.style.setProperty('opacity', '0', 'important');
+      navigation.style.setProperty('transform', 'translateX(-100%)', 'important');
+      // Log pour debug
+      if (estEnDeveloppement) {
+        log('🔧 Menu mobile forcé à left: -100%');
+      }
     }
     
     if (boutonMenu) {
