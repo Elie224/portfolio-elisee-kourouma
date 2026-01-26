@@ -22,7 +22,8 @@
     <meta property="og:description" content="Portfolio étudiant - Master Intelligence Artificielle. Passionné par l'IA et le développement." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://elisee-kourouma.fr/" />
-    <meta property="og:image" content="https://elisee-kourouma.fr/assets/og-image.jpg" />
+    <!-- TODO: Créer une image OG optimisée (1200x630px) pour de meilleurs previews -->
+    <meta property="og:image" content="https://elisee-kourouma.fr/assets/photo.jpeg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:site_name" content="Nema Kourouma Portfolio" />
@@ -32,13 +33,15 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Nema Elisée Kourouma - Étudiant en Master IA" />
     <meta name="twitter:description" content="Portfolio professionnel - Expert IA, Python, React. Master Intelligence Artificielle." />
-    <meta name="twitter:image" content="https://elisee-kourouma.fr/assets/twitter-card.jpg" />
+    <!-- TODO: Créer une image Twitter Card optimisée (1200x630px) pour de meilleurs previews -->
+    <meta name="twitter:image" content="https://elisee-kourouma.fr/assets/photo.jpeg" />
     <meta name="twitter:image:alt" content="Portfolio Nema Kourouma - Développeur IA" />
     
     <title>Nema Elisée Kourouma - Portfolio Étudiant Master Intelligence Artificielle</title>
     <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💼</text></svg>" />
     
     <!-- CORRECTION SEO TECHNIQUE AVANCÉ - Structured Data JSON-LD -->
+    <!-- Person Schema (sans données sensibles pour éviter le spam) -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -48,8 +51,6 @@
       "description": "Master en Intelligence Artificielle. Expert en Python, React, MongoDB.",
       "url": "https://elisee-kourouma.fr",
       "image": "https://elisee-kourouma.fr/assets/photo.jpeg",
-      "email": "kouroumaelisee@gmail.com",
-      "telephone": "+33689306432",
       "address": {
         "@type": "PostalAddress",
         "addressCountry": "FR",
@@ -74,7 +75,13 @@
       "sameAs": [
         "https://linkedin.com/in/nema-kourouma",
         "https://www.facebook.com/share/17xGVe29cL/"
-      ],
+      ]
+    }
+    </script>
+    <!-- WebSite et WebPage Schema (séparés pour meilleure validation) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
       "@graph": [
         {
           "@type": "WebSite",
@@ -105,9 +112,10 @@
       ]
     }
     </script>
-    <link rel="stylesheet" href="assets/css/styles.css" />
-    <!-- Preconnect supprimé - aucune font Google utilisée -->
-    <link rel="preload" href="assets/css/styles.css" as="style" />
+    <!-- Preload CSS avec pattern "preload then apply" -->
+    <link rel="preload" href="assets/css/styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href="assets/css/styles.css" /></noscript>
+    <!-- Preload image de profil -->
     <link rel="preload" href="assets/photo.jpeg" as="image" />
     <link rel="dns-prefetch" href="https://portfolio-backend-elisee.fly.dev" />
   </head>
@@ -130,7 +138,7 @@
           <a href="about.html">À propos</a>
           <a href="projects.html">Projets</a>
           <a href="contact.html">Contact</a>
-          <a href="#" target="_blank" rel="noopener noreferrer" data-cv-link="true">CV</a>
+          <a href="assets/CV.pdf" target="_blank" rel="noopener noreferrer" data-cv-link="true">CV</a>
           <a href="admin.html" class="admin-nav-link admin-nav-hidden">
             <span>🔐</span> <span class="admin-text">Admin</span>
           </a>
@@ -160,11 +168,14 @@
               mon parcours académique, enrichi par une licence en mathématiques et informatique obtenue à l'USMBA de Fès, 
               me permet d'allier rigueur mathématique et créativité technique.
             </p>
+            <p class="hero-availability" style="margin-top: var(--espacement-md); padding: var(--espacement-md); background: rgba(99, 102, 241, 0.1); border-left: 3px solid var(--couleur-accent); border-radius: var(--rayon-sm); font-size: 0.95rem; color: var(--couleur-texte-secondaire);">
+              <strong style="color: var(--couleur-accent);">🔍 Recherche active :</strong> Stage / Alternance / CDI en Intelligence Artificielle ou Développement Web — Disponible à partir de maintenant — Localisation : Paris / Télétravail
+            </p>
           </div>
           
           <!-- Actions principales -->
           <div class="hero-actions">
-            <a href="#" target="_blank" rel="noopener" class="btn btn-primary" data-cv-link="true">
+            <a href="assets/CV.pdf" target="_blank" rel="noopener" class="btn btn-primary" data-cv-link="true">
               <span>📄</span> Voir mon CV
             </a>
             <a href="projects.html" class="btn btn-secondary">
@@ -271,7 +282,7 @@
             <a href="contact.html" class="btn btn-primary">
               <span>📧</span> Me contacter
             </a>
-            <a href="#" class="btn btn-secondary" id="contact-email-btn">
+            <a href="mailto:kouroumaelisee@gmail.com?subject=Contact%20depuis%20portfolio" class="btn btn-secondary" id="contact-email-btn">
               <span>✉️</span> Envoyer un email
             </a>
           </div>
