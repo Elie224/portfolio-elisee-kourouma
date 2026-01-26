@@ -1650,13 +1650,28 @@ document.addEventListener('DOMContentLoaded', function() {
         overlay.classList.remove('active');
         boutonMenu.classList.remove('active');
         boutonMenu.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
       } else {
         // Ouvre le menu
         navigation.classList.add('active');
         overlay.classList.add('active');
         boutonMenu.classList.add('active');
         boutonMenu.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
       }
+    }
+    
+    // Créer le bouton de fermeture si il n'existe pas
+    if (!navigation.querySelector('.menu-close-btn')) {
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'menu-close-btn';
+      closeBtn.setAttribute('aria-label', 'Fermer le menu');
+      closeBtn.innerHTML = '✕';
+      closeBtn.type = 'button';
+      navigation.insertBefore(closeBtn, navigation.firstChild);
+      
+      // Fermer le menu au clic sur le bouton de fermeture
+      closeBtn.addEventListener('click', basculerMenu);
     }
     
     boutonMenu.addEventListener('click', basculerMenu);
