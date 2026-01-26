@@ -2718,16 +2718,19 @@ header.scrolled {
     /* S'assurer que le menu est complètement caché quand il n'est pas actif */
     visibility: hidden !important;
     pointer-events: none !important;
-    opacity: 0;
-    transform: translateX(-100%);
+    opacity: 0 !important;
+    transform: translateX(-100%) !important;
+    /* Forcer le menu complètement hors écran */
+    clip-path: inset(0 0 0 100%);
   }
   
   .nav-links.active {
     left: 0 !important;
     visibility: visible !important;
     pointer-events: all !important;
-    opacity: 1;
-    transform: translateX(0);
+    opacity: 1 !important;
+    transform: translateX(0) !important;
+    clip-path: inset(0 0 0 0);
   }
   
   /* Bordure animée avec gradient en haut */

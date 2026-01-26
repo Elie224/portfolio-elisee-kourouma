@@ -2822,12 +2822,35 @@ document.addEventListener('DOMContentLoaded', function() {
       visibility: visible !important;
       opacity: 1 !important;
       overflow-x: hidden !important;
+      background: var(--couleur-fond) !important;
+      position: relative !important;
     `;
     document.documentElement.style.cssText = `
       display: block !important;
       visibility: visible !important;
       overflow-x: hidden !important;
+      background: var(--couleur-fond) !important;
     `;
+    
+    // Vérifier et supprimer tout overlay non désiré
+    const allOverlays = document.querySelectorAll('[class*="overlay"], [id*="overlay"]');
+    allOverlays.forEach(overlay => {
+      const id = overlay.id;
+      const className = overlay.className;
+      // Ne toucher que les overlays qui ne sont pas le menu mobile overlay
+      if (id !== 'mobile-menu-overlay' && !className.includes('menu-mobile-overlay')) {
+        // Vérifier si c'est un overlay de maintenance ou autre
+        if (id === 'maintenance-overlay') {
+          // Ne pas supprimer le maintenance overlay, il est géré par verifierModeMaintenance
+          return;
+        }
+        // Supprimer tout autre overlay suspect
+        if (overlay.style.position === 'fixed' && overlay.style.zIndex > 100) {
+          console.warn('⚠️ Overlay suspect détecté et supprimé:', id || className);
+          overlay.remove();
+        }
+      }
+    });
     
     // Vérifier IMMÉDIATEMENT le mode maintenance avec les données du localStorage
     // (avant même le chargement depuis le serveur)
