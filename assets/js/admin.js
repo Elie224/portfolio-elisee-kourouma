@@ -185,6 +185,21 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         };
         
+        // S'assurer que les settings ont bien la structure analytics
+        if (!mesDonneesActuelles.settings.analytics) {
+          mesDonneesActuelles.settings.analytics = { googleAnalytics: '' };
+        }
+        
+        // Log pour debug
+        if (estEnDeveloppement) {
+          log('📊 Settings chargées depuis serveur:', {
+            hasSettings: !!mesDonneesActuelles.settings,
+            hasAnalytics: !!mesDonneesActuelles.settings.analytics,
+            googleAnalytics: mesDonneesActuelles.settings.analytics?.googleAnalytics || '(vide)'
+          });
+        }
+        };
+        
         // Sauvegarder aussi dans localStorage comme backup
         localStorage.setItem('portfolioData', JSON.stringify(mesDonneesActuelles));
         
@@ -195,6 +210,19 @@ document.addEventListener('DOMContentLoaded', function() {
         const donneesLocales = localStorage.getItem('portfolioData');
         if (donneesLocales) {
           mesDonneesActuelles = JSON.parse(donneesLocales);
+          
+          // S'assurer que les settings ont bien la structure analytics
+          if (!mesDonneesActuelles.settings) {
+            mesDonneesActuelles.settings = {
+              maintenance: { enabled: false, message: 'Le site est actuellement en maintenance. Nous serons bientôt de retour !' },
+              seo: { title: '', description: '', keywords: '' },
+              analytics: { googleAnalytics: '' }
+            };
+          }
+          if (!mesDonneesActuelles.settings.analytics) {
+            mesDonneesActuelles.settings.analytics = { googleAnalytics: '' };
+          }
+          
           afficherToutesMesDonnees();
           afficherErreur(null, 'Serveur indisponible, utilisation des données locales');
         }
