@@ -1251,12 +1251,20 @@ document.addEventListener('DOMContentLoaded', function() {
         const marginRight = parseInt(cardStyle.marginRight || 0);
         // Utiliser la largeur réelle de la carte + les marges + le gap
         cardWidth = cardRect.width + marginLeft + marginRight;
+        
+        // Si la largeur est toujours 0 ou invalide, utiliser une valeur par défaut
+        if (!cardWidth || cardWidth <= 0 || isNaN(cardWidth)) {
+          const containerWidth = container.offsetWidth || window.innerWidth;
+          cardWidth = window.innerWidth < 768 ? Math.min(280, containerWidth - 40) : Math.min(500, containerWidth - 160);
+          console.warn('⚠️ Largeur carte invalide, utilisation de la valeur par défaut:', cardWidth);
+        }
       } else {
         // Largeur par défaut basée sur la taille de l'écran
         const containerWidth = container.offsetWidth || window.innerWidth;
         cardWidth = window.innerWidth < 768 ? Math.min(280, containerWidth - 40) : Math.min(500, containerWidth - 160);
+        console.warn('⚠️ Aucune carte trouvée, utilisation de la valeur par défaut:', cardWidth);
       }
-      console.log('📏 Largeur carte calculée:', { cardWidth, gap, total: cardWidth + gap });
+      console.log('📏 Largeur carte calculée:', { cardWidth, gap, total: cardWidth + gap, nombreCartes: cards.length });
       return cardWidth;
     }
     
@@ -1369,7 +1377,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }, 600);
     }
     
-    // Event listeners pour les boutons - approche directe sans clonage
+    // Event listeners pour les boutons - approche simplifiée et fiable
     function handleNextClick(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -1388,38 +1396,28 @@ document.addEventListener('DOMContentLoaded', function() {
       return false;
     }
     
-    // S'assurer que les boutons sont cliquables et au-dessus de tout
-    nextBtn.style.pointerEvents = 'auto';
-    prevBtn.style.pointerEvents = 'auto';
-    nextBtn.style.cursor = 'pointer';
-    prevBtn.style.cursor = 'pointer';
-    nextBtn.style.zIndex = '1000';
-    prevBtn.style.zIndex = '1000';
-    nextBtn.style.position = 'absolute';
-    prevBtn.style.position = 'absolute';
-    nextBtn.disabled = false;
-    prevBtn.disabled = false;
-    nextBtn.type = 'button';
-    prevBtn.type = 'button';
-    
-    // Retirer tous les anciens event listeners en remplaçant les boutons
+    // Retirer tous les anciens event listeners en clonant et remplaçant les boutons
+    // Mais cette fois, on préserve les IDs correctement
+    const nextBtnId = nextBtn.id;
+    const prevBtnId = prevBtn.id;
     const nextBtnParent = nextBtn.parentNode;
     const prevBtnParent = prevBtn.parentNode;
-    const nextBtnClone = nextBtn.cloneNode(true);
-    const prevBtnClone = prevBtn.cloneNode(true);
-    nextBtnParent.replaceChild(nextBtnClone, nextBtn);
-    prevBtnParent.replaceChild(prevBtnClone, prevBtn);
     
-    // Référencer les nouveaux boutons
-    const actualNextBtn = document.getElementById('carousel-next');
-    const actualPrevBtn = document.getElementById('carousel-prev');
+    // Créer de nouveaux boutons avec les mêmes propriétés
+    const newNextBtn = nextBtn.cloneNode(true);
+    const newPrevBtn = prevBtn.cloneNode(true);
+    newNextBtn.id = nextBtnId;
+    newPrevBtn.id = prevBtnId;
     
-    if (!actualNextBtn || !actualPrevBtn) {
-      logWarn('❌ Impossible de trouver les boutons après remplacement');
-      return;
-    }
+    // Remplacer les anciens boutons
+    nextBtnParent.replaceChild(newNextBtn, nextBtn);
+    prevBtnParent.replaceChild(newPrevBtn, prevBtn);
     
-    // Réappliquer les styles - S'assurer que les deux boutons sont visibles
+    // Utiliser les nouveaux boutons
+    const actualNextBtn = newNextBtn;
+    const actualPrevBtn = newPrevBtn;
+    
+    // S'assurer que les boutons sont cliquables et au-dessus de tout
     actualNextBtn.style.pointerEvents = 'auto';
     actualPrevBtn.style.pointerEvents = 'auto';
     actualNextBtn.style.cursor = 'pointer';
@@ -1439,29 +1437,26 @@ document.addEventListener('DOMContentLoaded', function() {
     actualNextBtn.type = 'button';
     actualPrevBtn.type = 'button';
     
-    // Vérifier que les boutons sont bien positionnés
-    console.log('📍 Position des boutons:', {
-      nextBtn: {
-        right: actualNextBtn.style.right || window.getComputedStyle(actualNextBtn).right,
-        display: window.getComputedStyle(actualNextBtn).display,
-        visibility: window.getComputedStyle(actualNextBtn).visibility,
-        opacity: window.getComputedStyle(actualNextBtn).opacity
-      },
-      prevBtn: {
-        left: actualPrevBtn.style.left || window.getComputedStyle(actualPrevBtn).left,
-        display: window.getComputedStyle(actualPrevBtn).display,
-        visibility: window.getComputedStyle(actualPrevBtn).visibility,
-        opacity: window.getComputedStyle(actualPrevBtn).opacity
-      }
-    });
+    // Retirer tous les event listeners existants en utilisant une fonction wrapper
+    // et attacher un seul event listener propre
+    const wrappedNextClick = function(e) {
+      handleNextClick(e);
+    };
+    const wrappedPrevClick = function(e) {
+      handlePrevClick(e);
+    };
     
-    // Attacher les event listeners avec capture pour être sûr qu'ils sont déclenchés en premier
-    actualNextBtn.addEventListener('click', handleNextClick, true);
-    actualNextBtn.addEventListener('click', handleNextClick, false);
-    actualPrevBtn.addEventListener('click', handlePrevClick, true);
-    actualPrevBtn.addEventListener('click', handlePrevClick, false);
-    actualNextBtn.onclick = handleNextClick;
-    actualPrevBtn.onclick = handlePrevClick;
+    // Attacher les event listeners (une seule fois, sans capture)
+    actualNextBtn.addEventListener('click', wrappedNextClick, false);
+    actualPrevBtn.addEventListener('click', wrappedPrevClick, false);
+    
+    // Test direct pour vérifier que les boutons fonctionnent
+    actualNextBtn.addEventListener('mousedown', (e) => {
+      console.log('🖱️ Mousedown sur bouton suivant');
+    }, false);
+    actualPrevBtn.addEventListener('mousedown', (e) => {
+      console.log('🖱️ Mousedown sur bouton précédent');
+    }, false);
     
     // Mettre à jour les références globales pour mettreAJourCarrousel
     getNextBtn = () => actualNextBtn;
@@ -1470,8 +1465,14 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('✅ Event listeners attachés aux boutons carousel', {
       nextBtn: !!actualNextBtn,
       prevBtn: !!actualPrevBtn,
+      nextBtnId: actualNextBtn.id,
+      prevBtnId: actualPrevBtn.id,
       nextBtnZIndex: actualNextBtn.style.zIndex,
-      prevBtnZIndex: actualPrevBtn.style.zIndex
+      prevBtnZIndex: actualPrevBtn.style.zIndex,
+      nextBtnDisplay: window.getComputedStyle(actualNextBtn).display,
+      prevBtnDisplay: window.getComputedStyle(actualPrevBtn).display,
+      nextBtnPointerEvents: window.getComputedStyle(actualNextBtn).pointerEvents,
+      prevBtnPointerEvents: window.getComputedStyle(actualPrevBtn).pointerEvents
     });
     
     // Support du swipe tactile pour mobile
@@ -1630,17 +1631,47 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
     
-    // Initialisation
+    // Initialisation - s'assurer que les cartes sont rendues avant de calculer
     setTimeout(() => {
       calculerLargeurCarte();
       mettreAJourCarrousel(false);
-    }, 100);
+      
+      // Vérifier que les boutons fonctionnent et réattacher les listeners si nécessaire
+      const checkNextBtn = document.getElementById('carousel-next');
+      const checkPrevBtn = document.getElementById('carousel-prev');
+      
+      if (checkNextBtn && checkNextBtn !== actualNextBtn) {
+        console.warn('⚠️ Le bouton suivant a changé, réattachement des listeners');
+        checkNextBtn.removeEventListener('click', wrappedNextClick, false);
+        checkNextBtn.addEventListener('click', wrappedNextClick, false);
+      }
+      
+      if (checkPrevBtn && checkPrevBtn !== actualPrevBtn) {
+        console.warn('⚠️ Le bouton précédent a changé, réattachement des listeners');
+        checkPrevBtn.removeEventListener('click', wrappedPrevClick, false);
+        checkPrevBtn.addEventListener('click', wrappedPrevClick, false);
+      }
+      
+      // Vérifier que les boutons fonctionnent
+      console.log('🔍 Vérification finale des boutons:', {
+        nextBtnExists: !!actualNextBtn,
+        prevBtnExists: !!actualPrevBtn,
+        nextBtnInDOM: !!checkNextBtn,
+        prevBtnInDOM: !!checkPrevBtn,
+        nextBtnVisible: actualNextBtn ? window.getComputedStyle(actualNextBtn).display !== 'none' : false,
+        prevBtnVisible: actualPrevBtn ? window.getComputedStyle(actualPrevBtn).display !== 'none' : false,
+        nextBtnPointerEvents: actualNextBtn ? window.getComputedStyle(actualNextBtn).pointerEvents : 'none',
+        prevBtnPointerEvents: actualPrevBtn ? window.getComputedStyle(actualPrevBtn).pointerEvents : 'none',
+        nextBtnZIndex: actualNextBtn ? window.getComputedStyle(actualNextBtn).zIndex : 'auto',
+        prevBtnZIndex: actualPrevBtn ? window.getComputedStyle(actualPrevBtn).zIndex : 'auto'
+      });
+    }, 200);
     
     log('✅ Carousel slider initialisé:', {
       nombreProjets,
       type: 'Horizontal Slider',
       swipe: 'Activé',
-      autoScroll: '4s'
+      autoScroll: 'Désactivé'
     });
   }
   
