@@ -1855,6 +1855,9 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Configure le menu mobile
   function configurerMenuMobile() {
+    // Vérifier si on est sur mobile
+    const estMobile = window.innerWidth <= 768;
+    
     const boutonMenu = document.getElementById('mobile-menu-toggle');
     const navigation = document.getElementById('nav-links');
     const overlay = document.getElementById('mobile-menu-overlay');
@@ -1885,14 +1888,25 @@ document.addEventListener('DOMContentLoaded', function() {
     overlay.style.opacity = '0';
     overlay.style.pointerEvents = 'none';
     
-    // FORCER explicitement left: -100% sur le menu avec setProperty pour !important
-    navigation.style.setProperty('left', '-100%', 'important');
-    navigation.style.setProperty('visibility', 'hidden', 'important');
-    navigation.style.setProperty('pointer-events', 'none', 'important');
-    navigation.style.setProperty('opacity', '0', 'important');
-    navigation.style.setProperty('transform', 'translateX(-100%)', 'important');
-    navigation.style.setProperty('clip-path', 'inset(0 0 0 100%)', 'important');
-    navigation.style.setProperty('z-index', '-1', 'important');
+    // FORCER explicitement left: -100% sur le menu avec setProperty pour !important (uniquement sur mobile)
+    if (estMobile) {
+      navigation.style.setProperty('left', '-100%', 'important');
+      navigation.style.setProperty('visibility', 'hidden', 'important');
+      navigation.style.setProperty('pointer-events', 'none', 'important');
+      navigation.style.setProperty('opacity', '0', 'important');
+      navigation.style.setProperty('transform', 'translateX(-100%)', 'important');
+      navigation.style.setProperty('clip-path', 'inset(0 0 0 100%)', 'important');
+      navigation.style.setProperty('z-index', '-1', 'important');
+    } else {
+      // Sur desktop, restaurer les styles par défaut
+      navigation.style.removeProperty('left');
+      navigation.style.removeProperty('visibility');
+      navigation.style.removeProperty('pointer-events');
+      navigation.style.removeProperty('opacity');
+      navigation.style.removeProperty('transform');
+      navigation.style.removeProperty('clip-path');
+      navigation.style.removeProperty('z-index');
+    }
     
     function basculerMenu() {
       const estOuvert = navigation.classList.contains('active');
@@ -1911,14 +1925,25 @@ document.addEventListener('DOMContentLoaded', function() {
         overlay.style.setProperty('opacity', '0', 'important');
         overlay.style.setProperty('pointer-events', 'none', 'important');
         
-        // Forcer le menu à left: -100%
-        navigation.style.setProperty('left', '-100%', 'important');
-        navigation.style.setProperty('visibility', 'hidden', 'important');
-        navigation.style.setProperty('pointer-events', 'none', 'important');
-        navigation.style.setProperty('opacity', '0', 'important');
-        navigation.style.setProperty('transform', 'translateX(-100%)', 'important');
-        navigation.style.setProperty('clip-path', 'inset(0 0 0 100%)', 'important');
-        navigation.style.setProperty('z-index', '-1', 'important');
+        // Forcer le menu à left: -100% (uniquement sur mobile)
+        if (estMobile) {
+          navigation.style.setProperty('left', '-100%', 'important');
+          navigation.style.setProperty('visibility', 'hidden', 'important');
+          navigation.style.setProperty('pointer-events', 'none', 'important');
+          navigation.style.setProperty('opacity', '0', 'important');
+          navigation.style.setProperty('transform', 'translateX(-100%)', 'important');
+          navigation.style.setProperty('clip-path', 'inset(0 0 0 100%)', 'important');
+          navigation.style.setProperty('z-index', '-1', 'important');
+        } else {
+          // Sur desktop, restaurer les styles par défaut
+          navigation.style.removeProperty('left');
+          navigation.style.removeProperty('visibility');
+          navigation.style.removeProperty('pointer-events');
+          navigation.style.removeProperty('opacity');
+          navigation.style.removeProperty('transform');
+          navigation.style.removeProperty('clip-path');
+          navigation.style.removeProperty('z-index');
+        }
       } else {
         // Ouvre le menu
         navigation.classList.add('active');
@@ -1933,14 +1958,16 @@ document.addEventListener('DOMContentLoaded', function() {
         overlay.style.setProperty('opacity', '1', 'important');
         overlay.style.setProperty('pointer-events', 'all', 'important');
         
-        // Forcer le menu à left: 0
-        navigation.style.setProperty('left', '0', 'important');
-        navigation.style.setProperty('visibility', 'visible', 'important');
-        navigation.style.setProperty('pointer-events', 'all', 'important');
-        navigation.style.setProperty('opacity', '1', 'important');
-        navigation.style.setProperty('transform', 'translateX(0)', 'important');
-        navigation.style.setProperty('clip-path', 'inset(0 0 0 0)', 'important');
-        navigation.style.setProperty('z-index', 'var(--z-mobile-menu)', 'important');
+        // Forcer le menu à left: 0 (uniquement sur mobile)
+        if (estMobile) {
+          navigation.style.setProperty('left', '0', 'important');
+          navigation.style.setProperty('visibility', 'visible', 'important');
+          navigation.style.setProperty('pointer-events', 'all', 'important');
+          navigation.style.setProperty('opacity', '1', 'important');
+          navigation.style.setProperty('transform', 'translateX(0)', 'important');
+          navigation.style.setProperty('clip-path', 'inset(0 0 0 0)', 'important');
+          navigation.style.setProperty('z-index', 'var(--z-mobile-menu)', 'important');
+        }
       }
     }
     
@@ -1992,17 +2019,30 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (navigation) {
       navigation.classList.remove('active');
-      // Forcer explicitement left: -100% avec !important
-      navigation.style.setProperty('left', '-100%', 'important');
-      navigation.style.setProperty('visibility', 'hidden', 'important');
-      navigation.style.setProperty('pointer-events', 'none', 'important');
-      navigation.style.setProperty('opacity', '0', 'important');
-      navigation.style.setProperty('transform', 'translateX(-100%)', 'important');
-      navigation.style.setProperty('clip-path', 'inset(0 0 0 100%)', 'important');
-      navigation.style.setProperty('z-index', '-1', 'important');
-      // Log pour debug
-      if (estEnDeveloppement) {
-        log('🔧 Menu mobile forcé à left: -100% avec z-index: -1');
+      // Vérifier si on est sur mobile avant d'appliquer les styles
+      const estMobile = window.innerWidth <= 768;
+      if (estMobile) {
+        // Forcer explicitement left: -100% avec !important (uniquement sur mobile)
+        navigation.style.setProperty('left', '-100%', 'important');
+        navigation.style.setProperty('visibility', 'hidden', 'important');
+        navigation.style.setProperty('pointer-events', 'none', 'important');
+        navigation.style.setProperty('opacity', '0', 'important');
+        navigation.style.setProperty('transform', 'translateX(-100%)', 'important');
+        navigation.style.setProperty('clip-path', 'inset(0 0 0 100%)', 'important');
+        navigation.style.setProperty('z-index', '-1', 'important');
+        // Log pour debug
+        if (estEnDeveloppement) {
+          log('🔧 Menu mobile forcé à left: -100% avec z-index: -1');
+        }
+      } else {
+        // Sur desktop, ne pas appliquer ces styles
+        navigation.style.removeProperty('left');
+        navigation.style.removeProperty('visibility');
+        navigation.style.removeProperty('pointer-events');
+        navigation.style.removeProperty('opacity');
+        navigation.style.removeProperty('transform');
+        navigation.style.removeProperty('clip-path');
+        navigation.style.removeProperty('z-index');
       }
     }
     
@@ -3017,6 +3057,35 @@ document.addEventListener('DOMContentLoaded', function() {
     // Configuration de l'interface
     configurerContact();
     configurerMenuMobile();
+    
+    // Gérer le redimensionnement de la fenêtre pour réappliquer les styles correctement
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        const navigation = document.getElementById('nav-links');
+        const estMobile = window.innerWidth <= 768;
+        if (navigation && !navigation.classList.contains('active')) {
+          if (estMobile) {
+            navigation.style.setProperty('left', '-100%', 'important');
+            navigation.style.setProperty('visibility', 'hidden', 'important');
+            navigation.style.setProperty('pointer-events', 'none', 'important');
+            navigation.style.setProperty('opacity', '0', 'important');
+            navigation.style.setProperty('transform', 'translateX(-100%)', 'important');
+            navigation.style.setProperty('clip-path', 'inset(0 0 0 100%)', 'important');
+            navigation.style.setProperty('z-index', '-1', 'important');
+          } else {
+            navigation.style.removeProperty('left');
+            navigation.style.removeProperty('visibility');
+            navigation.style.removeProperty('pointer-events');
+            navigation.style.removeProperty('opacity');
+            navigation.style.removeProperty('transform');
+            navigation.style.removeProperty('clip-path');
+            navigation.style.removeProperty('z-index');
+          }
+        }
+      }, 250);
+    });
     configurerRetourEnHaut();
     configurerEvenements();
     
