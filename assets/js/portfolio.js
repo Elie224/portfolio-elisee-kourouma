@@ -1213,9 +1213,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const container = track?.parentElement;
     
     if (!track || !prevBtn || !nextBtn || !container) {
-      logWarn('Éléments du carrousel non trouvés');
+      logWarn('Éléments du carrousel non trouvés', {
+        track: !!track,
+        prevBtn: !!prevBtn,
+        nextBtn: !!nextBtn,
+        container: !!container
+      });
       return;
     }
+    
+    // S'assurer que les boutons sont bien cliquables
+    prevBtn.style.pointerEvents = 'auto';
+    nextBtn.style.pointerEvents = 'auto';
+    prevBtn.disabled = false;
+    nextBtn.disabled = false;
     
     if (nombreProjets === 0) {
       if (indicators) indicators.innerHTML = '';
@@ -1281,8 +1292,16 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Mettre à jour les boutons (désactivés aux extrémités si pas de boucle)
       // Ici on garde la boucle infinie, donc toujours activés
-      prevBtn.disabled = false;
-      nextBtn.disabled = false;
+      const actualPrevBtn = document.getElementById('carousel-prev');
+      const actualNextBtn = document.getElementById('carousel-next');
+      if (actualPrevBtn) {
+        actualPrevBtn.disabled = false;
+        actualPrevBtn.style.pointerEvents = 'auto';
+      }
+      if (actualNextBtn) {
+        actualNextBtn.disabled = false;
+        actualNextBtn.style.pointerEvents = 'auto';
+      }
     }
     
     // Aller à une slide spécifique
@@ -1326,9 +1345,45 @@ document.addEventListener('DOMContentLoaded', function() {
       }, 600);
     }
     
-    // Event listeners pour les boutons
-    nextBtn.addEventListener('click', slideSuivant);
-    prevBtn.addEventListener('click', slidePrecedent);
+    // Event listeners pour les boutons - avec gestion d'erreur et logs
+    function handleNextClick(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      log('🔄 Clic sur bouton suivant');
+      slideSuivant();
+    }
+    
+    function handlePrevClick(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      log('🔄 Clic sur bouton précédent');
+      slidePrecedent();
+    }
+    
+    // Retirer les anciens event listeners s'ils existent
+    const newNextBtn = nextBtn.cloneNode(true);
+    nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
+    const newPrevBtn = prevBtn.cloneNode(true);
+    prevBtn.parentNode.replaceChild(newPrevBtn, prevBtn);
+    
+    // Référencer les nouveaux boutons
+    const actualNextBtn = document.getElementById('carousel-next');
+    const actualPrevBtn = document.getElementById('carousel-prev');
+    
+    // Ajouter les nouveaux event listeners
+    actualNextBtn.addEventListener('click', handleNextClick);
+    actualPrevBtn.addEventListener('click', handlePrevClick);
+    
+    // S'assurer que les boutons sont cliquables
+    actualNextBtn.style.pointerEvents = 'auto';
+    actualPrevBtn.style.pointerEvents = 'auto';
+    actualNextBtn.style.cursor = 'pointer';
+    actualPrevBtn.style.cursor = 'pointer';
+    
+    log('✅ Event listeners attachés aux boutons carousel', {
+      nextBtn: !!actualNextBtn,
+      prevBtn: !!actualPrevBtn
+    });
     
     // Support du swipe tactile pour mobile
     let touchStartX = 0;
