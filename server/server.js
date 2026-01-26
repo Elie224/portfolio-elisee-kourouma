@@ -244,7 +244,14 @@ if (missingVars.length > 0) {
   process.exit(1);
 }
 
-// Connexion à MongoDB
+// Démarrer le serveur IMMÉDIATEMENT (même si MongoDB n'est pas connecté)
+// Écouter sur 0.0.0.0 pour être accessible depuis Fly.io
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Serveur démarré sur le port ${PORT}`);
+  console.log(`📡 API disponible sur http://0.0.0.0:${PORT}/api/portfolio`);
+});
+
+// Connexion à MongoDB (en arrière-plan, ne bloque pas le démarrage du serveur)
 mongoose.connect(process.env.MONGODB_URI)
 .then(async () => {
   console.log('✅ Connecté à MongoDB');
@@ -327,13 +334,6 @@ mongoose.connect(process.env.MONGODB_URI)
   } catch (initError) {
     console.error('⚠️ Erreur lors de l\'initialisation:', initError.message);
   }
-  
-  // Démarrer le serveur
-  // Écouter sur 0.0.0.0 pour être accessible depuis Fly.io
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Serveur démarré sur le port ${PORT}`);
-    console.log(`📡 API disponible sur http://0.0.0.0:${PORT}/api/portfolio`);
-  });
 })
 .catch((error) => {
   console.error('❌ Erreur de connexion à MongoDB:', {
@@ -345,10 +345,7 @@ mongoose.connect(process.env.MONGODB_URI)
   });
   console.log('💡 Assurez-vous que MongoDB est démarré ou utilisez MongoDB Atlas');
   console.log('💡 Vérifiez la variable MONGODB_URI dans les secrets Fly.io');
-  
-  // Ne pas arrêter le processus, permettre au serveur de démarrer
-  // Le serveur pourra toujours répondre avec des données par défaut
-  console.log('⚠️ Le serveur démarre quand même, mais MongoDB n\'est pas disponible');
+  console.log('⚠️ Le serveur fonctionne, mais MongoDB n\'est pas disponible - les routes retourneront des données par défaut');
 });
 
 // Gestion globale des erreurs (middleware de fin)
