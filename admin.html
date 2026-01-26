@@ -1966,6 +1966,8 @@
               <p style="margin: 4px 0; font-size: 14px;">Pour changer votre mot de passe, vous devez connaître votre mot de passe actuel. Le nouveau mot de passe doit contenir au minimum 8 caractères.</p>
             </div>
             <form id="change-password-form">
+              <!-- Champ username caché pour l'accessibilité (requis par Chrome) -->
+              <input type="text" name="username" value="admin" autocomplete="username" style="position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; pointer-events: none;" tabindex="-1" aria-hidden="true" />
               <div class="form-group">
                 <label for="current-password">Mot de passe actuel *</label>
                 <input type="password" id="current-password" placeholder="••••••••" required autocomplete="current-password" />
