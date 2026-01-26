@@ -443,7 +443,7 @@ document.addEventListener('DOMContentLoaded', function() {
       personal: {
         name: 'Nema Elisée Kourouma',
         title: 'Étudiant en Master 1 Intelligence Artificielle',
-        description: 'Étudiant en Master 1 Intelligence Artificielle à l\'École Supérieure d\'Informatique de Paris. Titulaire d\'une licence en mathématiques et informatique (USMBA Fès).',
+        description: 'Actuellement en Master 1 Intelligence Artificielle à l\'École Supérieure d\'Informatique de Paris (ESGI), je me spécialise dans le développement d\'applications intelligentes. Mon parcours académique, enrichi par une licence en mathématiques et informatique obtenue à l\'USMBA de Fès, me permet d\'allier rigueur mathématique et créativité technique.',
         email: MES_CONTACTS.email,
         phone: MES_CONTACTS.telephone,
         photo: 'assets/photo.jpeg'
@@ -457,8 +457,8 @@ document.addEventListener('DOMContentLoaded', function() {
       techEvents: [],
       links: {}, // Pas de CV par défaut - sera chargé depuis le serveur
       about: {
-        heroDescription: 'Passionné par l\'Intelligence Artificielle et le développement web.',
-        aboutDescription: 'Je conçois des solutions innovantes alliant IA et développement web.',
+        heroDescription: 'Passionné par les technologies émergentes, je me consacre à l\'exploration de l\'Intelligence Artificielle et au développement d\'applications web performantes.',
+        aboutDescription: 'Je conçois et développe des solutions innovantes qui combinent intelligence artificielle et technologies web modernes, avec un focus sur la qualité, la performance et l\'expérience utilisateur.',
         stats: {
           projects: 0,
           experience: 2,

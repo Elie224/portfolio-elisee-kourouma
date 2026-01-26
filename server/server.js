@@ -5,8 +5,37 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 require('dotenv').config();
 
+// DEBUG: Afficher toutes les variables d'environnement disponibles (sans valeurs sensibles)
+// IMPORTANT: Ce debug doit être AU DÉBUT pour voir ce qui est disponible
+console.log('🔍 Variables d\'environnement disponibles:');
+const envKeys = Object.keys(process.env).filter(key => 
+  key.includes('ADMIN') || key.includes('MONGODB') || key.includes('JWT') || key.includes('NODE')
+);
+envKeys.forEach(key => {
+  const value = process.env[key];
+  if (key.includes('PASSWORD') || key.includes('SECRET') || key.includes('URI')) {
+    console.log(`  ${key}: ${value ? '✅ Présent (' + value.substring(0, 10) + '...)' : '❌ Absent'}`);
+  } else {
+    console.log(`  ${key}: ${value || '❌ Absent'}`);
+  }
+});
+
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Activer trust proxy pour Fly.io (nécessaire pour rate limiting et IP correcte)
+app.set('trust proxy', true);
+
+// Middleware pour stocker le chemin de la requête (pour CORS - doit être avant /health)
+app.use((req, res, next) => {
+  global.currentPath = req.path;
+  next();
+});
+
+// Route de health check (doit être tôt pour que Fly.io puisse vérifier)
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 // Configuration de sécurité avec Helmet
 app.use(helmet({
@@ -76,6 +105,12 @@ app.use('/api/portfolio/login', authLimiter);
 // Configuration CORS sécurisée
 const corsOptions = {
   origin: function (origin, callback) {
+    // Autoriser les health checks sans origin (pour Fly.io)
+    // On utilise une variable globale temporaire définie par le middleware
+    if (global.currentPath === '/health') {
+      return callback(null, true);
+    }
+    
     // En développement, autoriser localhost
     if (process.env.NODE_ENV === 'development') {
       const allowedLocalOrigins = [
@@ -100,6 +135,7 @@ const corsOptions = {
     if (process.env.ALLOWED_ORIGINS) {
       const envOrigins = process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim());
       allowedOrigins.push(...envOrigins);
+      console.log('🔍 CORS - Origines autorisées depuis ALLOWED_ORIGINS:', allowedOrigins);
     } else if (process.env.NODE_ENV === 'production') {
       // En production, ALLOWED_ORIGINS doit être défini
       console.warn('⚠️ ALLOWED_ORIGINS non défini en production - CORS peut être restrictif');
@@ -108,7 +144,11 @@ const corsOptions = {
     // Ajouter le domaine du portfolio par défaut si présent dans les variables d'environnement
     if (process.env.PORTFOLIO_DOMAIN) {
       allowedOrigins.push(process.env.PORTFOLIO_DOMAIN);
+      console.log('🔍 CORS - Ajout PORTFOLIO_DOMAIN:', process.env.PORTFOLIO_DOMAIN);
     }
+    
+    console.log('🔍 CORS - Requête reçue - Origin:', origin || 'none', '| Path:', global.currentPath);
+    console.log('🔍 CORS - Liste complète des origines autorisées:', allowedOrigins);
     
     // Vérification stricte des origines
     if (!origin) {
@@ -122,6 +162,7 @@ const corsOptions = {
     }
     
     if (allowedOrigins.includes(origin)) {
+      console.log('✅ CORS: Origine autorisée:', origin);
       callback(null, true);
     } else {
       console.warn('🚫 CORS: Origine non autorisée:', origin);
@@ -142,21 +183,32 @@ const corsOptions = {
   optionsSuccessStatus: 200 // Pour IE11
 };
 
-app.use(cors(corsOptions));
+// Middleware de logging pour debug
+app.use((req, res, next) => {
+  console.log(`📥 ${req.method} ${req.path} - Origin: ${req.headers.origin || 'none'}`);
+  next();
+});
+
+// Appliquer CORS avec le chemin stocké
+app.use((req, res, next) => {
+  global.currentPath = req.path;
+  cors(corsOptions)(req, res, next);
+});
+
 app.use(express.json({ limit: '10mb' })); // Augmenter la limite pour les gros objets
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Gérer explicitement les requêtes OPTIONS (preflight)
-app.options('*', cors(corsOptions));
+// Gérer explicitement les requêtes OPTIONS (preflight) - exclure /health
+app.options('*', (req, res, next) => {
+  if (req.path === '/health') {
+    return res.status(200).end();
+  }
+  return cors(corsOptions)(req, res, next);
+});
 
 // Routes
 const portfolioRoutes = require('./routes/portfolio');
 app.use('/api/portfolio', portfolioRoutes);
-
-// Route de santé
-app.get('/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Serveur actif' });
-});
 
 // Validation des variables d'environnement obligatoires
 const requiredEnvVars = ['MONGODB_URI', 'JWT_SECRET', 'ADMIN_EMAIL', 'ADMIN_PASSWORD_HASH'];
@@ -214,9 +266,10 @@ mongoose.connect(process.env.MONGODB_URI)
   }
   
   // Démarrer le serveur
-  app.listen(PORT, () => {
+  // Écouter sur 0.0.0.0 pour être accessible depuis Fly.io
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Serveur démarré sur le port ${PORT}`);
-    console.log(`📡 API disponible sur http://localhost:${PORT}/api/portfolio`);
+    console.log(`📡 API disponible sur http://0.0.0.0:${PORT}/api/portfolio`);
   });
 })
 .catch((error) => {
@@ -226,8 +279,25 @@ mongoose.connect(process.env.MONGODB_URI)
 
 // Gestion des erreurs
 app.use((err, req, res, next) => {
-  console.error('Erreur:', err);
-  res.status(500).json({ error: 'Erreur serveur interne' });
+  console.error('❌ Erreur serveur:', {
+    message: err.message,
+    stack: err.stack,
+    path: req.path,
+    method: req.method,
+    origin: req.headers.origin,
+    timestamp: new Date().toISOString()
+  });
+  
+  // En développement, envoyer plus de détails
+  if (process.env.NODE_ENV === 'development') {
+    res.status(err.status || 500).json({ 
+      error: 'Erreur serveur interne',
+      message: err.message,
+      stack: err.stack
+    });
+  } else {
+    res.status(err.status || 500).json({ error: 'Erreur serveur interne' });
+  }
 });
 
 module.exports = app;

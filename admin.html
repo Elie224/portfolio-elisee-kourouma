@@ -218,8 +218,413 @@
         gap: 16px;
       }
       @media (max-width: 768px) {
+        .admin-container {
+          padding: var(--espacement-md) var(--espacement-sm);
+        }
+        
+        .login-container {
+          max-width: 100%;
+          margin: var(--espacement-xl) auto;
+          padding: var(--espacement-lg);
+          margin-left: var(--espacement-sm);
+          margin-right: var(--espacement-sm);
+        }
+        
+        .admin-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: var(--espacement-md);
+          padding-bottom: var(--espacement-md);
+        }
+        
+        .admin-stats {
+          grid-template-columns: 1fr;
+          gap: var(--espacement-md);
+        }
+        
+        .stat-card-admin {
+          padding: var(--espacement-md);
+        }
+        
+        .stat-card-admin .value {
+          font-size: 1.75rem;
+        }
+        
+        .admin-section {
+          padding: var(--espacement-md);
+          margin: var(--espacement-lg) 0;
+        }
+        
+        .admin-section h2 {
+          font-size: 1.5rem;
+          margin-bottom: var(--espacement-md);
+        }
+        
+        .admin-tabs {
+          flex-wrap: wrap;
+          gap: var(--espacement-xs);
+        }
+        
+        .admin-tab {
+          padding: var(--espacement-sm) var(--espacement-md);
+          font-size: 0.9rem;
+          flex: 1 1 auto;
+          min-width: calc(50% - var(--espacement-xs));
+        }
+        
         .form-row {
           grid-template-columns: 1fr;
+          gap: var(--espacement-md);
+        }
+        
+        .form-group {
+          margin-bottom: var(--espacement-md);
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+          width: 100%;
+          padding: var(--espacement-md);
+          font-size: 1rem;
+          min-height: 44px;
+        }
+        
+        .form-group textarea {
+          min-height: 120px;
+        }
+        
+        .item-list {
+          gap: var(--espacement-md);
+        }
+        
+        .item-card {
+          padding: var(--espacement-md);
+        }
+        
+        .item-actions {
+          flex-direction: column;
+          gap: var(--espacement-xs);
+        }
+        
+        .item-actions .btn-small {
+          width: 100%;
+          justify-content: center;
+        }
+        
+        .btn {
+          width: 100%;
+          padding: var(--espacement-md) var(--espacement-lg);
+          font-size: 1rem;
+          min-height: 44px;
+        }
+        
+        .btn-group {
+          flex-direction: column;
+          width: 100%;
+          gap: var(--espacement-sm);
+        }
+        
+        /* Form sections mobile */
+        .form-section {
+          padding: var(--espacement-md);
+          margin-bottom: var(--espacement-md);
+        }
+        
+        .form-section h3,
+        .form-section h4 {
+          font-size: 1.1rem;
+          margin-bottom: var(--espacement-sm);
+        }
+        
+        /* Featured checkbox mobile */
+        .featured-checkbox {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: var(--espacement-xs);
+        }
+        
+        /* Photo preview mobile */
+        .photo-preview,
+        .photo-preview-placeholder {
+          width: 120px;
+          height: 120px;
+        }
+        
+        .photo-controls {
+          width: 100%;
+        }
+        
+        /* Tag input mobile */
+        .tag-input {
+          gap: var(--espacement-xs);
+        }
+        
+        .tag-item {
+          font-size: 0.75rem;
+          padding: 4px 8px;
+        }
+        
+        /* Selection controls mobile */
+        .selection-controls {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: var(--espacement-sm);
+        }
+        
+        .bulk-actions {
+          width: 100%;
+          flex-direction: column;
+        }
+        
+        /* Item card mobile */
+        .item-card .select-checkbox {
+          top: var(--espacement-sm);
+          right: var(--espacement-sm);
+        }
+        
+        /* Skill items mobile */
+        .skill-item {
+          font-size: 0.75rem;
+          padding: 4px 8px;
+        }
+        
+        /* Admin info mobile */
+        .admin-info {
+          padding: var(--espacement-md);
+          font-size: 0.9rem;
+        }
+        
+        /* Error/Success messages mobile */
+        .error-message,
+        .success-message {
+          padding: var(--espacement-md);
+          font-size: 0.9rem;
+        }
+        
+        /* Modales admin mobile */
+        #personal-info-form-modal,
+        #project-form-modal,
+        #testimonial-form-modal,
+        #timeline-form-modal,
+        #service-form-modal,
+        #certification-form-modal,
+        #stage-form-modal,
+        #alternance-form-modal,
+        #tech-event-form-modal,
+        #faq-form-modal {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.8);
+          backdrop-filter: blur(4px);
+          -webkit-backdrop-filter: blur(4px);
+          z-index: 1000;
+          overflow-y: auto;
+          padding: var(--espacement-md);
+        }
+        
+        #personal-info-form-modal .admin-section,
+        #project-form-modal .admin-section,
+        #testimonial-form-modal .admin-section,
+        #timeline-form-modal .admin-section,
+        #service-form-modal .admin-section,
+        #certification-form-modal .admin-section,
+        #stage-form-modal .admin-section,
+        #alternance-form-modal .admin-section,
+        #tech-event-form-modal .admin-section,
+        #faq-form-modal .admin-section {
+          max-width: 100%;
+          margin: var(--espacement-md) 0;
+          max-height: calc(100vh - var(--espacement-2xl));
+          overflow-y: auto;
+        }
+        
+        /* Scroll amélioré pour les modales */
+        #personal-info-form-modal,
+        #project-form-modal,
+        #testimonial-form-modal,
+        #timeline-form-modal,
+        #service-form-modal,
+        #certification-form-modal,
+        #stage-form-modal,
+        #alternance-form-modal,
+        #tech-event-form-modal,
+        #faq-form-modal {
+          -webkit-overflow-scrolling: touch;
+        }
+      }
+      
+      @media (max-width: 480px) {
+        .admin-container {
+          padding: var(--espacement-sm);
+        }
+        
+        .login-container {
+          padding: var(--espacement-md);
+          margin: var(--espacement-lg) var(--espacement-xs);
+        }
+        
+        .admin-header h1 {
+          font-size: 1.5rem;
+        }
+        
+        .stat-card-admin {
+          padding: var(--espacement-sm);
+        }
+        
+        .stat-card-admin .value {
+          font-size: 1.5rem;
+        }
+        
+        .admin-section {
+          padding: var(--espacement-sm);
+        }
+        
+        .admin-section h2 {
+          font-size: 1.25rem;
+        }
+        
+        .admin-section h3 {
+          font-size: 1.1rem;
+        }
+        
+        .admin-tab {
+          padding: var(--espacement-xs) var(--espacement-sm);
+          font-size: 0.85rem;
+          min-width: 100%;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+          padding: var(--espacement-sm) var(--espacement-md);
+          font-size: 0.95rem;
+          min-height: 40px;
+        }
+        
+        .form-group textarea {
+          min-height: 100px;
+        }
+        
+        .btn {
+          padding: var(--espacement-sm) var(--espacement-md);
+          font-size: 0.9rem;
+          min-height: 40px;
+        }
+        
+        .item-card {
+          padding: var(--espacement-sm);
+        }
+        
+        .item-card h4 {
+          font-size: 1rem;
+        }
+        
+        /* Form sections ultra compactes */
+        .form-section {
+          padding: var(--espacement-sm);
+        }
+        
+        .form-section h3 {
+          font-size: 1rem;
+        }
+        
+        .form-section h4 {
+          font-size: 0.95rem;
+        }
+        
+        /* Photo preview ultra compact */
+        .photo-preview,
+        .photo-preview-placeholder {
+          width: 100px;
+          height: 100px;
+        }
+        
+        .photo-preview-container {
+          padding: var(--espacement-sm);
+        }
+        
+        /* Tag items ultra compacts */
+        .tag-item {
+          font-size: 0.7rem;
+          padding: 3px 6px;
+        }
+        
+        /* Admin info ultra compact */
+        .admin-info {
+          padding: var(--espacement-sm);
+          font-size: 0.85rem;
+        }
+        
+        /* Login container ultra compact */
+        .login-container h1 {
+          font-size: 1.5rem;
+        }
+        
+        .login-container p {
+          font-size: 0.9rem;
+        }
+      }
+      
+      @media (max-width: 375px) {
+        .admin-container {
+          padding: var(--espacement-xs);
+        }
+        
+        .login-container {
+          padding: var(--espacement-sm);
+        }
+        
+        .admin-header h1 {
+          font-size: 1.25rem;
+        }
+        
+        .admin-tab {
+          font-size: 0.8rem;
+          padding: 8px var(--espacement-xs);
+        }
+        
+        .admin-section h2 {
+          font-size: 1.1rem;
+        }
+        
+        .admin-section h3 {
+          font-size: 0.95rem;
+        }
+        
+        .stat-card-admin .value {
+          font-size: 1.25rem;
+        }
+        
+        /* Modales ultra compactes */
+        #personal-info-form-modal,
+        #project-form-modal,
+        #testimonial-form-modal,
+        #timeline-form-modal,
+        #service-form-modal,
+        #certification-form-modal,
+        #stage-form-modal,
+        #alternance-form-modal,
+        #tech-event-form-modal,
+        #faq-form-modal {
+          padding: var(--espacement-sm);
+        }
+        
+        #personal-info-form-modal .admin-section,
+        #project-form-modal .admin-section,
+        #testimonial-form-modal .admin-section,
+        #timeline-form-modal .admin-section,
+        #service-form-modal .admin-section,
+        #certification-form-modal .admin-section,
+        #stage-form-modal .admin-section,
+        #alternance-form-modal .admin-section,
+        #tech-event-form-modal .admin-section,
+        #faq-form-modal .admin-section {
+          padding: var(--espacement-sm);
+          max-height: calc(100vh - var(--espacement-xl));
         }
       }
       .tag-input {
@@ -431,6 +836,12 @@
         .photo-preview-container {
           flex-direction: column;
           align-items: center;
+          gap: var(--espacement-md);
+        }
+        
+        .photo-preview-container img {
+          max-width: 100%;
+          height: auto;
         }
       }
     </style>

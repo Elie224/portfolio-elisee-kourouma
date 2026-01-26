@@ -258,19 +258,152 @@
 
 /* Responsive Contact */
 @media (max-width: 768px) {
+  .contact-hero {
+    padding: var(--espacement-xl) 0;
+    margin-bottom: var(--espacement-xl);
+  }
+  
+  .contact-hero-title {
+    font-size: clamp(1.75rem, 6vw, 2.5rem);
+    margin-bottom: var(--espacement-sm);
+  }
+  
   .contact-form-container {
     padding: var(--espacement-lg);
+    margin: 0 var(--espacement-md);
+    border-radius: var(--rayon-md);
+  }
+  
+  .contact-form-title {
+    font-size: clamp(1.5rem, 5vw, 2rem);
+    margin-bottom: var(--espacement-xs);
+  }
+  
+  .contact-form-subtitle {
+    font-size: 0.95rem;
+    margin-bottom: var(--espacement-lg);
   }
   
   .contact-card {
     padding: var(--espacement-lg);
+    margin-bottom: var(--espacement-md);
+  }
+  
+  .contact-card-icon {
+    width: 56px;
+    height: 56px;
+    margin-bottom: var(--espacement-md);
+  }
+  
+  .contact-section-title {
+    font-size: 1.1rem;
+  }
+  
+  .form-group {
+    margin-bottom: var(--espacement-md);
+  }
+  
+  .form-group label {
+    font-size: 0.9rem;
+    margin-bottom: var(--espacement-xs);
+  }
+  
+  .form-group input,
+  .form-group textarea {
+    padding: var(--espacement-md);
+    font-size: 1rem;
+    min-height: 44px; /* Taille tactile optimale */
+  }
+  
+  .form-group textarea {
+    min-height: 120px;
   }
   
   .form-actions {
     flex-direction: column;
+    gap: var(--espacement-sm);
+    margin-top: var(--espacement-lg);
   }
   
   .form-actions .btn {
     width: 100%;
+    padding: var(--espacement-md) var(--espacement-lg);
+    font-size: 1rem;
+    min-height: 44px;
+  }
+  
+  .form-message {
+    padding: var(--espacement-md);
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .contact-hero {
+    padding: var(--espacement-lg) 0;
+    margin-bottom: var(--espacement-lg);
+  }
+  
+  .contact-hero-title {
+    font-size: clamp(1.5rem, 7vw, 2rem);
+  }
+  
+  .contact-form-container {
+    padding: var(--espacement-md);
+    margin: 0 var(--espacement-sm);
+    border-radius: var(--rayon-sm);
+  }
+  
+  .contact-form-title {
+    font-size: clamp(1.25rem, 6vw, 1.75rem);
+  }
+  
+  .contact-form-subtitle {
+    font-size: 0.9rem;
+    margin-bottom: var(--espacement-md);
+  }
+  
+  .contact-card {
+    padding: var(--espacement-md);
+  }
+  
+  .contact-card-icon {
+    width: 48px;
+    height: 48px;
+    margin-bottom: var(--espacement-sm);
+  }
+  
+  .contact-section-title {
+    font-size: 1rem;
+  }
+  
+  .form-group {
+    margin-bottom: var(--espacement-sm);
+  }
+  
+  .form-group label {
+    font-size: 0.85rem;
+  }
+  
+  .form-group input,
+  .form-group textarea {
+    padding: var(--espacement-sm) var(--espacement-md);
+    font-size: 0.95rem;
+    min-height: 40px;
+  }
+  
+  .form-group textarea {
+    min-height: 100px;
+  }
+  
+  .form-actions .btn {
+    padding: var(--espacement-sm) var(--espacement-md);
+    font-size: 0.9rem;
+    min-height: 40px;
+  }
+  
+  .form-message {
+    padding: var(--espacement-sm);
+    font-size: 0.9rem;
   }
 }
