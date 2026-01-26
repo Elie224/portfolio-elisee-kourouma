@@ -1265,6 +1265,9 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
     
+    // Variables pour stocker les fonctions de récupération des boutons
+    let getNextBtn, getPrevBtn;
+    
     // Mettre à jour la position du slider
     function mettreAJourCarrousel(smooth = true) {
       if (isTransitioning) return;
@@ -1292,8 +1295,8 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Mettre à jour les boutons (désactivés aux extrémités si pas de boucle)
       // Ici on garde la boucle infinie, donc toujours activés
-      const actualPrevBtn = document.getElementById('carousel-prev');
-      const actualNextBtn = document.getElementById('carousel-next');
+      const actualPrevBtn = getPrevBtn ? getPrevBtn() : document.getElementById('carousel-prev');
+      const actualNextBtn = getNextBtn ? getNextBtn() : document.getElementById('carousel-next');
       if (actualPrevBtn) {
         actualPrevBtn.disabled = false;
         actualPrevBtn.style.pointerEvents = 'auto';
@@ -1360,7 +1363,15 @@ document.addEventListener('DOMContentLoaded', function() {
       slidePrecedent();
     }
     
-    // Retirer les anciens event listeners s'ils existent
+    // S'assurer que les boutons sont cliquables et ajouter les event listeners
+    nextBtn.style.pointerEvents = 'auto';
+    prevBtn.style.pointerEvents = 'auto';
+    nextBtn.style.cursor = 'pointer';
+    prevBtn.style.cursor = 'pointer';
+    nextBtn.style.zIndex = '100';
+    prevBtn.style.zIndex = '100';
+    
+    // Retirer les anciens event listeners s'ils existent en clonant les boutons
     const newNextBtn = nextBtn.cloneNode(true);
     nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
     const newPrevBtn = prevBtn.cloneNode(true);
@@ -1370,15 +1381,26 @@ document.addEventListener('DOMContentLoaded', function() {
     const actualNextBtn = document.getElementById('carousel-next');
     const actualPrevBtn = document.getElementById('carousel-prev');
     
+    if (!actualNextBtn || !actualPrevBtn) {
+      logWarn('❌ Impossible de trouver les boutons après clonage');
+      return;
+    }
+    
     // Ajouter les nouveaux event listeners
-    actualNextBtn.addEventListener('click', handleNextClick);
-    actualPrevBtn.addEventListener('click', handlePrevClick);
+    actualNextBtn.addEventListener('click', handleNextClick, { passive: false });
+    actualPrevBtn.addEventListener('click', handlePrevClick, { passive: false });
     
     // S'assurer que les boutons sont cliquables
     actualNextBtn.style.pointerEvents = 'auto';
     actualPrevBtn.style.pointerEvents = 'auto';
     actualNextBtn.style.cursor = 'pointer';
     actualPrevBtn.style.cursor = 'pointer';
+    actualNextBtn.style.zIndex = '100';
+    actualPrevBtn.style.zIndex = '100';
+    
+    // Mettre à jour les références globales pour mettreAJourCarrousel
+    getNextBtn = () => document.getElementById('carousel-next');
+    getPrevBtn = () => document.getElementById('carousel-prev');
     
     log('✅ Event listeners attachés aux boutons carousel', {
       nextBtn: !!actualNextBtn,
