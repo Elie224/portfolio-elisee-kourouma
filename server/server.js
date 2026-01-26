@@ -21,7 +21,6 @@ envKeys.forEach(key => {
 });
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 // Activer trust proxy pour Fly.io (nécessaire pour rate limiting et IP correcte)
 // Utiliser 1 au lieu de true pour éviter l'avertissement express-rate-limit
@@ -37,6 +36,16 @@ app.use((req, res, next) => {
 // Route de health check (doit être tôt pour que Fly.io puisse vérifier)
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Démarrer le serveur IMMÉDIATEMENT après la route health check
+// Cela permet au health check d'être disponible dès que possible
+const PORT = process.env.PORT || 3000;
+console.log(`📡 Démarrage du serveur sur le port ${PORT}...`);
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Serveur démarré avec succès sur le port ${PORT}`);
+  console.log(`📡 API disponible sur http://0.0.0.0:${PORT}/api/portfolio`);
+  console.log(`🌐 Health check disponible sur http://0.0.0.0:${PORT}/health`);
 });
 
 // Configuration de sécurité avec Helmet
@@ -248,19 +257,8 @@ if (missingVars.length > 0) {
   // Ne pas faire process.exit(1) - laisser le serveur démarrer pour le diagnostic
 }
 
-// Démarrer le serveur IMMÉDIATEMENT (même si MongoDB n'est pas connecté)
-// Écouter sur 0.0.0.0 pour être accessible depuis Fly.io
-console.log(`📡 Tentative de démarrage du serveur sur le port ${PORT}...`);
-try {
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Serveur démarré avec succès sur le port ${PORT}`);
-    console.log(`📡 API disponible sur http://0.0.0.0:${PORT}/api/portfolio`);
-    console.log(`🌐 Health check disponible sur http://0.0.0.0:${PORT}/health`);
-  });
-} catch (error) {
-  console.error('❌ Erreur lors du démarrage du serveur:', error);
-  process.exit(1);
-}
+// Le serveur a déjà été démarré plus tôt (après la route /health)
+// pour que le health check soit disponible immédiatement
 
 // Connexion à MongoDB (en arrière-plan, ne bloque pas le démarrage du serveur)
 mongoose.connect(process.env.MONGODB_URI)
