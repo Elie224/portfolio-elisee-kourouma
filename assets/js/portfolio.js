@@ -542,6 +542,19 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Charge et affiche toutes mes données
   async function chargerEtAfficherDonnees() {
+    // S'assurer que le contenu est visible avant le chargement (fallback pour éviter l'écran noir)
+    const mainContent = document.querySelector('main');
+    if (mainContent) {
+      mainContent.style.display = '';
+      mainContent.style.visibility = 'visible';
+      mainContent.style.opacity = '1';
+    }
+    const header = document.querySelector('header');
+    if (header) {
+      header.style.display = '';
+      header.style.visibility = 'visible';
+    }
+    
     try {
       // Essaie d'abord de charger depuis le serveur
       const donneesServeur = await chargerDonneesServeur();
