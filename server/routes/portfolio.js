@@ -510,9 +510,20 @@ router.post('/login', validateLoginData, async (req, res) => {
     });
     
   } catch (error) {
-    console.error('Erreur lors de la connexion:', error.message);
+    // Log détaillé de l'erreur pour diagnostic
+    console.error('❌ Erreur lors de la connexion:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+      path: req.path,
+      method: req.method,
+      origin: req.headers.origin,
+      timestamp: new Date().toISOString()
+    });
+    
     res.status(500).json({ 
-      error: 'Erreur serveur lors de l\'authentification' 
+      error: 'Erreur serveur lors de l\'authentification',
+      code: 'AUTH_ERROR'
     });
   }
 });
