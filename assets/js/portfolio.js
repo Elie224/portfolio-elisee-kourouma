@@ -1996,8 +1996,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         try {
-          // Envoyer au backend
-          const reponse = await fetch(`${MON_SERVEUR}/contact`, {
+          // Envoyer au backend (endpoint: /api/portfolio/contact)
+          const reponse = await fetch(`${MON_SERVEUR}/portfolio/contact`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -2005,9 +2005,21 @@ document.addEventListener('DOMContentLoaded', function() {
             body: JSON.stringify({ name, email, subject, message })
           });
           
+          // Vérifier si la réponse est OK avant de parser JSON
+          if (!reponse.ok) {
+            // Essayer de parser le JSON d'erreur
+            let errorData;
+            try {
+              errorData = await reponse.json();
+            } catch (e) {
+              errorData = { message: `Erreur serveur (${reponse.status})` };
+            }
+            throw new Error(errorData.message || errorData.error || `Erreur serveur (${reponse.status})`);
+          }
+          
           const resultat = await reponse.json();
           
-          if (reponse.ok && resultat.success) {
+          if (resultat.success) {
             // Succès
             if (messageDiv) {
               messageDiv.textContent = '✅ Message envoyé avec succès ! Je vous répondrai dans les plus brefs délais.';
@@ -2032,14 +2044,27 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
           } else {
-            throw new Error(resultat.message || 'Erreur lors de l\'envoi');
+            throw new Error(resultat.message || resultat.error || 'Erreur lors de l\'envoi');
           }
           
         } catch (erreur) {
           logError('Erreur lors de l\'envoi du message:', erreur);
           
+          // Message d'erreur plus détaillé
+          let errorMessage = '❌ Erreur lors de l\'envoi du message. ';
+          
+          if (erreur.message) {
+            if (erreur.message.includes('Failed to fetch') || erreur.message.includes('network')) {
+              errorMessage += 'Problème de connexion au serveur. ';
+            } else {
+              errorMessage += erreur.message + ' ';
+            }
+          }
+          
+          errorMessage += 'Veuillez réessayer ou m\'envoyer un email directement à ' + MES_CONTACTS.email;
+          
           if (messageDiv) {
-            messageDiv.textContent = '❌ Erreur lors de l\'envoi du message. Veuillez réessayer ou m\'envoyer un email directement à ' + MES_CONTACTS.email;
+            messageDiv.textContent = errorMessage;
             messageDiv.className = 'form-message error';
             messageDiv.style.display = 'block';
           }

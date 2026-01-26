@@ -9,8 +9,8 @@ if (-not (Test-Path ".git")) {
     exit 1
 }
 
-# Mettre à jour le remote
-Write-Host "📡 Mise à jour du remote GitHub..." -ForegroundColor Yellow
+# Mettre à jour le remote (HTTPS pour éviter les problèmes de clé SSH)
+Write-Host "📡 Mise à jour du remote GitHub (HTTPS)..." -ForegroundColor Yellow
 git remote set-url origin https://github.com/Elie224/portfolio-elisee-kourouma.git
 
 # Vérifier le remote
@@ -60,4 +60,5 @@ if ($LASTEXITCODE -eq 0) {
 } else {
     Write-Host "`n❌ Erreur lors du push. Vérifiez votre authentification GitHub." -ForegroundColor Red
     Write-Host "💡 Vous pouvez aussi faire manuellement : git push -u origin main" -ForegroundColor Yellow
+    Write-Host "💡 Si vous utilisez SSH, assurez-vous d'avoir configuré votre clé SSH GitHub" -ForegroundColor Yellow
 }
