@@ -17,10 +17,19 @@ flyctl logs -a portfolio-backend-elisee
 - `flyctl logs -a portfolio-backend-elisee --json` : Format JSON pour analyse
 - `flyctl logs -a portfolio-backend-elisee | grep "❌"` : Filtrer uniquement les erreurs
 
-### 2. Voir les logs des dernières heures
+### 2. Voir les logs récents (sans filtre de temps)
 
 ```powershell
-flyctl logs -a portfolio-backend-elisee --since 1h
+# Voir les dernières lignes (par défaut, les 100 dernières)
+flyctl logs -a portfolio-backend-elisee -n
+
+# Voir les logs en continu (streaming)
+flyctl logs -a portfolio-backend-elisee
+```
+
+**Note** : `flyctl logs` ne supporte pas l'option `--since`. Pour filtrer par date, utilisez PowerShell :
+```powershell
+flyctl logs -a portfolio-backend-elisee | Select-String "2026-01-26"
 ```
 
 ### 3. Voir les logs avec filtres

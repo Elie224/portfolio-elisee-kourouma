@@ -105,9 +105,11 @@ app.use('/api/portfolio/login', authLimiter);
 // Configuration CORS sécurisée
 const corsOptions = {
   origin: function (origin, callback) {
-    // Autoriser les health checks sans origin (pour Fly.io)
-    // On utilise une variable globale temporaire définie par le middleware
-    if (global.currentPath === '/health') {
+    // Récupérer le chemin depuis la requête (via req.path dans le middleware)
+    const currentPath = global.currentPath || '';
+    
+    // Autoriser les health checks sans origin (pour Fly.io et monitoring)
+    if (currentPath === '/health') {
       return callback(null, true);
     }
     
@@ -135,7 +137,6 @@ const corsOptions = {
     if (process.env.ALLOWED_ORIGINS) {
       const envOrigins = process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim());
       allowedOrigins.push(...envOrigins);
-      console.log('🔍 CORS - Origines autorisées depuis ALLOWED_ORIGINS:', allowedOrigins);
     } else if (process.env.NODE_ENV === 'production') {
       // En production, ALLOWED_ORIGINS doit être défini
       console.warn('⚠️ ALLOWED_ORIGINS non défini en production - CORS peut être restrictif');
@@ -144,30 +145,27 @@ const corsOptions = {
     // Ajouter le domaine du portfolio par défaut si présent dans les variables d'environnement
     if (process.env.PORTFOLIO_DOMAIN) {
       allowedOrigins.push(process.env.PORTFOLIO_DOMAIN);
-      console.log('🔍 CORS - Ajout PORTFOLIO_DOMAIN:', process.env.PORTFOLIO_DOMAIN);
     }
-    
-    console.log('🔍 CORS - Requête reçue - Origin:', origin || 'none', '| Path:', global.currentPath);
-    console.log('🔍 CORS - Liste complète des origines autorisées:', allowedOrigins);
     
     // Vérification stricte des origines
     if (!origin) {
-      // Autoriser les requêtes sans origin en développement uniquement
-      if (process.env.NODE_ENV === 'development') {
-        return callback(null, true);
+      // En production, bloquer silencieusement les requêtes sans origin (sauf /health)
+      // Ne pas logger comme erreur car c'est normal (health checks, curl, etc.)
+      if (process.env.NODE_ENV === 'production') {
+        // Retourner une erreur silencieuse (ne sera pas loggée comme erreur serveur)
+        return callback(null, false); // false = bloquer sans erreur
       } else {
-        console.warn('🚫 CORS: Requête sans origin bloquée en production');
-        return callback(new Error('Origine requise en production'), false);
+        // En développement, autoriser
+        return callback(null, true);
       }
     }
     
     if (allowedOrigins.includes(origin)) {
-      console.log('✅ CORS: Origine autorisée:', origin);
       callback(null, true);
     } else {
-      console.warn('🚫 CORS: Origine non autorisée:', origin);
-      console.warn('🔍 Origines autorisées:', allowedOrigins);
-      callback(new Error('Origine non autorisée par la politique CORS'), false);
+      // Logger uniquement si c'est une vraie tentative d'accès (avec origin)
+      console.warn('🚫 CORS: Origine non autorisée:', origin, '| Path:', currentPath);
+      callback(null, false); // false = bloquer sans erreur
     }
   },
   credentials: true,
@@ -183,9 +181,12 @@ const corsOptions = {
   optionsSuccessStatus: 200 // Pour IE11
 };
 
-// Middleware de logging pour debug
+// Middleware de logging pour debug (réduit pour éviter le spam)
 app.use((req, res, next) => {
-  console.log(`📥 ${req.method} ${req.path} - Origin: ${req.headers.origin || 'none'}`);
+  // Ne logger que les requêtes API (pas les health checks)
+  if (req.path.startsWith('/api/')) {
+    console.log(`📥 ${req.method} ${req.path} - Origin: ${req.headers.origin || 'none'}`);
+  }
   next();
 });
 
@@ -329,7 +330,17 @@ mongoose.connect(process.env.MONGODB_URI)
 
 // Gestion globale des erreurs (middleware de fin)
 app.use((err, req, res, next) => {
-  // Log détaillé de l'erreur
+  // Ignorer les erreurs CORS (gérées silencieusement par le middleware CORS)
+  if (err.message && (err.message.includes('CORS') || err.message.includes('cors') || err.message.includes('Origine'))) {
+    // Erreur CORS - répondre avec un statut approprié mais ne pas logger comme erreur serveur
+    return res.status(403).json({ 
+      error: 'Accès refusé',
+      message: 'Origine non autorisée',
+      code: 'CORS_ERROR'
+    });
+  }
+  
+  // Log détaillé uniquement pour les vraies erreurs serveur
   console.error('❌ Erreur serveur non gérée:', {
     message: err.message,
     name: err.name,
@@ -343,26 +354,20 @@ app.use((err, req, res, next) => {
     timestamp: new Date().toISOString()
   });
   
-  // Ne pas logger les erreurs CORS (déjà gérées)
-  if (err.message && !err.message.includes('CORS') && !err.message.includes('cors')) {
-    // En développement, envoyer plus de détails
-    if (process.env.NODE_ENV === 'development') {
-      res.status(err.status || 500).json({ 
-        error: 'Erreur serveur interne',
-        message: err.message,
-        stack: err.stack,
-        code: 'SERVER_ERROR'
-      });
-    } else {
-      // En production, message générique pour la sécurité
-      res.status(err.status || 500).json({ 
-        error: 'Erreur serveur interne',
-        code: 'SERVER_ERROR'
-      });
-    }
+  // En développement, envoyer plus de détails
+  if (process.env.NODE_ENV === 'development') {
+    res.status(err.status || 500).json({ 
+      error: 'Erreur serveur interne',
+      message: err.message,
+      stack: err.stack,
+      code: 'SERVER_ERROR'
+    });
   } else {
-    // Erreur CORS - déjà gérée par le middleware CORS
-    next();
+    // En production, message générique pour la sécurité
+    res.status(err.status || 500).json({ 
+      error: 'Erreur serveur interne',
+      code: 'SERVER_ERROR'
+    });
   }
 });
 
