@@ -708,34 +708,21 @@ document.addEventListener('DOMContentLoaded', function() {
       logError('❌ Erreur lors du chargement, utilisation des données par défaut:', erreur);
       
       // S'assurer que le contenu est visible même en cas d'erreur
-      const mainContent = document.querySelector('main');
-      if (mainContent) {
-        mainContent.style.display = '';
-        mainContent.style.visibility = 'visible';
-        mainContent.style.opacity = '1';
+      const mainContentError = document.querySelector('main');
+      if (mainContentError) {
+        mainContentError.style.display = '';
+        mainContentError.style.visibility = 'visible';
+        mainContentError.style.opacity = '1';
       }
-      const header = document.querySelector('header');
-      if (header) {
-        header.style.display = '';
-        header.style.visibility = 'visible';
+      const headerError = document.querySelector('header');
+      if (headerError) {
+        headerError.style.display = '';
+        headerError.style.visibility = 'visible';
       }
       
       const donnees = obtenirMesDonnees();
       donneesActuelles = donnees;
       hashDonneesActuelles = calculerHash(donnees);
-      
-      // S'assurer que le contenu est visible même en cas d'erreur
-      const mainContent = document.querySelector('main');
-      if (mainContent) {
-        mainContent.style.display = '';
-        mainContent.style.visibility = 'visible';
-        mainContent.style.opacity = '1';
-      }
-      const header = document.querySelector('header');
-      if (header) {
-        header.style.display = '';
-        header.style.visibility = 'visible';
-      }
       
       afficherMesDonnees(donnees);
       afficherCertifications(donnees.certifications || []);
