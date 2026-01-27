@@ -24,6 +24,68 @@
     <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💼</text></svg>" />
     <link rel="stylesheet" href="assets/css/styles.css" />
     <link rel="stylesheet" href="assets/css/contact.css" />
+    
+    <!-- FIX MOBILE CRITIQUE : Script inline qui s'exécute IMMÉDIATEMENT pour corriger le body::before -->
+    <script>
+      (function() {
+        console.log('🚀 FIX MOBILE: Script inline démarré');
+        const isMobile = window.innerWidth <= 1024;
+        console.log('📱 Détection mobile:', isMobile, 'Largeur:', window.innerWidth);
+        
+        if (isMobile) {
+          function applyMobileFix() {
+            if (document.body) {
+              console.log('✅ Body trouvé, application du fix mobile...');
+              document.body.classList.add('no-before-pseudo');
+              document.body.style.setProperty('background', '#0a0a0f', 'important');
+              document.body.style.setProperty('background-image', 'none', 'important');
+              document.body.style.setProperty('background-attachment', 'scroll', 'important');
+              document.body.style.setProperty('background-color', '#0a0a0f', 'important');
+              document.documentElement.style.setProperty('background', '#0a0a0f', 'important');
+              document.documentElement.style.setProperty('background-image', 'none', 'important');
+              document.documentElement.style.setProperty('background-attachment', 'scroll', 'important');
+              const overlay = document.getElementById('mobile-menu-overlay');
+              if (overlay) {
+                overlay.style.setProperty('background', 'transparent', 'important');
+                overlay.style.setProperty('backdrop-filter', 'none', 'important');
+                overlay.style.setProperty('-webkit-backdrop-filter', 'none', 'important');
+                console.log('✅ Overlay désactivé');
+              }
+              const noise = document.querySelector('.noise');
+              if (noise) {
+                noise.style.setProperty('display', 'none', 'important');
+                console.log('✅ Noise désactivé');
+              }
+              console.log('✅ Fix mobile appliqué avec succès!', {
+                hasClass: document.body.classList.contains('no-before-pseudo'),
+                bodyBg: document.body.style.background
+              });
+              return true;
+            }
+            return false;
+          }
+          
+          if (!applyMobileFix()) {
+            console.log('⏳ Body pas encore créé, attente...');
+            const observer = new MutationObserver(function(mutations, obs) {
+              if (applyMobileFix()) {
+                obs.disconnect();
+              }
+            });
+            observer.observe(document.documentElement, {
+              childList: true,
+              subtree: true
+            });
+            setTimeout(function() {
+              applyMobileFix();
+              observer.disconnect();
+            }, 0);
+          }
+        } else {
+          console.log('🖥️ Desktop détecté, fix mobile ignoré');
+        }
+      })();
+    </script>
   </head>
   <body id="top" class="dark">
     <!-- Skip Link pour accessibilité -->
