@@ -123,31 +123,11 @@
     <script>
       (function() {
         console.log('🚀 FIX MOBILE: Script inline démarré');
-        // Détecter mobile avec plusieurs méthodes pour être sûr (viewport réel, pas window.innerWidth)
-        function detectMobile() {
-          // Méthode 1: Viewport réel (clientWidth)
-          const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
-          // Méthode 2: Media query
-          const isMobileMedia = window.matchMedia && window.matchMedia('(max-width: 1024px)').matches;
-          // Méthode 3: User agent (fallback)
-          const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-          
-          // Utiliser la méthode la plus fiable (viewport ou media query)
-          const isMobile = viewportWidth <= 1024 || isMobileMedia;
-          
-          console.log('📱 Détection mobile:', {
-            isMobile: isMobile,
-            viewportWidth: viewportWidth,
-            windowInnerWidth: window.innerWidth,
-            clientWidth: document.documentElement.clientWidth,
-            mediaQuery: isMobileMedia,
-            userAgent: isMobileUA
-          });
-          
-          return isMobile;
-        }
-        
-        const isMobile = detectMobile();
+        // Détecter mobile avec le viewport RÉEL (pas window.innerWidth qui peut être la fenêtre du navigateur)
+        // Utiliser clientWidth qui donne la largeur du viewport, même en mode responsive DevTools
+        const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
+        const isMobile = viewportWidth <= 1024;
+        console.log('📱 Détection mobile:', isMobile, 'Viewport:', viewportWidth, 'Window:', window.innerWidth);
         
         if (isMobile) {
           // Attendre que le body existe, puis appliquer immédiatement
