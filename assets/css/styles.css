@@ -187,14 +187,14 @@ body::before {
 /* Désactiver les gros effets de fond fixes sur mobile pour éviter
    tout bug d'affichage (certaines combinaisons Chrome + appareils
    gèrent mal plusieurs calques fixed en plein écran). */
-@media (max-width: 768px) {
+/* SOLUTION RADICALE MOBILE : Media query large pour capturer tous les mobiles */
+@media (max-width: 1024px) {
   body::before {
-    content: none;
+    content: none !important;
   }
   
-  /* SOLUTION RADICALE MOBILE : Simplifier complètement le fond du body
-     pour éviter tous les bugs de rendu (zones noires fixes) sur Chrome Android.
-     On enlève tous les gradients et on met un fond uni simple. */
+  /* Simplifier complètement le fond du body sur mobile/tablette
+     pour éviter tous les bugs de rendu (zones noires fixes) sur Chrome Android. */
   body {
     background: var(--couleur-fond) !important;
     background-image: none !important;
@@ -217,13 +217,15 @@ body::before {
   
   /* FORCER l'overlay du menu mobile à être transparent sur mobile
      pour éviter qu'il crée une "page noire" même s'il est actif */
-  .menu-mobile-overlay {
+  .menu-mobile-overlay,
+  #mobile-menu-overlay {
     background: transparent !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
   }
   
-  .menu-mobile-overlay:not(.active) {
+  .menu-mobile-overlay:not(.active),
+  #mobile-menu-overlay:not(.active) {
     display: none !important;
     opacity: 0 !important;
     visibility: hidden !important;
@@ -231,7 +233,8 @@ body::before {
     z-index: -1 !important;
   }
   
-  .menu-mobile-overlay.active {
+  .menu-mobile-overlay.active,
+  #mobile-menu-overlay.active {
     /* Même quand actif sur mobile, garder le fond transparent
        pour éviter la page noire (le menu slide depuis la gauche) */
     background: transparent !important;
