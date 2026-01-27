@@ -34,6 +34,54 @@
         console.log('📱 Détection mobile:', isMobile, 'Viewport:', viewportWidth, 'Window:', window.innerWidth);
         
         if (isMobile) {
+          // SOLUTION RADICALE : Injecter un style tag dans le head
+          const styleTag = document.createElement('style');
+          styleTag.id = 'mobile-fix-inline';
+          styleTag.textContent = `
+            body::before,
+            body.no-before-pseudo::before,
+            html body::before,
+            html body.no-before-pseudo::before {
+              content: none !important;
+              display: none !important;
+              visibility: hidden !important;
+              opacity: 0 !important;
+              pointer-events: none !important;
+              position: absolute !important;
+              width: 0 !important;
+              height: 0 !important;
+              z-index: -9999 !important;
+              background: none !important;
+              background-image: none !important;
+              background-color: transparent !important;
+              transform: scale(0) !important;
+              overflow: hidden !important;
+            }
+            @media (max-width: 1024px) {
+              body::before,
+              body.no-before-pseudo::before,
+              html body::before,
+              html body.no-before-pseudo::before {
+                content: none !important;
+                display: none !important;
+                visibility: hidden !important;
+                opacity: 0 !important;
+                pointer-events: none !important;
+                position: absolute !important;
+                width: 0 !important;
+                height: 0 !important;
+                z-index: -9999 !important;
+                background: none !important;
+                background-image: none !important;
+                background-color: transparent !important;
+                transform: scale(0) !important;
+                overflow: hidden !important;
+              }
+            }
+          `;
+          document.head.appendChild(styleTag);
+          console.log('✅ Style tag injecté dans head');
+          
           function applyMobileFix() {
             if (document.body) {
               console.log('✅ Body trouvé, application du fix mobile...');
