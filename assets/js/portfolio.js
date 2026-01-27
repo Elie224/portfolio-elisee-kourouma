@@ -2205,6 +2205,19 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     }
     
+    // Fallback pour navigateurs anciens (Phoenix, vieux Android, etc.)
+    // qui ne supportent pas IntersectionObserver : on active simplement
+    // toutes les sections [data-animate] sans effet de scroll.
+    if (typeof window.IntersectionObserver === 'undefined') {
+      animerElementsVisibles();
+      const autresElements = document.querySelectorAll('[data-animate]');
+      autresElements.forEach(function(element) {
+        element.classList.add('animated');
+      });
+      // Pas d'observeur possible, on quitte proprement.
+      return;
+    }
+    
     // Animation pour [data-animate] - Améliorée
     const elementsAnimes = document.querySelectorAll('[data-animate]');
     if (elementsAnimes.length > 0) {
