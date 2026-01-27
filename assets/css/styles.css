@@ -197,6 +197,12 @@ body.no-before-pseudo::before {
   position: absolute !important;
   width: 0 !important;
   height: 0 !important;
+  z-index: -9999 !important;
+  background: none !important;
+  background-image: none !important;
+  background-color: transparent !important;
+  transform: scale(0) !important;
+  overflow: hidden !important;
 }
 
 /* SOLUTION RADICALE MOBILE : Media query large pour capturer tous les mobiles */
@@ -215,6 +221,30 @@ body.no-before-pseudo::before {
     position: absolute !important;
     width: 0 !important;
     height: 0 !important;
+    z-index: -9999 !important;
+    background: none !important;
+    background-image: none !important;
+    background-color: transparent !important;
+    transform: scale(0) !important;
+    overflow: hidden !important;
+  }
+  
+  /* TRIPLE SÉCURITÉ : Forcer body::before à être complètement supprimé sur mobile */
+  body::before {
+    content: none !important;
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    position: absolute !important;
+    width: 0 !important;
+    height: 0 !important;
+    z-index: -9999 !important;
+    background: none !important;
+    background-image: none !important;
+    background-color: transparent !important;
+    transform: scale(0) !important;
+    overflow: hidden !important;
   }
   
   /* Simplifier complètement le fond du body sur mobile/tablette
@@ -229,14 +259,26 @@ body.no-before-pseudo::before {
   /* S'assurer que le contenu principal est toujours visible et au-dessus de tout */
   main {
     position: relative !important;
-    z-index: 1 !important;
+    z-index: 10 !important;
     background: transparent !important;
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
   }
   
   /* S'assurer que les sections sont visibles */
   section {
     position: relative !important;
-    z-index: 1 !important;
+    z-index: 10 !important;
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+  
+  /* S'assurer que le body lui-même n'a pas de z-index négatif */
+  body {
+    z-index: 0 !important;
+    position: relative !important;
   }
   
   /* FORCER l'overlay du menu mobile à être transparent sur mobile
