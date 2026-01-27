@@ -119,78 +119,77 @@
     <link rel="preload" href="assets/photo.jpeg" as="image" />
     <link rel="dns-prefetch" href="https://portfolio-backend-elisee.fly.dev" />
     
+    <!-- FIX MOBILE CRITIQUE : Script externe compatible avec tous les navigateurs (Phoenix inclus) -->
+    <script src="assets/js/mobile-fix.js"></script>
+    
     <!-- FIX MOBILE CRITIQUE : Script inline qui s'exécute IMMÉDIATEMENT pour corriger le body::before -->
+    <!-- Compatible avec tous les navigateurs, y compris Phoenix -->
     <script>
       (function() {
         console.log('🚀 FIX MOBILE: Script inline démarré');
-        // Détecter mobile avec plusieurs méthodes pour être sûr (même en mode responsive DevTools)
-        // En mode responsive DevTools, clientWidth peut aussi retourner la largeur de la fenêtre
-        // Utiliser matchMedia qui détecte correctement le viewport réel
+        
+        // Détection mobile robuste avec plusieurs fallbacks pour navigateurs moins standards
+        function detectMobile() {
+          // Méthode 1: matchMedia (le plus fiable)
+          try {
+            if (window.matchMedia && window.matchMedia('(max-width: 1024px)').matches) {
+              return true;
+            }
+          } catch(e) {
+            console.log('⚠️ matchMedia non supporté, utilisation fallback');
+          }
+          
+          // Méthode 2: Viewport width
+          const viewportWidth = document.documentElement.clientWidth || 
+                               (document.body ? document.body.clientWidth : 0) || 
+                               window.innerWidth;
+          if (viewportWidth <= 1024) {
+            return true;
+          }
+          
+          // Méthode 3: User agent (fallback ultime)
+          const ua = navigator.userAgent || navigator.vendor || window.opera;
+          if (/android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(ua.toLowerCase())) {
+            return true;
+          }
+          
+          return false;
+        }
+        
+        const isMobile = detectMobile();
         const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
-        const isMobileMedia = window.matchMedia && window.matchMedia('(max-width: 1024px)').matches;
-        // Si matchMedia dit mobile OU si viewport <= 1024, c'est mobile
-        const isMobile = isMobileMedia || viewportWidth <= 1024;
-        console.log('📱 Détection mobile:', isMobile, 'Viewport:', viewportWidth, 'Window:', window.innerWidth, 'MediaQuery:', isMobileMedia);
+        console.log('📱 Détection mobile:', isMobile, 'Viewport:', viewportWidth, 'Window:', window.innerWidth);
         
         if (isMobile) {
           // SOLUTION RADICALE : Injecter un style tag dans le head AVANT que le CSS ne charge
-          // pour forcer body::before à être supprimé avec une spécificité maximale
-          const styleTag = document.createElement('style');
-          styleTag.id = 'mobile-fix-inline';
-          styleTag.textContent = `
-            /* FIX MOBILE ULTIME - Règles injectées avec spécificité maximale */
-            body::before,
-            body.no-before-pseudo::before,
-            html body::before,
-            html body.no-before-pseudo::before {
-              content: none !important;
-              display: none !important;
-              visibility: hidden !important;
-              opacity: 0 !important;
-              pointer-events: none !important;
-              position: absolute !important;
-              width: 0 !important;
-              height: 0 !important;
-              z-index: -9999 !important;
-              background: none !important;
-              background-image: none !important;
-              background-color: transparent !important;
-              transform: scale(0) !important;
-              overflow: hidden !important;
-              max-width: 0 !important;
-              max-height: 0 !important;
-              min-width: 0 !important;
-              min-height: 0 !important;
+          // Compatible avec tous les navigateurs (y compris Phoenix)
+          try {
+            const styleTag = document.createElement('style');
+            styleTag.id = 'mobile-fix-inline';
+            styleTag.setAttribute('type', 'text/css');
+            // Utiliser textContent (plus compatible que innerHTML)
+            if (styleTag.styleSheet) {
+              // IE8 et anciens navigateurs
+              styleTag.styleSheet.cssText = 'body::before,body.no-before-pseudo::before,html body::before,html body.no-before-pseudo::before{content:none!important;display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;position:absolute!important;width:0!important;height:0!important;z-index:-9999!important;background:none!important;background-image:none!important;background-color:transparent!important;transform:scale(0)!important;overflow:hidden!important}@media (max-width:1024px){body::before,body.no-before-pseudo::before,html body::before,html body.no-before-pseudo::before{content:none!important;display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;position:absolute!important;width:0!important;height:0!important;z-index:-9999!important;background:none!important;background-image:none!important;background-color:transparent!important;transform:scale(0)!important;overflow:hidden!important}';
+            } else {
+              styleTag.textContent = 'body::before,body.no-before-pseudo::before,html body::before,html body.no-before-pseudo::before{content:none!important;display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;position:absolute!important;width:0!important;height:0!important;z-index:-9999!important;background:none!important;background-image:none!important;background-color:transparent!important;transform:scale(0)!important;overflow:hidden!important}@media (max-width:1024px){body::before,body.no-before-pseudo::before,html body::before,html body.no-before-pseudo::before{content:none!important;display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;position:absolute!important;width:0!important;height:0!important;z-index:-9999!important;background:none!important;background-image:none!important;background-color:transparent!important;transform:scale(0)!important;overflow:hidden!important}';
             }
             
-            @media (max-width: 1024px) {
-              body::before,
-              body.no-before-pseudo::before,
-              html body::before,
-              html body.no-before-pseudo::before {
-                content: none !important;
-                display: none !important;
-                visibility: hidden !important;
-                opacity: 0 !important;
-                pointer-events: none !important;
-                position: absolute !important;
-                width: 0 !important;
-                height: 0 !important;
-                z-index: -9999 !important;
-                background: none !important;
-                background-image: none !important;
-                background-color: transparent !important;
-                transform: scale(0) !important;
-                overflow: hidden !important;
-                max-width: 0 !important;
-                max-height: 0 !important;
-                min-width: 0 !important;
-                min-height: 0 !important;
-              }
+            // Insérer dans le head (compatible avec tous les navigateurs)
+            const head = document.head || document.getElementsByTagName('head')[0];
+            if (head) {
+              head.insertBefore(styleTag, head.firstChild);
+              console.log('✅ Style tag injecté dans head pour forcer body::before à être supprimé');
+            } else {
+              // Fallback si head n'existe pas encore
+              document.addEventListener('DOMContentLoaded', function() {
+                const h = document.head || document.getElementsByTagName('head')[0];
+                if (h) h.insertBefore(styleTag, h.firstChild);
+              });
             }
-          `;
-          document.head.appendChild(styleTag);
-          console.log('✅ Style tag injecté dans head pour forcer body::before à être supprimé');
+          } catch(e) {
+            console.error('❌ Erreur injection style tag:', e);
+          }
           
           // Attendre que le body existe, puis appliquer immédiatement
           function applyMobileFix() {
@@ -240,24 +239,52 @@
           // Essayer immédiatement (si le body existe déjà)
           if (!applyMobileFix()) {
             console.log('⏳ Body pas encore créé, attente...');
-            // Sinon, utiliser MutationObserver pour détecter quand le body est créé
-            const observer = new MutationObserver(function(mutations, obs) {
-              if (applyMobileFix()) {
-                obs.disconnect(); // Arrêter l'observation une fois le fix appliqué
+            
+            // Utiliser MutationObserver si disponible (navigateurs modernes)
+            if (window.MutationObserver) {
+              try {
+                const observer = new MutationObserver(function(mutations, obs) {
+                  if (applyMobileFix()) {
+                    obs.disconnect();
+                  }
+                });
+                observer.observe(document.documentElement, {
+                  childList: true,
+                  subtree: true
+                });
+                
+                // Timeout de sécurité
+                setTimeout(function() {
+                  applyMobileFix();
+                  if (observer) observer.disconnect();
+                }, 100);
+              } catch(e) {
+                console.log('⚠️ MutationObserver non supporté, utilisation fallback');
               }
-            });
+            }
             
-            // Observer le document pour détecter l'ajout du body
-            observer.observe(document.documentElement, {
-              childList: true,
-              subtree: true
-            });
+            // Fallback pour navigateurs anciens (Phoenix, etc.) : utiliser plusieurs timeouts
+            var attempts = 0;
+            var maxAttempts = 20; // 2 secondes max
+            var interval = setInterval(function() {
+              attempts++;
+              if (applyMobileFix() || attempts >= maxAttempts) {
+                clearInterval(interval);
+              }
+            }, 100);
             
-            // Timeout de sécurité (au cas où MutationObserver ne fonctionne pas)
-            setTimeout(function() {
-              applyMobileFix();
-              observer.disconnect();
-            }, 0);
+            // Aussi au chargement complet
+            if (document.addEventListener) {
+              document.addEventListener('DOMContentLoaded', applyMobileFix);
+              window.addEventListener('load', applyMobileFix);
+            } else if (document.attachEvent) {
+              // IE8
+              document.attachEvent('onreadystatechange', function() {
+                if (document.readyState === 'complete') {
+                  applyMobileFix();
+                }
+              });
+            }
           }
         } else {
           console.log('🖥️ Desktop détecté, fix mobile ignoré');
