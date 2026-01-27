@@ -3202,6 +3202,31 @@ document.addEventListener('DOMContentLoaded', function() {
     configurerRetourEnHaut();
     configurerEvenements();
     
+    // CORRECTIF MOBILE : Forcer les styles mobile même si les media queries ne s'appliquent pas
+    function forcerStylesMobile() {
+      const isMobile = window.innerWidth <= 1024;
+      if (isMobile) {
+        // Forcer le body à avoir un fond simple sans gradients ni fixed
+        document.body.style.setProperty('background', 'var(--couleur-fond)', 'important');
+        document.body.style.setProperty('background-image', 'none', 'important');
+        document.body.style.setProperty('background-attachment', 'scroll', 'important');
+        
+        // Forcer l'overlay du menu à être transparent
+        const overlay = document.getElementById('mobile-menu-overlay');
+        if (overlay) {
+          overlay.style.setProperty('background', 'transparent', 'important');
+          overlay.style.setProperty('backdrop-filter', 'none', 'important');
+          overlay.style.setProperty('-webkit-backdrop-filter', 'none', 'important');
+        }
+        
+        log('✅ Styles mobile forcés via JavaScript');
+      }
+    }
+    
+    // Appliquer immédiatement et au redimensionnement
+    forcerStylesMobile();
+    window.addEventListener('resize', forcerStylesMobile);
+    
     // Configurer les animations avec un petit délai pour s'assurer que le DOM est prêt
     setTimeout(function() {
       configurerAnimations();
