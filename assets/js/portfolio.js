@@ -3204,8 +3204,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // CORRECTIF MOBILE RADICAL : Forcer les styles mobile même si les media queries ne s'appliquent pas
     function forcerStylesMobile() {
-      const isMobile = window.innerWidth <= 1024;
-      console.log('🔧 forcerStylesMobile appelé, isMobile:', isMobile, 'width:', window.innerWidth);
+      // Utiliser le viewport RÉEL (clientWidth) pour détecter mobile, même en mode responsive DevTools
+      const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
+      const isMobile = viewportWidth <= 1024;
+      console.log('🔧 forcerStylesMobile appelé, isMobile:', isMobile, 'viewport:', viewportWidth, 'window:', window.innerWidth);
       
       if (isMobile) {
         // SOLUTION RADICALE 1 : Ajouter une classe pour désactiver body::before
