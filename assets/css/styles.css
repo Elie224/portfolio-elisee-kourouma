@@ -192,11 +192,27 @@ body::before {
     content: none;
   }
   
-  /* Désactiver aussi background-attachment: fixed sur mobile,
-     connu pour provoquer des artefacts visuels (zones noires) sur
-     certains Chrome Android. */
+  /* SOLUTION RADICALE MOBILE : Simplifier complètement le fond du body
+     pour éviter tous les bugs de rendu (zones noires fixes) sur Chrome Android.
+     On enlève tous les gradients et on met un fond uni simple. */
   body {
-    background-attachment: scroll;
+    background: var(--couleur-fond) !important;
+    background-image: none !important;
+    background-attachment: scroll !important;
+    position: relative !important;
+  }
+  
+  /* S'assurer que le contenu principal est toujours visible et au-dessus de tout */
+  main {
+    position: relative !important;
+    z-index: 1 !important;
+    background: transparent !important;
+  }
+  
+  /* S'assurer que les sections sont visibles */
+  section {
+    position: relative !important;
+    z-index: 1 !important;
   }
 }
 
