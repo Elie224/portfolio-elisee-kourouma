@@ -122,13 +122,17 @@
     <!-- FIX MOBILE CRITIQUE : Script inline qui s'exécute IMMÉDIATEMENT pour corriger le body::before -->
     <script>
       (function() {
+        console.log('🚀 FIX MOBILE: Script inline démarré');
         // Détecter mobile immédiatement
         const isMobile = window.innerWidth <= 1024;
+        console.log('📱 Détection mobile:', isMobile, 'Largeur:', window.innerWidth);
         
         if (isMobile) {
           // Attendre que le body existe, puis appliquer immédiatement
           function applyMobileFix() {
             if (document.body) {
+              console.log('✅ Body trouvé, application du fix mobile...');
+              
               // Ajouter la classe pour désactiver body::before
               document.body.classList.add('no-before-pseudo');
               
@@ -149,13 +153,20 @@
                 overlay.style.setProperty('background', 'transparent', 'important');
                 overlay.style.setProperty('backdrop-filter', 'none', 'important');
                 overlay.style.setProperty('-webkit-backdrop-filter', 'none', 'important');
+                console.log('✅ Overlay désactivé');
               }
               
               // Désactiver .noise
               const noise = document.querySelector('.noise');
               if (noise) {
                 noise.style.setProperty('display', 'none', 'important');
+                console.log('✅ Noise désactivé');
               }
+              
+              console.log('✅ Fix mobile appliqué avec succès!', {
+                hasClass: document.body.classList.contains('no-before-pseudo'),
+                bodyBg: document.body.style.background
+              });
               
               return true; // Body trouvé et fix appliqué
             }
@@ -164,6 +175,7 @@
           
           // Essayer immédiatement (si le body existe déjà)
           if (!applyMobileFix()) {
+            console.log('⏳ Body pas encore créé, attente...');
             // Sinon, utiliser MutationObserver pour détecter quand le body est créé
             const observer = new MutationObserver(function(mutations, obs) {
               if (applyMobileFix()) {
@@ -183,6 +195,8 @@
               observer.disconnect();
             }, 0);
           }
+        } else {
+          console.log('🖥️ Desktop détecté, fix mobile ignoré');
         }
       })();
     </script>
