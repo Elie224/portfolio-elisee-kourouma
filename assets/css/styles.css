@@ -215,15 +215,28 @@ body::before {
     z-index: 1 !important;
   }
   
-  /* FORCER l'overlay du menu mobile à être complètement caché par défaut sur mobile
-     (il ne s'ouvrira que si l'utilisateur clique vraiment sur le bouton menu) */
+  /* FORCER l'overlay du menu mobile à être transparent sur mobile
+     pour éviter qu'il crée une "page noire" même s'il est actif */
+  .menu-mobile-overlay {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  
   .menu-mobile-overlay:not(.active) {
     display: none !important;
     opacity: 0 !important;
     visibility: hidden !important;
     pointer-events: none !important;
     z-index: -1 !important;
+  }
+  
+  .menu-mobile-overlay.active {
+    /* Même quand actif sur mobile, garder le fond transparent
+       pour éviter la page noire (le menu slide depuis la gauche) */
     background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 }
 
