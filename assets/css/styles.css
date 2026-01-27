@@ -214,6 +214,17 @@ body::before {
     position: relative !important;
     z-index: 1 !important;
   }
+  
+  /* FORCER l'overlay du menu mobile à être complètement caché par défaut sur mobile
+     (il ne s'ouvrira que si l'utilisateur clique vraiment sur le bouton menu) */
+  .menu-mobile-overlay:not(.active) {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    z-index: -1 !important;
+    background: transparent !important;
+  }
 }
 
 @keyframes backgroundShift {
@@ -891,10 +902,10 @@ header.scrolled {
   backdrop-filter: blur(12px) saturate(180%);
   -webkit-backdrop-filter: blur(12px) saturate(180%);
   z-index: var(--z-mobile-overlay);
-  opacity: 0;
-  visibility: hidden;
+  opacity: 0 !important;
+  visibility: hidden !important;
   transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.4s;
-  pointer-events: none;
+  pointer-events: none !important;
 }
 
 .menu-mobile-overlay::before {
