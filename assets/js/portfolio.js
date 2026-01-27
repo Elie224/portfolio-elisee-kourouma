@@ -3202,14 +3202,23 @@ document.addEventListener('DOMContentLoaded', function() {
     configurerRetourEnHaut();
     configurerEvenements();
     
-    // CORRECTIF MOBILE : Forcer les styles mobile même si les media queries ne s'appliquent pas
+    // CORRECTIF MOBILE RADICAL : Forcer les styles mobile même si les media queries ne s'appliquent pas
     function forcerStylesMobile() {
       const isMobile = window.innerWidth <= 1024;
+      console.log('🔧 forcerStylesMobile appelé, isMobile:', isMobile, 'width:', window.innerWidth);
+      
       if (isMobile) {
-        // Forcer le body à avoir un fond simple sans gradients ni fixed
-        document.body.style.setProperty('background', 'var(--couleur-fond)', 'important');
+        // SOLUTION RADICALE : Forcer le body à avoir un fond uni SANS utiliser la variable CSS
+        // (la variable peut être rgb(10,10,15) qui est trop sombre)
+        document.body.style.setProperty('background', '#0a0a0f', 'important');
         document.body.style.setProperty('background-image', 'none', 'important');
         document.body.style.setProperty('background-attachment', 'scroll', 'important');
+        document.body.style.setProperty('background-color', '#0a0a0f', 'important');
+        
+        // Forcer aussi le html pour être sûr
+        document.documentElement.style.setProperty('background', '#0a0a0f', 'important');
+        document.documentElement.style.setProperty('background-image', 'none', 'important');
+        document.documentElement.style.setProperty('background-attachment', 'scroll', 'important');
         
         // Forcer l'overlay du menu à être transparent
         const overlay = document.getElementById('mobile-menu-overlay');
@@ -3217,15 +3226,28 @@ document.addEventListener('DOMContentLoaded', function() {
           overlay.style.setProperty('background', 'transparent', 'important');
           overlay.style.setProperty('backdrop-filter', 'none', 'important');
           overlay.style.setProperty('-webkit-backdrop-filter', 'none', 'important');
+          overlay.style.setProperty('background-color', 'transparent', 'important');
         }
         
-        log('✅ Styles mobile forcés via JavaScript');
+        // Forcer body::before à être supprimé
+        const bodyBefore = window.getComputedStyle(document.body, '::before');
+        // On ne peut pas modifier ::before via JS, mais on peut vérifier
+        
+        console.log('✅ Styles mobile forcés via JavaScript', {
+          bodyBackground: document.body.style.background,
+          bodyBgImage: document.body.style.backgroundImage,
+          bodyBgAttachment: document.body.style.backgroundAttachment
+        });
       }
     }
     
-    // Appliquer immédiatement et au redimensionnement
+    // Appliquer immédiatement (plusieurs fois pour être sûr)
     forcerStylesMobile();
+    setTimeout(forcerStylesMobile, 100);
+    setTimeout(forcerStylesMobile, 500);
     window.addEventListener('resize', forcerStylesMobile);
+    // Aussi au chargement complet
+    window.addEventListener('load', forcerStylesMobile);
     
     // Configurer les animations avec un petit délai pour s'assurer que le DOM est prêt
     setTimeout(function() {
