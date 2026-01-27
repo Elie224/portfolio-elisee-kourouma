@@ -3208,7 +3208,11 @@ document.addEventListener('DOMContentLoaded', function() {
       console.log('🔧 forcerStylesMobile appelé, isMobile:', isMobile, 'width:', window.innerWidth);
       
       if (isMobile) {
-        // SOLUTION RADICALE : Forcer le body à avoir un fond uni SANS utiliser la variable CSS
+        // SOLUTION RADICALE 1 : Ajouter une classe pour désactiver body::before
+        // (on ne peut pas modifier ::before directement via JS, mais on peut ajouter une classe)
+        document.body.classList.add('no-before-pseudo');
+        
+        // SOLUTION RADICALE 2 : Forcer le body à avoir un fond uni SANS utiliser la variable CSS
         // (la variable peut être rgb(10,10,15) qui est trop sombre)
         document.body.style.setProperty('background', '#0a0a0f', 'important');
         document.body.style.setProperty('background-image', 'none', 'important');
@@ -3229,15 +3233,23 @@ document.addEventListener('DOMContentLoaded', function() {
           overlay.style.setProperty('background-color', 'transparent', 'important');
         }
         
-        // Forcer body::before à être supprimé
-        const bodyBefore = window.getComputedStyle(document.body, '::before');
-        // On ne peut pas modifier ::before via JS, mais on peut vérifier
+        // Désactiver aussi .noise si présent
+        const noise = document.querySelector('.noise');
+        if (noise) {
+          noise.style.setProperty('display', 'none', 'important');
+          noise.style.setProperty('visibility', 'hidden', 'important');
+          noise.style.setProperty('opacity', '0', 'important');
+        }
         
         console.log('✅ Styles mobile forcés via JavaScript', {
           bodyBackground: document.body.style.background,
           bodyBgImage: document.body.style.backgroundImage,
-          bodyBgAttachment: document.body.style.backgroundAttachment
+          bodyBgAttachment: document.body.style.backgroundAttachment,
+          hasNoBeforeClass: document.body.classList.contains('no-before-pseudo')
         });
+      } else {
+        // Sur desktop, retirer la classe si elle existe
+        document.body.classList.remove('no-before-pseudo');
       }
     }
     

@@ -187,10 +187,34 @@ body::before {
 /* Désactiver les gros effets de fond fixes sur mobile pour éviter
    tout bug d'affichage (certaines combinaisons Chrome + appareils
    gèrent mal plusieurs calques fixed en plein écran). */
+/* Classe pour désactiver body::before via JavaScript (solution radicale mobile) */
+body.no-before-pseudo::before {
+  content: none !important;
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
 /* SOLUTION RADICALE MOBILE : Media query large pour capturer tous les mobiles */
 @media (max-width: 1024px) {
   body::before {
     content: none !important;
+  }
+  
+  /* Double sécurité : même avec la classe */
+  body.no-before-pseudo::before {
+    content: none !important;
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    position: absolute !important;
+    width: 0 !important;
+    height: 0 !important;
   }
   
   /* Simplifier complètement le fond du body sur mobile/tablette
