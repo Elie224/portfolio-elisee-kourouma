@@ -25,6 +25,45 @@
     <link rel="stylesheet" href="assets/css/styles.css" />
     <link rel="stylesheet" href="assets/css/contact.css" />
     
+    <!-- FIX MOBILE CRITIQUE PHOENIX : Style inline qui fonctionne MÊME si JavaScript est désactivé -->
+    <style id="mobile-fix-inline-critical">
+      @media (max-width: 1024px) {
+        body::before,
+        body.no-before-pseudo::before,
+        html body::before,
+        html body.no-before-pseudo::before {
+          content: none !important;
+          display: none !important;
+          visibility: hidden !important;
+          opacity: 0 !important;
+          pointer-events: none !important;
+          position: absolute !important;
+          width: 0 !important;
+          height: 0 !important;
+          z-index: -9999 !important;
+          background: none !important;
+          background-image: none !important;
+          background-color: transparent !important;
+          transform: scale(0) !important;
+          overflow: hidden !important;
+        }
+        body {
+          background: #0a0a0f !important;
+          background-image: none !important;
+          background-attachment: scroll !important;
+        }
+        .menu-mobile-overlay,
+        #mobile-menu-overlay {
+          background: transparent !important;
+          backdrop-filter: none !important;
+          -webkit-backdrop-filter: none !important;
+        }
+        .noise {
+          display: none !important;
+        }
+      }
+    </style>
+    
     <!-- FIX MOBILE CRITIQUE : Script externe compatible avec tous les navigateurs (Phoenix inclus) -->
     <script src="assets/js/mobile-fix.js"></script>
     
