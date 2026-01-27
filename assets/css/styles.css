@@ -191,6 +191,13 @@ body::before {
   body::before {
     content: none;
   }
+  
+  /* Désactiver aussi background-attachment: fixed sur mobile,
+     connu pour provoquer des artefacts visuels (zones noires) sur
+     certains Chrome Android. */
+  body {
+    background-attachment: scroll;
+  }
 }
 
 @keyframes backgroundShift {
