@@ -118,6 +118,74 @@
     <!-- Preload image de profil -->
     <link rel="preload" href="assets/photo.jpeg" as="image" />
     <link rel="dns-prefetch" href="https://portfolio-backend-elisee.fly.dev" />
+    
+    <!-- FIX MOBILE CRITIQUE : Script inline qui s'exécute IMMÉDIATEMENT pour corriger le body::before -->
+    <script>
+      (function() {
+        // Détecter mobile immédiatement
+        const isMobile = window.innerWidth <= 1024;
+        
+        if (isMobile) {
+          // Attendre que le body existe, puis appliquer immédiatement
+          function applyMobileFix() {
+            if (document.body) {
+              // Ajouter la classe pour désactiver body::before
+              document.body.classList.add('no-before-pseudo');
+              
+              // Forcer les styles inline immédiatement
+              document.body.style.setProperty('background', '#0a0a0f', 'important');
+              document.body.style.setProperty('background-image', 'none', 'important');
+              document.body.style.setProperty('background-attachment', 'scroll', 'important');
+              document.body.style.setProperty('background-color', '#0a0a0f', 'important');
+              
+              // Forcer aussi le html
+              document.documentElement.style.setProperty('background', '#0a0a0f', 'important');
+              document.documentElement.style.setProperty('background-image', 'none', 'important');
+              document.documentElement.style.setProperty('background-attachment', 'scroll', 'important');
+              
+              // Désactiver l'overlay
+              const overlay = document.getElementById('mobile-menu-overlay');
+              if (overlay) {
+                overlay.style.setProperty('background', 'transparent', 'important');
+                overlay.style.setProperty('backdrop-filter', 'none', 'important');
+                overlay.style.setProperty('-webkit-backdrop-filter', 'none', 'important');
+              }
+              
+              // Désactiver .noise
+              const noise = document.querySelector('.noise');
+              if (noise) {
+                noise.style.setProperty('display', 'none', 'important');
+              }
+              
+              return true; // Body trouvé et fix appliqué
+            }
+            return false;
+          }
+          
+          // Essayer immédiatement (si le body existe déjà)
+          if (!applyMobileFix()) {
+            // Sinon, utiliser MutationObserver pour détecter quand le body est créé
+            const observer = new MutationObserver(function(mutations, obs) {
+              if (applyMobileFix()) {
+                obs.disconnect(); // Arrêter l'observation une fois le fix appliqué
+              }
+            });
+            
+            // Observer le document pour détecter l'ajout du body
+            observer.observe(document.documentElement, {
+              childList: true,
+              subtree: true
+            });
+            
+            // Timeout de sécurité (au cas où MutationObserver ne fonctionne pas)
+            setTimeout(function() {
+              applyMobileFix();
+              observer.disconnect();
+            }, 0);
+          }
+        }
+      })();
+    </script>
   </head>
   <body id="top" class="dark">
     <!-- CORRECTION WCAG AAA - Skip Links -->
