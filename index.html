@@ -123,11 +123,14 @@
     <script>
       (function() {
         console.log('🚀 FIX MOBILE: Script inline démarré');
-        // Détecter mobile avec le viewport RÉEL (pas window.innerWidth qui peut être la fenêtre du navigateur)
-        // Utiliser clientWidth qui donne la largeur du viewport, même en mode responsive DevTools
+        // Détecter mobile avec plusieurs méthodes pour être sûr (même en mode responsive DevTools)
+        // En mode responsive DevTools, clientWidth peut aussi retourner la largeur de la fenêtre
+        // Utiliser matchMedia qui détecte correctement le viewport réel
         const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
-        const isMobile = viewportWidth <= 1024;
-        console.log('📱 Détection mobile:', isMobile, 'Viewport:', viewportWidth, 'Window:', window.innerWidth);
+        const isMobileMedia = window.matchMedia && window.matchMedia('(max-width: 1024px)').matches;
+        // Si matchMedia dit mobile OU si viewport <= 1024, c'est mobile
+        const isMobile = isMobileMedia || viewportWidth <= 1024;
+        console.log('📱 Détection mobile:', isMobile, 'Viewport:', viewportWidth, 'Window:', window.innerWidth, 'MediaQuery:', isMobileMedia);
         
         if (isMobile) {
           // SOLUTION RADICALE : Injecter un style tag dans le head AVANT que le CSS ne charge
