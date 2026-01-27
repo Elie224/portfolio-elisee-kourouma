@@ -1381,7 +1381,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function handleNextClick(e) {
       e.preventDefault();
       e.stopPropagation();
-      e.stopImmediatePropagation();
       console.log('🔄 Clic sur bouton suivant - slideSuivant appelé');
       slideSuivant();
       return false;
@@ -1390,73 +1389,39 @@ document.addEventListener('DOMContentLoaded', function() {
     function handlePrevClick(e) {
       e.preventDefault();
       e.stopPropagation();
-      e.stopImmediatePropagation();
       console.log('🔄 Clic sur bouton précédent - slidePrecedent appelé');
       slidePrecedent();
       return false;
     }
     
-    // Retirer tous les anciens event listeners en clonant et remplaçant les boutons
-    // Mais cette fois, on préserve les IDs correctement
-    const nextBtnId = nextBtn.id;
-    const prevBtnId = prevBtn.id;
-    const nextBtnParent = nextBtn.parentNode;
-    const prevBtnParent = prevBtn.parentNode;
+    // Références directes (pas de clonage)
+    const actualNextBtn = nextBtn;
+    const actualPrevBtn = prevBtn;
     
-    // Créer de nouveaux boutons avec les mêmes propriétés
-    const newNextBtn = nextBtn.cloneNode(true);
-    const newPrevBtn = prevBtn.cloneNode(true);
-    newNextBtn.id = nextBtnId;
-    newPrevBtn.id = prevBtnId;
+    // S'assurer que les boutons sont cliquables et visibles
+    [actualNextBtn, actualPrevBtn].forEach((btn) => {
+      if (!btn) return;
+      btn.style.pointerEvents = 'auto';
+      btn.style.cursor = 'pointer';
+      btn.style.zIndex = '1000';
+      btn.style.position = 'absolute';
+      btn.style.display = 'flex';
+      btn.style.visibility = 'visible';
+      btn.style.opacity = '1';
+      btn.disabled = false;
+      btn.type = 'button';
+      btn.onclick = null; // nettoie tout gestionnaire inline éventuel
+    });
     
-    // Remplacer les anciens boutons
-    nextBtnParent.replaceChild(newNextBtn, nextBtn);
-    prevBtnParent.replaceChild(newPrevBtn, prevBtn);
-    
-    // Utiliser les nouveaux boutons
-    const actualNextBtn = newNextBtn;
-    const actualPrevBtn = newPrevBtn;
-    
-    // S'assurer que les boutons sont cliquables et au-dessus de tout
-    actualNextBtn.style.pointerEvents = 'auto';
-    actualPrevBtn.style.pointerEvents = 'auto';
-    actualNextBtn.style.cursor = 'pointer';
-    actualPrevBtn.style.cursor = 'pointer';
-    actualNextBtn.style.zIndex = '1000';
-    actualPrevBtn.style.zIndex = '1000';
-    actualNextBtn.style.position = 'absolute';
-    actualPrevBtn.style.position = 'absolute';
-    actualNextBtn.style.display = 'flex';
-    actualPrevBtn.style.display = 'flex';
-    actualNextBtn.style.visibility = 'visible';
-    actualPrevBtn.style.visibility = 'visible';
-    actualNextBtn.style.opacity = '1';
-    actualPrevBtn.style.opacity = '1';
-    actualNextBtn.disabled = false;
-    actualPrevBtn.disabled = false;
-    actualNextBtn.type = 'button';
-    actualPrevBtn.type = 'button';
-    
-    // Retirer tous les event listeners existants en utilisant une fonction wrapper
-    // et attacher un seul event listener propre
-    const wrappedNextClick = function(e) {
-      handleNextClick(e);
-    };
-    const wrappedPrevClick = function(e) {
-      handlePrevClick(e);
-    };
-    
-    // Attacher les event listeners (une seule fois, sans capture)
-    actualNextBtn.addEventListener('click', wrappedNextClick, false);
-    actualPrevBtn.addEventListener('click', wrappedPrevClick, false);
-    
-    // Test direct pour vérifier que les boutons fonctionnent
-    actualNextBtn.addEventListener('mousedown', (e) => {
-      console.log('🖱️ Mousedown sur bouton suivant');
-    }, false);
-    actualPrevBtn.addEventListener('mousedown', (e) => {
-      console.log('🖱️ Mousedown sur bouton précédent');
-    }, false);
+    // Attacher les listeners une seule fois par bouton
+    if (actualNextBtn && !actualNextBtn.dataset.carouselBound) {
+      actualNextBtn.addEventListener('click', handleNextClick, false);
+      actualNextBtn.dataset.carouselBound = 'true';
+    }
+    if (actualPrevBtn && !actualPrevBtn.dataset.carouselBound) {
+      actualPrevBtn.addEventListener('click', handlePrevClick, false);
+      actualPrevBtn.dataset.carouselBound = 'true';
+    }
     
     // Mettre à jour les références globales pour mettreAJourCarrousel
     getNextBtn = () => actualNextBtn;
@@ -1465,14 +1430,12 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('✅ Event listeners attachés aux boutons carousel', {
       nextBtn: !!actualNextBtn,
       prevBtn: !!actualPrevBtn,
-      nextBtnId: actualNextBtn.id,
-      prevBtnId: actualPrevBtn.id,
-      nextBtnZIndex: actualNextBtn.style.zIndex,
-      prevBtnZIndex: actualPrevBtn.style.zIndex,
-      nextBtnDisplay: window.getComputedStyle(actualNextBtn).display,
-      prevBtnDisplay: window.getComputedStyle(actualPrevBtn).display,
-      nextBtnPointerEvents: window.getComputedStyle(actualNextBtn).pointerEvents,
-      prevBtnPointerEvents: window.getComputedStyle(actualPrevBtn).pointerEvents
+      nextBtnId: actualNextBtn?.id,
+      prevBtnId: actualPrevBtn?.id,
+      nextBtnZIndex: actualNextBtn ? window.getComputedStyle(actualNextBtn).zIndex : 'n/a',
+      prevBtnZIndex: actualPrevBtn ? window.getComputedStyle(actualPrevBtn).zIndex : 'n/a',
+      nextBtnPointerEvents: actualNextBtn ? window.getComputedStyle(actualNextBtn).pointerEvents : 'n/a',
+      prevBtnPointerEvents: actualPrevBtn ? window.getComputedStyle(actualPrevBtn).pointerEvents : 'n/a'
     });
     
     // Support du swipe tactile pour mobile
@@ -1636,34 +1599,18 @@ document.addEventListener('DOMContentLoaded', function() {
       calculerLargeurCarte();
       mettreAJourCarrousel(false);
       
-      // Vérifier que les boutons fonctionnent et réattacher les listeners si nécessaire
+      // Vérifier que les boutons fonctionnent
       const checkNextBtn = document.getElementById('carousel-next');
       const checkPrevBtn = document.getElementById('carousel-prev');
-      
-      if (checkNextBtn && checkNextBtn !== actualNextBtn) {
-        console.warn('⚠️ Le bouton suivant a changé, réattachement des listeners');
-        checkNextBtn.removeEventListener('click', wrappedNextClick, false);
-        checkNextBtn.addEventListener('click', wrappedNextClick, false);
-      }
-      
-      if (checkPrevBtn && checkPrevBtn !== actualPrevBtn) {
-        console.warn('⚠️ Le bouton précédent a changé, réattachement des listeners');
-        checkPrevBtn.removeEventListener('click', wrappedPrevClick, false);
-        checkPrevBtn.addEventListener('click', wrappedPrevClick, false);
-      }
-      
-      // Vérifier que les boutons fonctionnent
       console.log('🔍 Vérification finale des boutons:', {
-        nextBtnExists: !!actualNextBtn,
-        prevBtnExists: !!actualPrevBtn,
-        nextBtnInDOM: !!checkNextBtn,
-        prevBtnInDOM: !!checkPrevBtn,
-        nextBtnVisible: actualNextBtn ? window.getComputedStyle(actualNextBtn).display !== 'none' : false,
-        prevBtnVisible: actualPrevBtn ? window.getComputedStyle(actualPrevBtn).display !== 'none' : false,
-        nextBtnPointerEvents: actualNextBtn ? window.getComputedStyle(actualNextBtn).pointerEvents : 'none',
-        prevBtnPointerEvents: actualPrevBtn ? window.getComputedStyle(actualPrevBtn).pointerEvents : 'none',
-        nextBtnZIndex: actualNextBtn ? window.getComputedStyle(actualNextBtn).zIndex : 'auto',
-        prevBtnZIndex: actualPrevBtn ? window.getComputedStyle(actualPrevBtn).zIndex : 'auto'
+        nextBtnExists: !!checkNextBtn,
+        prevBtnExists: !!checkPrevBtn,
+        nextBtnVisible: checkNextBtn ? window.getComputedStyle(checkNextBtn).display !== 'none' : false,
+        prevBtnVisible: checkPrevBtn ? window.getComputedStyle(checkPrevBtn).display !== 'none' : false,
+        nextBtnPointerEvents: checkNextBtn ? window.getComputedStyle(checkNextBtn).pointerEvents : 'none',
+        prevBtnPointerEvents: checkPrevBtn ? window.getComputedStyle(checkPrevBtn).pointerEvents : 'none',
+        nextBtnZIndex: checkNextBtn ? window.getComputedStyle(checkNextBtn).zIndex : 'auto',
+        prevBtnZIndex: checkPrevBtn ? window.getComputedStyle(checkPrevBtn).zIndex : 'auto'
       });
     }, 200);
     
