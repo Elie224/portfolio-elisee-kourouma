@@ -4074,12 +4074,14 @@ header.scrolled {
   }
 }
 
-/* Animation pour les sections avec data-animate */
+/* Animation pour les sections avec data-animate
+   IMPORTANT : compatibilité vieux navigateurs
+   - Par défaut, le contenu est VISIBLE (opacity: 1)
+   - Si le JS fonctionne, on ajoute .animated pour gérer l'animation
+   - Si le JS est cassé (vieux Android, Phoenix, etc.), le contenu reste visible. */
 [data-animate] {
-  opacity: 0;
-  transform: translateY(40px);
-  transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-              transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  opacity: 1;
+  transform: none;
 }
 
 [data-animate].animated {
@@ -4087,13 +4089,7 @@ header.scrolled {
   transform: translateY(0);
 }
 
-/* Animation stagger pour les enfants */
-[data-animate] > * {
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-}
-
+/* Animation stagger pour les enfants (uniquement quand .animated est présent) */
 [data-animate].animated > *:nth-child(1) { transition-delay: 0.1s; }
 [data-animate].animated > *:nth-child(2) { transition-delay: 0.2s; }
 [data-animate].animated > *:nth-child(3) { transition-delay: 0.3s; }
@@ -4104,6 +4100,7 @@ header.scrolled {
 [data-animate].animated > * {
   opacity: 1;
   transform: translateY(0);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
 }
 
 /* Hover effects améliorés */
