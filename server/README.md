@@ -67,7 +67,7 @@ Authentification admin
 **Body :**
 ```json
 {
-  "email": "kouroumaelisee@gmail.com",
+  "email": "smartshift12@gmail.com",
   "password": "votre_mot_de_passe"
 }
 ```

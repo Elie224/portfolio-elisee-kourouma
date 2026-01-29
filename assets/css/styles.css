@@ -1419,8 +1419,8 @@ header.scrolled {
   display: inline-block !important;
   border-radius: 50% !important;
   overflow: visible !important;
-  width: 220px;
-  height: 220px;
+  width: 180px;
+  height: 180px;
 }
 
 @keyframes avatarFloat {
@@ -1433,8 +1433,8 @@ header.scrolled {
 }
 
 .hero-avatar {
-  width: 220px !important;
-  height: 220px !important;
+  width: 180px !important;
+  height: 180px !important;
   border-radius: 50% !important;
   object-fit: cover !important;
   border: 4px solid var(--couleur-bordure) !important;
@@ -1645,13 +1645,13 @@ header.scrolled {
   }
   
   .hero-avatar-wrapper {
-    width: 160px !important;
-    height: 160px !important;
+    width: 140px !important;
+    height: 140px !important;
   }
   
   .hero-avatar {
-    width: 160px !important;
-    height: 160px !important;
+    width: 140px !important;
+    height: 140px !important;
     border-radius: 50% !important;
   }
   

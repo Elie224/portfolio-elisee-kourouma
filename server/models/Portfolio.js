@@ -1,4 +1,15 @@
+/**
+ * Modèle MongoDB pour le Portfolio
+ * 
+ * Ce modèle définit la structure des données du portfolio stockées dans MongoDB.
+ * Il inclut des méthodes statiques pour faciliter l'accès aux données.
+ * 
+ * @author Nema Elisée Kourouma
+ * @date 2026
+ */
+
 const mongoose = require('mongoose');
+const { log, logError, logSuccess, logWarn } = require('../utils/logger');
 
 const portfolioSchema = new mongoose.Schema({
   personal: {
@@ -123,7 +134,7 @@ const portfolioSchema = new mongoose.Schema({
 const MINIMAL_PORTFOLIO_DATA = {
   personal: {
     fullName: "Nema Elisée Kourouma",
-    email: "kouroumaelisee@gmail.com",
+    email: "smartshift12@gmail.com",
     phone: "",
     photo: "assets/photo.jpeg",
     currentEducation: "Master IA",
@@ -155,11 +166,11 @@ portfolioSchema.statics.getPortfolio = async function() {
     let portfolio = await this.findOne();
     
     if (!portfolio) {
-      console.log('📦 Aucun document trouvé, création avec les données par défaut');
+      log('📦 Aucun document trouvé, création avec les données par défaut');
       // Utiliser la fonction pour éviter tout problème avec les références
       const dataToCreate = getDefaultPortfolioData();
       portfolio = await this.create(dataToCreate);
-      console.log('✅ Portfolio créé avec succès:', {
+      logSuccess('✅ Portfolio créé avec succès:', {
         projects: portfolio.projects?.length || 0,
         skills: portfolio.skills?.length || 0,
         timeline: portfolio.timeline?.length || 0
@@ -183,8 +194,8 @@ portfolioSchema.statics.getPortfolio = async function() {
         (portfolio.links.cv && portfolio.links.cv.startsWith('data:'))
       );
       
-      // Log détaillé pour debug
-      console.log('🔍 Vérification CV avant décision de réinitialisation:', {
+      // Vérification détaillée pour décider si on doit réinitialiser (logging en développement uniquement)
+      log('🔍 Vérification CV avant décision de réinitialisation:', {
         hasLinks: !!portfolio.links,
         cvExists: !!portfolio.links?.cv,
         cvFileExists: !!portfolio.links?.cvFile,
@@ -220,7 +231,7 @@ portfolioSchema.statics.getPortfolio = async function() {
       cvType: portfolio.links.cv ? (portfolio.links.cv.startsWith('data:') ? 'base64' : 'path') : 'none',
       cvFileType: portfolio.links.cvFile ? (portfolio.links.cvFile.startsWith('data:') ? 'base64' : 'path') : 'none'
     } : { error: 'No links before conversion' };
-    console.log('🔍 CV AVANT conversion toObject():', cvAvantConversion);
+    log('🔍 CV AVANT conversion toObject():', cvAvantConversion);
     
     // Convertir en objet propre
     const portfolioObj = portfolio.toObject();
@@ -238,7 +249,7 @@ portfolioSchema.statics.getPortfolio = async function() {
       cvType: portfolioObj.links.cv ? (portfolioObj.links.cv.startsWith('data:') ? 'base64' : 'path') : 'none',
       cvFileType: portfolioObj.links.cvFile ? (portfolioObj.links.cvFile.startsWith('data:') ? 'base64' : 'path') : 'none'
     } : { error: 'No links after conversion' };
-    console.log('🔍 CV APRÈS conversion toObject():', cvApresConversion);
+    log('🔍 CV APRÈS conversion toObject():', cvApresConversion);
     
     console.log('📤 Portfolio renvoyé avec succès:', {
       projects: portfolioObj.projects?.length || 0,
@@ -251,8 +262,7 @@ portfolioSchema.statics.getPortfolio = async function() {
     return portfolioObj;
     
   } catch (error) {
-    console.error('❌ Erreur critique dans getPortfolio:', error.message);
-    console.error('Stack:', error.stack);
+    logError('❌ Erreur critique dans getPortfolio:', { message: error.message, stack: error.stack });
     
     // En cas d'erreur critique, retourner une copie propre des données par défaut
     return getDefaultPortfolioData();

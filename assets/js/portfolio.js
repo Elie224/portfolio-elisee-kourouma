@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Mon email et informations de contact
   const MES_CONTACTS = {
-    email: 'kouroumaelisee@gmail.com',
+    email: 'smartshift12@gmail.com',
     telephone: '+33689306432',
     whatsapp: 'https://wa.me/33689306432',
     facebook: 'https://www.facebook.com/share/17xGVe29cL/',
@@ -30,8 +30,9 @@ document.addEventListener('DOMContentLoaded', function() {
   };
   
   // Adresse de mon serveur backend
-  const MON_SERVEUR = window.location.hostname === 'localhost' 
-    ? 'http://localhost:3001/api'
+  // Configuration centralisée pour faciliter la maintenance
+  const MON_SERVEUR = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:3000/api'
     : 'https://portfolio-backend-elisee.fly.dev/api';
   
   
@@ -45,19 +46,48 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
-  // Nettoie le localStorage si il contient du code malveillant
+  /**
+   * Nettoie le localStorage si il contient du code malveillant
+   * 
+   * Cette fonction vérifie si le localStorage contient des patterns suspects
+   * qui pourraient indiquer une tentative d'injection de code malveillant.
+   * Si des patterns suspects sont détectés, les données sont supprimées pour la sécurité.
+   * 
+   * @function nettoyerDonnees
+   * @returns {void}
+   */
   function nettoyerDonnees() {
-    const donnees = localStorage.getItem('portfolioData');
-    if (donnees && (donnees.includes("'\\n' +") || donnees.includes('`'))) {
-      // On supprime les données suspectes pour la sécurité
-      localStorage.removeItem('portfolioData');
-      localStorage.removeItem('projects');
-      localStorage.removeItem('skills');
-      localStorage.removeItem('timeline');
+    try {
+      const donnees = localStorage.getItem('portfolioData');
+      if (donnees && (donnees.includes("'\\n' +") || donnees.includes('`'))) {
+        // Supprimer les données suspectes pour la sécurité
+        // Cela protège contre les tentatives d'injection XSS via localStorage
+        localStorage.removeItem('portfolioData');
+        localStorage.removeItem('projects');
+        localStorage.removeItem('skills');
+        localStorage.removeItem('timeline');
+        logWarn('⚠️ Données suspectes détectées dans localStorage, nettoyage effectué');
+      }
+    } catch (error) {
+      // En cas d'erreur (localStorage bloqué, etc.), on continue sans bloquer l'application
+      logError('❌ Erreur lors du nettoyage du localStorage:', error);
     }
   }
   
-  // Vérifie si les données sont vides ou inexistantes
+  /**
+   * Vérifie si les données du portfolio sont vides ou inexistantes
+   * 
+   * Cette fonction vérifie si le portfolio contient des données significatives.
+   * Un portfolio est considéré comme non vide s'il contient au moins :
+   * - Des projets, OU
+   * - Des compétences, OU
+   * - Un parcours (timeline), OU
+   * - Un CV base64
+   * 
+   * @function donneesSontVides
+   * @param {Object} donnees - Les données du portfolio à vérifier
+   * @returns {boolean} - true si les données sont vides, false sinon
+   */
   function donneesSontVides(donnees) {
     if (!donnees) return true;
     
@@ -66,6 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const aParcours = donnees.timeline && donnees.timeline.length > 0;
     
     // Vérifier si le portfolio contient un CV base64
+    // Un CV base64 est considéré comme une donnée importante
     const aCvBase64 = donnees.links && (
       (donnees.links.cvFile && donnees.links.cvFile.startsWith('data:')) ||
       (donnees.links.cv && donnees.links.cv.startsWith('data:'))
@@ -423,13 +454,41 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
-  // Récupère mes données (serveur ou localStorage)
-  function obtenirMesDonnees() {
+  /**
+   * Récupère les données du portfolio depuis le serveur ou le localStorage
+   * 
+   * Cette fonction tente d'abord de charger les données depuis le serveur.
+   * Si le serveur n'est pas disponible, elle utilise les données du localStorage.
+   * Si aucune donnée n'est disponible, elle crée des données par défaut.
+   * 
+   * @function obtenirMesDonnees
+   * @returns {Promise<Object>} Les données du portfolio
+   */
+  async function obtenirMesDonnees() {
     try {
+      // Essayer d'abord de charger depuis le serveur (données à jour)
+      // Cette approche garantit que l'utilisateur voit toujours les données les plus récentes
+      const donneesServeur = await chargerDonneesServeur();
+      if (donneesServeur) {
+        // Sauvegarder dans localStorage pour utilisation hors ligne
+        // Cela permet au site de fonctionner même si le serveur est temporairement indisponible
+        try {
+          localStorage.setItem('portfolioData', JSON.stringify(donneesServeur));
+        } catch (e) {
+          // Si localStorage est bloqué (mode privé, quota dépassé), continuer quand même
+          // L'application doit rester fonctionnelle même sans localStorage
+          logWarn('⚠️ Impossible de sauvegarder dans localStorage:', e.message);
+        }
+        return donneesServeur;
+      }
+      
+      // Si le serveur n'est pas disponible, utiliser les données locales (fallback)
+      // Cette stratégie garantit que le site fonctionne même en mode hors ligne
       const donneesLocales = localStorage.getItem('portfolioData');
       let donnees = donneesLocales ? JSON.parse(donneesLocales) : creerDonneesParDefaut();
       
       // Remplir les données vides avec les données par défaut
+      // Cela évite d'afficher des sections vides qui pourraient confondre l'utilisateur
       const donneesParDefaut = creerDonneesParDefaut();
       if (!donnees.skills || donnees.skills.length === 0) {
         donnees.skills = donneesParDefaut.skills;
@@ -439,6 +498,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       
       // Charger Google Analytics si configuré (priorité haute pour un suivi fiable)
+      // Le chargement est asynchrone pour ne pas bloquer le rendu de la page
       if (donnees.settings?.analytics?.googleAnalytics) {
         // Charger immédiatement, ne pas attendre
         setTimeout(() => {
@@ -448,6 +508,8 @@ document.addEventListener('DOMContentLoaded', function() {
       
       return donnees;
     } catch (erreur) {
+      // En cas d'erreur, retourner des données par défaut pour garantir que le site reste fonctionnel
+      // Cette gestion d'erreur robuste évite les écrans blancs ou les erreurs JavaScript
       logError('❌ Erreur lors du parsing des données locales:', erreur);
       return creerDonneesParDefaut();
     }

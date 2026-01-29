@@ -5,9 +5,10 @@
 
 document.addEventListener('DOMContentLoaded', function() {
   
-  // Configuration
-  const MON_SERVEUR = window.location.hostname === 'localhost' 
-    ? 'http://localhost:3001/api'
+  // Configuration du serveur backend
+  // Configuration centralisée pour faciliter la maintenance
+  const MON_SERVEUR = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:3000/api'
     : 'https://portfolio-backend-elisee.fly.dev/api';
   
   // Utilitaires pour les logs (uniquement en développement)

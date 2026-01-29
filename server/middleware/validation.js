@@ -1,4 +1,15 @@
+/**
+ * Middlewares de validation et sanitization
+ * 
+ * Ce fichier contient tous les middlewares de validation et de sécurité
+ * pour protéger l'API contre les attaques XSS, injection, et données malformées.
+ * 
+ * @author Nema Elisée Kourouma
+ * @date 2026
+ */
+
 const { body, validationResult } = require('express-validator');
+const { logSecurity, logError, logWarn } = require('../utils/logger');
 
 // Validation pour les données portfolio
 const validatePortfolioData = [
@@ -133,19 +144,24 @@ const sanitizeData = (req, res, next) => {
                          bodyString.includes('data:image/') ||
                          (req.body.links && req.body.links.cvFile && req.body.links.cvFile.startsWith('data:'));
     
+    // EXCEPTION : Autoriser les données base64 (data:application/pdf;base64,...)
+    // Les données base64 peuvent contenir des caractères qui ressemblent à du code mais qui sont valides
+    // On assouplit la validation pour les fichiers, mais on vérifie quand même les patterns vraiment dangereux
     if (isBase64Data) {
-      console.log('📄 Données base64 détectées - Validation de sécurité assouplie pour les fichiers');
+      logSecurity('📄 Données base64 détectées - Validation de sécurité assouplie pour les fichiers');
+      
       // Pour les données base64, on vérifie seulement les patterns vraiment dangereux
+      // Les patterns moins dangereux sont autorisés car ils font partie du fichier encodé
       const criticalPatterns = [
-        /<script.*?>/gi,                  // Script tags
-        /javascript:/gi,                  // Javascript protocol
-        /eval\s*\(/g,                     // Eval calls
-        /document\.write/gi               // Document write
+        /<script.*?>/gi,                  // Script tags HTML
+        /javascript:/gi,                  // Protocole JavaScript dans les URLs
+        /eval\s*\(/g,                     // Appels à eval() (très dangereux)
+        /document\.write/gi               // Écriture directe dans le DOM
       ];
       
       for (const pattern of criticalPatterns) {
         if (pattern.test(bodyString)) {
-          console.log('🚨 Code JavaScript malveillant détecté dans base64:', pattern);
+          logSecurity('🚨 Code JavaScript malveillant détecté dans base64:', { pattern: pattern.toString() });
           return res.status(400).json({
             error: 'Code JavaScript détecté dans les données',
             message: 'Les données contiennent du code non autorisé',
@@ -159,27 +175,31 @@ const sanitizeData = (req, res, next) => {
     }
     
     // Patterns dangereux à détecter (pour les données non-base64)
+    // Cette liste est exhaustive et couvre les principales techniques d'injection XSS
     const dangerousPatterns = [
-      /`.*`/g,                           // Backticks
-      /\$\{.*\}/g,                      // Template literals
-      /function\s*\(/g,                 // Function declarations
-      /=>\s*{/g,                        // Arrow functions
-      /eval\s*\(/g,                     // Eval calls
-      /document\./g,                    // DOM access
-      /window\./g,                      // Window object
-      /console\./g,                     // Console calls
-      /<script.*?>/gi,                  // Script tags
-      /javascript:/gi,                  // Javascript protocol
-      /on(click|load|error|mouse)/gi,   // Event handlers
-      /innerHTML/gi,                    // DOM manipulation
-      /\[\\n['"].*?\+/g,               // Concatenation patterns
-      /"\\n['"].*?\+/g                 // Concatenation patterns
+      /`.*`/g,                           // Backticks (template literals)
+      /\$\{.*\}/g,                       // Template literals avec interpolation
+      /function\s*\(/g,                  // Déclarations de fonction
+      /=>\s*{/g,                         // Fonctions fléchées
+      /eval\s*\(/g,                      // Appels à eval()
+      /document\./g,                     // Accès au DOM
+      /window\./g,                       // Accès à l'objet window
+      /console\./g,                      // Appels à console
+      /<script.*?>/gi,                   // Balises script HTML
+      /javascript:/gi,                    // Protocole JavaScript
+      /on(click|load|error|mouse)/gi,    // Gestionnaires d'événements inline
+      /innerHTML/gi,                     // Manipulation du DOM via innerHTML
+      /\[\\n['"].*?\+/g,                 // Patterns de concaténation suspecte
+      /"\\n['"].*?\+/g                   // Patterns de concaténation suspecte
     ];
     
+    // Vérifier chaque pattern dangereux
     for (const pattern of dangerousPatterns) {
       if (pattern.test(bodyString)) {
-        console.log('🚨 Code JavaScript malveillant détecté:', pattern);
-        console.log('📋 Aperçu:', bodyString.substring(0, 200));
+        logSecurity('🚨 Code JavaScript malveillant détecté:', {
+          pattern: pattern.toString(),
+          preview: bodyString.substring(0, 200)
+        });
         
         return res.status(400).json({
           error: 'Code JavaScript détecté dans les données',
@@ -189,9 +209,12 @@ const sanitizeData = (req, res, next) => {
       }
     }
     
+    // Si aucune menace détectée, continuer vers le prochain middleware
     next();
   } catch (error) {
-    console.error('❌ Erreur dans sanitizeData:', error);
+    // En cas d'erreur dans la validation, logger l'erreur mais continuer
+    // Cela évite de bloquer toutes les requêtes en cas de bug dans le middleware
+    logError('❌ Erreur dans sanitizeData:', { message: error.message, stack: error.stack });
     next(); // Continuer en cas d'erreur dans la validation
   }
 };

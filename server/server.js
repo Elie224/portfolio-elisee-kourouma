@@ -1,3 +1,16 @@
+/**
+ * Serveur Backend - Portfolio de Nema Elisée Kourouma
+ * 
+ * Ce serveur Node.js/Express gère :
+ * - L'API REST pour le portfolio
+ * - L'authentification admin sécurisée
+ * - La connexion à MongoDB Atlas
+ * - La protection contre les attaques courantes
+ * 
+ * @author Nema Elisée Kourouma
+ * @date 2026
+ */
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -5,20 +18,26 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 require('dotenv').config();
 
-// DEBUG: Afficher toutes les variables d'environnement disponibles (sans valeurs sensibles)
-// IMPORTANT: Ce debug doit être AU DÉBUT pour voir ce qui est disponible
-console.log('🔍 Variables d\'environnement disponibles:');
-const envKeys = Object.keys(process.env).filter(key => 
-  key.includes('ADMIN') || key.includes('MONGODB') || key.includes('JWT') || key.includes('NODE')
-);
-envKeys.forEach(key => {
-  const value = process.env[key];
-  if (key.includes('PASSWORD') || key.includes('SECRET') || key.includes('URI')) {
-    console.log(`  ${key}: ${value ? '✅ Présent (' + value.substring(0, 10) + '...)' : '❌ Absent'}`);
-  } else {
-    console.log(`  ${key}: ${value || '❌ Absent'}`);
-  }
-});
+// Importer le système de logging centralisé
+const { log, logError, logWarn, logRequest, logSecurity, estEnDeveloppement } = require('./utils/logger');
+
+// Vérification des variables d'environnement critiques (uniquement en développement)
+// Cette vérification aide à détecter les problèmes de configuration tôt
+// En production, on ne logge pas ces informations pour des raisons de sécurité
+if (estEnDeveloppement) {
+  const envKeys = Object.keys(process.env).filter(key => 
+    key.includes('ADMIN') || key.includes('MONGODB') || key.includes('JWT') || key.includes('NODE')
+  );
+  log('🔍 Variables d\'environnement critiques détectées:');
+  envKeys.forEach(key => {
+    const value = process.env[key];
+    if (key.includes('PASSWORD') || key.includes('SECRET') || key.includes('URI')) {
+      log(`  ${key}: ${value ? '✅ Présent (' + value.substring(0, 10) + '...)' : '❌ Absent'}`);
+    } else {
+      log(`  ${key}: ${value || '❌ Absent'}`);
+    }
+  });
+}
 
 const app = express();
 
@@ -68,7 +87,11 @@ const limiter = rateLimit({
     return process.env.NODE_ENV === 'development';
   },
   handler: (req, res) => {
-    console.log(`🚫 Rate limit atteint pour IP: ${req.ip}`);
+    // Logger les tentatives de rate limiting (toujours actif pour la sécurité)
+    logSecurity(`🚫 Rate limit atteint pour IP: ${req.ip}`, {
+      path: req.path,
+      method: req.method
+    });
     res.status(429).json({
       error: 'Trop de requêtes',
       message: 'Veuillez réessayer dans 15 minutes'
@@ -90,7 +113,11 @@ const authLimiter = rateLimit({
     return process.env.NODE_ENV === 'development';
   },
   handler: (req, res) => {
-    console.log(`🚫 Trop de tentatives de connexion pour IP: ${req.ip}`);
+    // Logger les tentatives de rate limiting sur l'authentification (toujours actif pour la sécurité)
+    logSecurity(`🚫 Trop de tentatives de connexion pour IP: ${req.ip}`, {
+      path: req.path,
+      method: req.method
+    });
     res.status(429).json({
       error: 'Trop de tentatives de connexion',
       message: 'Veuillez réessayer dans 15 minutes'
@@ -141,7 +168,7 @@ const corsOptions = {
       allowedOrigins.push(...envOrigins);
     } else if (process.env.NODE_ENV === 'production') {
       // En production, ALLOWED_ORIGINS doit être défini
-      console.warn('⚠️ ALLOWED_ORIGINS non défini en production - CORS peut être restrictif');
+      logWarn('⚠️ ALLOWED_ORIGINS non défini en production - CORS peut être restrictif');
     }
     
     // Ajouter le domaine du portfolio par défaut si présent dans les variables d'environnement
@@ -166,7 +193,7 @@ const corsOptions = {
       callback(null, true);
     } else {
       // Logger uniquement si c'est une vraie tentative d'accès (avec origin)
-      console.warn('🚫 CORS: Origine non autorisée:', origin, '| Path:', currentPath);
+      logSecurity('🚫 CORS: Origine non autorisée:', { origin: origin, path: currentPath });
       callback(null, false); // false = bloquer sans erreur
     }
   },
@@ -183,11 +210,11 @@ const corsOptions = {
   optionsSuccessStatus: 200 // Pour IE11
 };
 
-// Middleware de logging pour debug (réduit pour éviter le spam)
+// Middleware de logging pour les requêtes HTTP (uniquement en développement)
+// Ne logger que les requêtes API (pas les health checks) pour éviter le spam
 app.use((req, res, next) => {
-  // Ne logger que les requêtes API (pas les health checks)
   if (req.path.startsWith('/api/')) {
-    console.log(`📥 ${req.method} ${req.path} - Origin: ${req.headers.origin || 'none'}`);
+    logRequest(req.method, req.path, req.headers.origin);
   }
   next();
 });
@@ -242,31 +269,32 @@ const requiredEnvVars = ['MONGODB_URI', 'JWT_SECRET', 'ADMIN_EMAIL', 'ADMIN_PASS
 const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
 
 if (missingVars.length > 0) {
-  console.error('❌ Variables d\'environnement manquantes:', missingVars.join(', '));
-  console.error('💡 Vérifiez vos secrets Fly.io avec: flyctl secrets list -a portfolio-backend-elisee');
-  console.warn('⚠️ Le serveur démarre quand même, mais certaines fonctionnalités peuvent ne pas fonctionner');
+  // Logger les variables manquantes (toujours actif car critique)
+  logError('❌ Variables d\'environnement manquantes:', { missing: missingVars.join(', ') });
+  logError('💡 Vérifiez vos secrets Fly.io avec: flyctl secrets list -a portfolio-backend-elisee');
+  logWarn('⚠️ Le serveur démarre quand même, mais certaines fonctionnalités peuvent ne pas fonctionner');
   // Ne pas faire process.exit(1) - laisser le serveur démarrer pour le diagnostic
 }
 
 // Démarrer le serveur APRÈS tous les middlewares
 // Écouter sur 0.0.0.0 pour être accessible depuis Fly.io
 const PORT = process.env.PORT || 3000;
-console.log(`📡 Démarrage du serveur sur le port ${PORT}...`);
+log(`📡 Démarrage du serveur sur le port ${PORT}...`);
 try {
   const server = app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Serveur démarré avec succès sur le port ${PORT}`);
-    console.log(`📡 API disponible sur http://0.0.0.0:${PORT}/api/portfolio`);
-    console.log(`🌐 Health check disponible sur http://0.0.0.0:${PORT}/health`);
+    logSuccess(`🚀 Serveur démarré avec succès sur le port ${PORT}`);
+    log(`📡 API disponible sur http://0.0.0.0:${PORT}/api/portfolio`);
+    log(`🌐 Health check disponible sur http://0.0.0.0:${PORT}/health`);
   });
 } catch (error) {
-  console.error('❌ Erreur lors du démarrage du serveur:', error);
+  logError('❌ Erreur lors du démarrage du serveur:', { message: error.message, stack: error.stack });
   process.exit(1);
 }
 
 // Connexion à MongoDB (en arrière-plan, ne bloque pas le démarrage du serveur)
 mongoose.connect(process.env.MONGODB_URI)
 .then(async () => {
-  console.log('✅ Connecté à MongoDB');
+  logSuccess('✅ Connecté à MongoDB');
   
   // Initialiser les données par défaut uniquement si la collection est vide
   try {
@@ -274,7 +302,7 @@ mongoose.connect(process.env.MONGODB_URI)
     const existingPortfolio = await Portfolio.findOne();
     
     if (!existingPortfolio) {
-      console.log('📋 Collection vide, création des données par défaut...');
+      log('📋 Collection vide, création des données par défaut...');
       const defaultData = {
         personal: {
           fullName: "Nema Elisée Kourouma",
@@ -339,25 +367,25 @@ mongoose.connect(process.env.MONGODB_URI)
       };
       
       await Portfolio.create(defaultData);
-      console.log('✅ Données par défaut créées');
+      logSuccess('✅ Données par défaut créées');
     } else {
-      console.log('📋 Données existantes trouvées, aucune initialisation nécessaire');
+      log('📋 Données existantes trouvées, aucune initialisation nécessaire');
     }
   } catch (initError) {
-    console.error('⚠️ Erreur lors de l\'initialisation:', initError.message);
+    logError('⚠️ Erreur lors de l\'initialisation:', { message: initError.message });
   }
 })
 .catch((error) => {
-  console.error('❌ Erreur de connexion à MongoDB:', {
+  logError('❌ Erreur de connexion à MongoDB:', {
     message: error.message,
     name: error.name,
     code: error.code,
     stack: error.stack,
     timestamp: new Date().toISOString()
   });
-  console.log('💡 Assurez-vous que MongoDB est démarré ou utilisez MongoDB Atlas');
-  console.log('💡 Vérifiez la variable MONGODB_URI dans les secrets Fly.io');
-  console.log('⚠️ Le serveur fonctionne, mais MongoDB n\'est pas disponible - les routes retourneront des données par défaut');
+  logWarn('💡 Assurez-vous que MongoDB est démarré ou utilisez MongoDB Atlas');
+  logWarn('💡 Vérifiez la variable MONGODB_URI dans les secrets Fly.io');
+  logWarn('⚠️ Le serveur fonctionne, mais MongoDB n\'est pas disponible - les routes retourneront des données par défaut');
 });
 
 // Gestion globale des erreurs (middleware de fin)
@@ -384,7 +412,7 @@ app.use((err, req, res, next) => {
   }
   
   // Log détaillé uniquement pour les vraies erreurs serveur
-  console.error('❌ Erreur serveur non gérée:', {
+  logError('❌ Erreur serveur non gérée:', {
     message: err.message,
     name: err.name,
     code: err.code,

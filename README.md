@@ -1,66 +1,67 @@
 # 💼 Portfolio de Nema Elisée Kourouma
 
 > **Étudiant en Master Intelligence Artificielle**  
-> Master Intelligence Artificielle  
+> Portfolio professionnel moderne et performant  
 > 🌐 Site web : [elisee-kourouma.fr](https://elisee-kourouma.fr)
 
-## 🚀 Ce que vous trouverez ici
+---
 
-Un portfolio moderne et professionnel qui présente :
-- 👨‍💻 Mon parcours et mes compétences en développement
-- 🤖 Mes projets en Intelligence Artificielle
-- 💻 Mes réalisations web (React, Python, MongoDB)
-- 📧 Moyens de me contacter pour des collaborations
+## 🎯 À propos
 
-## 📁 Structure simple et claire
+Portfolio professionnel développé avec soin pour présenter :
+- 👨‍💻 Mon parcours académique et professionnel
+- 🤖 Mes projets en Intelligence Artificielle et Machine Learning
+- 💻 Mes compétences techniques (Python, JavaScript, React, MongoDB)
+- 📧 Moyens de contact pour collaborations et opportunités
 
-```
-portfolio/
-├── 📄 Pages principales
-│   ├── index.html          # Page d'accueil 
-│   ├── about.html          # Mon parcours
-│   ├── projects.html       # Mes projets
-│   ├── contact.html        # Me contacter
-│   └── admin.html          # Gestion du contenu
-├── 🎨 Styles et scripts  
-│   ├── assets/css/styles.css    # CSS principal (humain et lisible)
-│   ├── assets/js/portfolio.js   # Script principal (commenté en français)
-│   └── assets/js/admin.js       # Interface d'administration
-└── 🔧 Backend (optionnel)
-    └── server/             # API Node.js pour la gestion des données
-```
+**Code écrit pour être facilement compris et maintenu par un humain** 🤝
 
-## 💻 Utilisation
+---
 
-### Pour visiter le portfolio
-Ouvrez simplement `index.html` dans votre navigateur !
+## 🚀 Démarrage rapide
 
-### Pour gérer le contenu
-1. Allez sur `admin.html` 
-2. Connectez-vous avec vos identifiants
-3. Ajoutez/modifiez vos projets et compétences
-4. Les modifications s'affichent automatiquement
+### Visiter le portfolio
+Ouvrez simplement `index.html` dans votre navigateur ou visitez [elisee-kourouma.fr](https://elisee-kourouma.fr)
 
-### Pour le backend (optionnel)
+### Gérer le contenu (Admin)
+1. Aller sur `admin.html`
+2. Se connecter avec vos identifiants
+3. Modifier les projets, compétences, timeline, etc.
+4. Les modifications sont sauvegardées automatiquement
+
+### Démarrer le backend localement
 ```bash
 cd server
 npm install
 npm start
+# Le serveur démarre sur http://localhost:3000
 ```
 
-## ✨ Fonctionnalités
+---
+
+## ✨ Fonctionnalités principales
 
 - ✅ **Design moderne** - Interface épurée et professionnelle
-- 📱 **100% Responsive** - Parfait sur mobile, tablette, desktop
-- 🚀 **Performance optimisée** - Chargement rapide
-- ♿ **Accessible** - Compatible lecteurs d'écran
-- 🔐 **Sécurisé** - Protection contre les attaques courantes
-- 🎨 **Facile à personnaliser** - Code clair et documenté
+- 📱 **100% Responsive** - Parfait sur tous les appareils (mobile, tablette, desktop)
+- 🚀 **Performance optimisée** - Chargement rapide, lazy loading, cache
+- ♿ **Accessible** - Conforme WCAG 2.1 AAA, compatible lecteurs d'écran
+- 🔐 **Sécurisé** - Protection XSS, rate limiting, authentification JWT
+- 🎨 **Code lisible** - Bien commenté, structure claire, facile à maintenir
+- 🌐 **Multi-navigateurs** - Compatible Chrome, Firefox, Safari, Phoenix, etc.
+
+---
+
+## 📚 Documentation
+
+Pour plus de détails, consultez :
+- **[DOCUMENTATION.md](./DOCUMENTATION.md)** - Documentation complète (déploiement, configuration, dépannage)
+- **[SECURITE.md](./SECURITE.md)** - Guide de sécurité et bonnes pratiques
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Architecture technique détaillée
 
 ## 📞 Contact
 
 **Nema Elisée Kourouma**  
-📧 Email : [kouroumaelisee@gmail.com](mailto:kouroumaelisee@gmail.com)  
+📧 Email : [smartshift12@gmail.com](mailto:smartshift12@gmail.com)  
 📱 Téléphone : +33 6 89 30 64 32  
 💼 LinkedIn : [linkedin.com/in/nema-kourouma](https://linkedin.com/in/nema-kourouma)  
 🌐 Site web : [elisee-kourouma.fr](https://elisee-kourouma.fr)  

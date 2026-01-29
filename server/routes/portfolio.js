@@ -1,3 +1,15 @@
+/**
+ * Routes API pour le Portfolio
+ * 
+ * Ce fichier gère toutes les routes API pour :
+ * - Récupérer les données du portfolio (GET)
+ * - Mettre à jour les données (POST - authentifié)
+ * - Authentification admin (POST /login)
+ * 
+ * @author Nema Elisée Kourouma
+ * @date 2026
+ */
+
 const express = require('express');
 const router = express.Router();
 const Portfolio = require('../models/Portfolio');
@@ -9,40 +21,49 @@ const {
   limitDataSize 
 } = require('../middleware/validation');
 
-// GET /api/portfolio - Récupérer les données du portfolio (public)
+// Importer le système de logging centralisé
+const { log, logError, logWarn, logSecurity, logSuccess } = require('../utils/logger');
+
+/**
+ * GET /api/portfolio - Récupérer les données du portfolio (public)
+ * 
+ * Cette route est accessible sans authentification et retourne toutes les données
+ * du portfolio pour l'affichage sur le site web.
+ * 
+ * @route GET /api/portfolio
+ * @access Public
+ * @returns {Object} Données complètes du portfolio
+ */
 router.get('/', async (req, res) => {
   try {
-    console.log('📥 GET /api/portfolio - Début de la requête');
+    log('📥 GET /api/portfolio - Début de la requête');
     const portfolio = await Portfolio.getPortfolio();
     
-    // Log pour debug
+    // Vérifier si des données existent (pour le logging en développement)
     const hasData = (portfolio.projects?.length > 0) || 
                    (portfolio.skills?.length > 0) || 
                    (portfolio.timeline?.length > 0) ||
                    (portfolio.personal?.photo);
     
-    // Log pour déboguer le CV
+    // Informations sur le CV (pour le debugging en développement uniquement)
     const cvInfo = portfolio.links ? {
       hasCv: !!portfolio.links.cv,
       hasCvFile: !!portfolio.links.cvFile,
       cvType: portfolio.links.cv ? (portfolio.links.cv.startsWith('data:') ? 'base64' : 'path') : 'none',
       cvFileType: portfolio.links.cvFile ? (portfolio.links.cvFile.startsWith('data:') ? 'base64' : 'path') : 'none',
       cvFileName: portfolio.links.cvFileName,
-      cvSize: portfolio.links.cvFile ? portfolio.links.cvFile.length : 0,
-      cvValue: portfolio.links.cv ? (portfolio.links.cv.length > 100 ? portfolio.links.cv.substring(0, 100) + '...' : portfolio.links.cv) : 'none',
-      cvFileValue: portfolio.links.cvFile ? (portfolio.links.cvFile.length > 100 ? portfolio.links.cvFile.substring(0, 100) + '...' : portfolio.links.cvFile) : 'none',
-      linksKeys: Object.keys(portfolio.links || {})
+      cvSize: portfolio.links.cvFile ? portfolio.links.cvFile.length : 0
     } : { error: 'No links object' };
     
-    // Log pour déboguer les settings
+    // Informations sur les settings (pour le debugging en développement uniquement)
     const settingsInfo = portfolio.settings ? {
       hasSettings: true,
       maintenanceEnabled: portfolio.settings.maintenance?.enabled,
-      maintenanceMessage: portfolio.settings.maintenance?.message,
-      settingsKeys: Object.keys(portfolio.settings)
+      maintenanceMessage: portfolio.settings.maintenance?.message
     } : { hasSettings: false };
     
-    console.log('📊 GET /api/portfolio:', {
+    // Logger les informations (uniquement en développement)
+    log('📊 GET /api/portfolio:', {
       hasData,
       projects: portfolio.projects?.length || 0,
       skills: portfolio.skills?.length || 0,
@@ -54,8 +75,9 @@ router.get('/', async (req, res) => {
     });
     
     // S'assurer que les settings sont bien dans la réponse
+    // Si absentes, on ajoute des valeurs par défaut pour éviter les erreurs
     if (!portfolio.settings) {
-      console.log('⚠️ Aucune settings dans le portfolio, ajout des valeurs par défaut');
+      logWarn('⚠️ Aucune settings dans le portfolio, ajout des valeurs par défaut');
       portfolio.settings = {
         maintenance: { enabled: false, message: 'Le site est actuellement en maintenance. Nous serons bientôt de retour !' },
         seo: { title: '', description: '', keywords: '' },
@@ -66,7 +88,8 @@ router.get('/', async (req, res) => {
     res.json(portfolio);
   } catch (error) {
     // Log détaillé de l'erreur pour diagnostic
-    console.error('❌ Erreur lors de la récupération du portfolio:', {
+    // Les erreurs sont toujours loggées même en production pour le debugging
+    logError('❌ Erreur lors de la récupération du portfolio:', {
       message: error.message,
       name: error.name,
       stack: error.stack,
@@ -77,8 +100,10 @@ router.get('/', async (req, res) => {
     });
     
     // Gestion d'erreurs spécifiques MongoDB
+    // En cas d'erreur de connexion, on retourne un objet vide plutôt qu'une erreur 500
+    // Cela évite d'écraser les données existantes dans le localStorage du client
     if (error.name === 'MongoServerError' || error.message.includes('MongoDB') || error.message.includes('connection')) {
-      console.error('❌ Erreur MongoDB - Retour d\'un objet vide pour éviter l\'écrasement du localStorage');
+      logError('❌ Erreur MongoDB - Retour d\'un objet vide pour éviter l\'écrasement du localStorage');
       // Retourner un objet vide plutôt qu'une erreur 500 pour éviter que le frontend écrase localStorage
       return res.json({
         personal: {},
@@ -100,7 +125,8 @@ router.get('/', async (req, res) => {
     }
     
     // Pour les autres erreurs, retourner un objet vide aussi (fallback)
-    console.log('⚠️ Retour d\'un objet vide en cas d\'erreur pour éviter l\'écrasement du localStorage');
+    // Cela évite d'écraser les données existantes dans le localStorage du client
+    logWarn('⚠️ Retour d\'un objet vide en cas d\'erreur pour éviter l\'écrasement du localStorage');
     res.json({
       personal: {},
       projects: [],
@@ -121,7 +147,17 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST /api/portfolio - Mettre à jour les données (admin seulement)
+/**
+ * POST /api/portfolio - Mettre à jour les données du portfolio (admin seulement)
+ * 
+ * Cette route nécessite une authentification admin valide et permet de mettre à jour
+ * toutes les données du portfolio (projets, compétences, timeline, etc.)
+ * 
+ * @route POST /api/portfolio
+ * @access Private (Admin uniquement)
+ * @middleware authenticateAdmin, validatePortfolioData, sanitizeData, limitDataSize
+ * @returns {Object} Portfolio mis à jour
+ */
 router.post('/', 
   limitDataSize,
   sanitizeData,
@@ -129,18 +165,18 @@ router.post('/',
   validatePortfolioData,
   async (req, res) => {
   try {
-    console.log('📥 Requête de mise à jour reçue de:', req.admin.email);
+    logSuccess('📥 Requête de mise à jour reçue de:', { email: req.admin.email });
     
-    // Log des settings reçues dans req.body
+    // Vérifier les settings reçues dans req.body (logging en développement uniquement)
     if (req.body.settings) {
-      console.log('📥 Settings reçues dans req.body:', {
+      log('📥 Settings reçues dans req.body:', {
         hasSettings: true,
         maintenanceEnabled: req.body.settings.maintenance?.enabled,
         maintenanceMessage: req.body.settings.maintenance?.message,
         settingsKeys: Object.keys(req.body.settings)
       });
     } else {
-      console.log('⚠️ Aucune settings dans req.body');
+      logWarn('⚠️ Aucune settings dans req.body');
     }
     
     // Préparation des données (la validation a déjà été faite par les middlewares)
@@ -162,8 +198,9 @@ router.post('/',
     };
     
     // S'assurer que les settings sont bien présentes
+    // Si absentes, on utilise des valeurs par défaut pour éviter les erreurs
     if (!updateData.settings || Object.keys(updateData.settings).length === 0) {
-      console.log('⚠️ Settings vides ou absentes, utilisation des valeurs par défaut');
+      logWarn('⚠️ Settings vides ou absentes, utilisation des valeurs par défaut');
       updateData.settings = {
         maintenance: { enabled: false, message: 'Le site est actuellement en maintenance. Nous serons bientôt de retour !' },
         seo: { title: '', description: '', keywords: '' },
@@ -180,8 +217,9 @@ router.post('/',
         // Si le portfolio actuel a un CV base64, ne pas l'écraser
         if (portfolioActuel.links.cvFile && portfolioActuel.links.cvFile.startsWith('data:')) {
           // Si les nouvelles données n'ont pas de cvFile base64 mais ont 'assets/CV.pdf', garder l'ancien base64
+          // Protection contre l'écrasement accidentel du CV base64
           if (!updateData.links.cvFile && updateData.links.cv === 'assets/CV.pdf') {
-            console.log('🛡️ Protection : Conservation du CV base64 existant (ignoré assets/CV.pdf)');
+            logSecurity('🛡️ Protection : Conservation du CV base64 existant (ignoré assets/CV.pdf)');
             updateData.links.cvFile = portfolioActuel.links.cvFile;
             updateData.links.cv = portfolioActuel.links.cvFile; // Utiliser le base64
             updateData.links.cvFileName = portfolioActuel.links.cvFileName;
@@ -190,7 +228,7 @@ router.post('/',
         }
         // Si les nouvelles données ont un CV base64, s'assurer qu'il remplace bien l'ancien
         else if (updateData.links.cvFile && updateData.links.cvFile.startsWith('data:')) {
-          console.log('✅ Nouveau CV base64 détecté - Remplacement de l\'ancien');
+          logSuccess('✅ Nouveau CV base64 détecté - Remplacement de l\'ancien');
           // S'assurer que cv contient aussi le base64
           if (!updateData.links.cv || !updateData.links.cv.startsWith('data:')) {
             updateData.links.cv = updateData.links.cvFile;
@@ -199,9 +237,9 @@ router.post('/',
       }
     }
     
-    // Log pour déboguer le CV
+    // Informations sur le CV à sauvegarder (logging en développement uniquement)
     if (updateData.links) {
-      console.log('📄 CV dans les données à sauvegarder:', {
+      log('📄 CV dans les données à sauvegarder:', {
         hasCv: !!updateData.links.cv,
         hasCvFile: !!updateData.links.cvFile,
         cvType: updateData.links.cv ? (updateData.links.cv.startsWith('data:') ? 'base64' : 'path') : 'none',
@@ -211,7 +249,8 @@ router.post('/',
       });
     }
 
-    console.log('📦 Données validées à sauvegarder:', {
+    // Résumé des données à sauvegarder (logging en développement uniquement)
+    log('📦 Données validées à sauvegarder:', {
       projects: updateData.projects.length,
       skills: updateData.skills.length,
       timeline: updateData.timeline.length,
@@ -225,31 +264,31 @@ router.post('/',
     
     // PROTECTION CRITIQUE : S'assurer que le CV base64 est bien inclus dans updateData
     // Si updateData.links contient un CV base64, s'assurer qu'il est bien sauvegardé
+    // Cette protection évite la perte de données importantes
     if (updateData.links && updateData.links.cvFile && updateData.links.cvFile.startsWith('data:')) {
-      console.log('🔒 Protection CV base64 activée - Vérification avant sauvegarde:', {
+      logSecurity('🔒 Protection CV base64 activée - Vérification avant sauvegarde:', {
         cvFileLength: updateData.links.cvFile.length,
         cvFileStartsWith: updateData.links.cvFile.substring(0, 30),
-        cvFileName: updateData.links.cvFileName,
+        cvFileName: updateData.links.cvFile,
         cvFileSize: updateData.links.cvFileSize
       });
       
-      // S'assurer que cv contient aussi le base64
+      // S'assurer que cv contient aussi le base64 pour cohérence
       if (!updateData.links.cv || !updateData.links.cv.startsWith('data:')) {
         updateData.links.cv = updateData.links.cvFile;
-        console.log('✅ cv mis à jour avec cvFile base64');
+        logSuccess('✅ cv mis à jour avec cvFile base64');
       }
     }
     
-    // Log des settings reçues AVANT sauvegarde
+    // Vérification des settings avant sauvegarde (logging en développement uniquement)
     if (updateData.settings) {
-      console.log('🔧 Settings reçues pour sauvegarde:', {
+      log('🔧 Settings reçues pour sauvegarde:', {
         hasSettings: true,
         maintenanceEnabled: updateData.settings.maintenance?.enabled,
-        maintenanceMessage: updateData.settings.maintenance?.message,
-        settingsObject: JSON.stringify(updateData.settings)
+        maintenanceMessage: updateData.settings.maintenance?.message
       });
     } else {
-      console.log('⚠️ Aucune settings reçue dans updateData');
+      logWarn('⚠️ Aucune settings reçue dans updateData');
     }
     
     // Mettre à jour directement avec findOneAndUpdate
@@ -265,22 +304,24 @@ router.post('/',
     );
     
     // VÉRIFICATION CRITIQUE : Vérifier que le CV base64 a bien été sauvegardé
+    // Cette vérification est importante pour s'assurer que les données importantes ne sont pas perdues
     if (updateData.links && updateData.links.cvFile && updateData.links.cvFile.startsWith('data:')) {
       const cvSauvegarde = portfolio.links;
       if (!cvSauvegarde || !cvSauvegarde.cvFile || !cvSauvegarde.cvFile.startsWith('data:')) {
-        console.error('❌ ERREUR CRITIQUE: Le CV base64 n\'a PAS été sauvegardé dans MongoDB !');
-        console.error('CV envoyé:', {
+        logError('❌ ERREUR CRITIQUE: Le CV base64 n\'a PAS été sauvegardé dans MongoDB !');
+        logError('CV envoyé:', {
           length: updateData.links.cvFile.length,
           startsWith: updateData.links.cvFile.substring(0, 30)
         });
-        console.error('CV dans portfolio après sauvegarde:', {
+        logError('CV dans portfolio après sauvegarde:', {
           hasLinks: !!cvSauvegarde,
           hasCvFile: !!cvSauvegarde?.cvFile,
           cvFileType: cvSauvegarde?.cvFile ? (cvSauvegarde.cvFile.startsWith('data:') ? 'base64' : 'other') : 'none'
         });
         
         // TENTATIVE DE RÉCUPÉRATION : Réessayer avec une mise à jour explicite du CV
-        console.log('🔄 Tentative de récupération - Mise à jour explicite du CV...');
+        // Cette tentative permet de récupérer les données en cas d'échec initial
+        log('🔄 Tentative de récupération - Mise à jour explicite du CV...');
         const portfolioRecupere = await Portfolio.findOneAndUpdate(
           {},
           { 
@@ -295,13 +336,13 @@ router.post('/',
         );
         
         if (portfolioRecupere && portfolioRecupere.links && portfolioRecupere.links.cvFile && portfolioRecupere.links.cvFile.startsWith('data:')) {
-          console.log('✅ CV base64 récupéré avec succès après tentative de récupération');
+          logSuccess('✅ CV base64 récupéré avec succès après tentative de récupération');
           portfolio = portfolioRecupere;
         } else {
-          console.error('❌ ÉCHEC: Impossible de sauvegarder le CV base64 même après tentative de récupération');
+          logError('❌ ÉCHEC: Impossible de sauvegarder le CV base64 même après tentative de récupération');
         }
       } else {
-        console.log('✅ CV base64 confirmé sauvegardé dans MongoDB:', {
+        logSuccess('✅ CV base64 confirmé sauvegardé dans MongoDB:', {
           cvFileLength: cvSauvegarde.cvFile.length,
           cvLength: cvSauvegarde.cv ? cvSauvegarde.cv.length : 0,
           cvFileName: cvSauvegarde.cvFileName
@@ -328,7 +369,8 @@ router.post('/',
       hasAnalytics: !!portfolio.settings.analytics
     } : { hasSettings: false };
     
-    console.log('✅ Portfolio mis à jour avec succès:', {
+    // Confirmation de la mise à jour réussie (logging en développement uniquement)
+    logSuccess('✅ Portfolio mis à jour avec succès:', {
       projects: portfolio.projects?.length || 0,
       skills: portfolio.skills?.length || 0,
       timeline: portfolio.timeline?.length || 0,
@@ -344,29 +386,31 @@ router.post('/',
     delete portfolioObj.updatedAt;
     
     // VÉRIFICATION CRITIQUE : S'assurer que les settings sont bien dans la réponse
+    // Cette vérification garantit que les données importantes ne sont pas perdues
     if (updateData.settings) {
       if (!portfolioObj.settings) {
-        console.error('❌ ERREUR: Les settings n\'ont pas été sauvegardées dans MongoDB !');
-        console.error('Settings envoyées:', {
+        logError('❌ ERREUR: Les settings n\'ont pas été sauvegardées dans MongoDB !');
+        logError('Settings envoyées:', {
           maintenanceEnabled: updateData.settings.maintenance?.enabled,
           maintenanceMessage: updateData.settings.maintenance?.message
         });
         
-        // Forcer les settings dans la réponse
+        // Forcer les settings dans la réponse pour éviter la perte de données
         portfolioObj.settings = updateData.settings;
-        console.log('⚠️ Settings forcées dans la réponse (problème de sauvegarde MongoDB détecté)');
+        logWarn('⚠️ Settings forcées dans la réponse (problème de sauvegarde MongoDB détecté)');
       } else {
         // Vérifier que les settings sont correctes
+        // Double vérification pour s'assurer de la cohérence
         if (updateData.settings.maintenance?.enabled !== portfolioObj.settings.maintenance?.enabled) {
-          console.error('❌ ERREUR: Le mode maintenance ne correspond pas !');
-          console.error('Attendu:', updateData.settings.maintenance?.enabled);
-          console.error('Reçu:', portfolioObj.settings.maintenance?.enabled);
+          logError('❌ ERREUR: Le mode maintenance ne correspond pas !');
+          logError('Attendu:', updateData.settings.maintenance?.enabled);
+          logError('Reçu:', portfolioObj.settings.maintenance?.enabled);
           
-          // Forcer les settings correctes
+          // Forcer les settings correctes pour maintenir la cohérence
           portfolioObj.settings = updateData.settings;
-          console.log('⚠️ Settings corrigées dans la réponse');
+          logWarn('⚠️ Settings corrigées dans la réponse');
         } else {
-          console.log('✅ Settings confirmées dans la réponse:', {
+          logSuccess('✅ Settings confirmées dans la réponse:', {
             maintenanceEnabled: portfolioObj.settings.maintenance?.enabled,
             maintenanceMessage: portfolioObj.settings.maintenance?.message
           });
@@ -375,22 +419,24 @@ router.post('/',
     }
     
     // Vérification critique : Si un CV base64 a été envoyé, il doit être dans la réponse
+    // Cette vérification est cruciale car le CV est une donnée importante qui ne doit pas être perdue
     if (updateData.links && updateData.links.cvFile && updateData.links.cvFile.startsWith('data:')) {
       if (!portfolioObj.links || !portfolioObj.links.cvFile || !portfolioObj.links.cvFile.startsWith('data:')) {
-        console.error('❌ ERREUR CRITIQUE: Le CV base64 n\'est pas dans la réponse !');
-        console.error('CV envoyé (premiers 50 chars):', updateData.links.cvFile.substring(0, 50));
-        console.error('CV dans réponse:', portfolioObj.links?.cvFile ? portfolioObj.links.cvFile.substring(0, 50) : 'undefined');
+        logError('❌ ERREUR CRITIQUE: Le CV base64 n\'est pas dans la réponse !');
+        logError('CV envoyé (premiers 50 chars):', updateData.links.cvFile.substring(0, 50));
+        logError('CV dans réponse:', portfolioObj.links?.cvFile ? portfolioObj.links.cvFile.substring(0, 50) : 'undefined');
         
         // Forcer le CV base64 dans la réponse même si MongoDB ne l'a pas sauvegardé
+        // Cette correction permet de maintenir la cohérence même en cas de problème MongoDB
         if (!portfolioObj.links) portfolioObj.links = {};
         portfolioObj.links.cvFile = updateData.links.cvFile;
         portfolioObj.links.cv = updateData.links.cv;
         portfolioObj.links.cvFileName = updateData.links.cvFileName;
         portfolioObj.links.cvFileSize = updateData.links.cvFileSize;
         
-        console.log('⚠️ CV base64 forcé dans la réponse (problème de sauvegarde MongoDB détecté)');
+        logWarn('⚠️ CV base64 forcé dans la réponse (problème de sauvegarde MongoDB détecté)');
       } else {
-        console.log('✅ CV base64 confirmé dans la réponse:', {
+        logSuccess('✅ CV base64 confirmé dans la réponse:', {
           cvFileLength: portfolioObj.links.cvFile.length,
           cvFileName: portfolioObj.links.cvFileName
         });
@@ -405,7 +451,7 @@ router.post('/',
     
   } catch (error) {
     // Log détaillé de l'erreur pour diagnostic
-    console.error('❌ Erreur lors de la mise à jour:', {
+    logError('❌ Erreur lors de la mise à jour:', {
       message: error.message,
       name: error.name,
       code: error.code,
@@ -463,27 +509,30 @@ router.post('/login', validateLoginData, async (req, res) => {
     const { email, password } = req.body;
     
     // Validation des champs obligatoires
+    // Vérification basique avant de faire des opérations coûteuses
     if (!email || !password) {
-      console.log('❌ Email ou mot de passe manquant');
+      logSecurity('❌ Tentative de connexion sans email ou mot de passe');
       return res.status(400).json({ 
         error: 'Email et mot de passe requis' 
       });
     }
     
     // Vérification de l'email admin
+    // Comparaison stricte pour éviter les attaques par injection
     if (email !== process.env.ADMIN_EMAIL) {
-      console.log('❌ Tentative de connexion avec email invalide:', email);
+      logSecurity('❌ Tentative de connexion avec email invalide:', { email: email });
       return res.status(401).json({ 
         error: 'Identifiants invalides' 
       });
     }
     
     // Vérification du mot de passe avec bcrypt
+    // Utilisation de bcrypt pour comparer le hash de manière sécurisée
     const bcrypt = require('bcryptjs');
     const isValidPassword = await bcrypt.compare(password, process.env.ADMIN_PASSWORD_HASH);
     
     if (!isValidPassword) {
-      console.log('❌ Mot de passe incorrect pour:', email);
+      logSecurity('❌ Mot de passe incorrect pour:', { email: email });
       return res.status(401).json({ 
         error: 'Identifiants invalides' 
       });
@@ -501,7 +550,7 @@ router.post('/login', validateLoginData, async (req, res) => {
       { expiresIn: '24h' }
     );
     
-    console.log('✅ Connexion admin réussie:', email);
+    logSecurity('✅ Connexion admin réussie:', { email: email });
     res.json({ 
       success: true, 
       token,
@@ -511,7 +560,8 @@ router.post('/login', validateLoginData, async (req, res) => {
     
   } catch (error) {
     // Log détaillé de l'erreur pour diagnostic
-    console.error('❌ Erreur lors de la connexion:', {
+    // Les erreurs sont toujours loggées même en production
+    logError('❌ Erreur lors de la connexion:', {
       message: error.message,
       name: error.name,
       stack: error.stack,
@@ -553,23 +603,26 @@ router.post('/auth/change-password',
       const isValidPassword = await bcrypt.compare(currentPassword, process.env.ADMIN_PASSWORD_HASH);
       
       if (!isValidPassword) {
-        console.log('❌ Tentative de changement de mot de passe avec mot de passe actuel incorrect');
+        logSecurity('❌ Tentative de changement de mot de passe avec mot de passe actuel incorrect', {
+          email: req.admin.email
+        });
         return res.status(401).json({ 
           error: 'Mot de passe actuel incorrect' 
         });
       }
       
-      // Générer le nouveau hash
+      // Générer le nouveau hash avec bcrypt
+      // Utilisation de 12 rounds pour un bon équilibre sécurité/performance
       const saltRounds = 12;
       const newPasswordHash = await bcrypt.hash(newPassword, saltRounds);
       
       // IMPORTANT: Le changement de mot de passe nécessite une modification du fichier .env
       // Pour une solution complète, il faudrait stocker les credentials dans MongoDB
       // Pour l'instant, on retourne le nouveau hash que l'admin devra ajouter manuellement
-      console.log('✅ Nouveau hash de mot de passe généré pour:', req.admin.email);
-      console.log('⚠️  IMPORTANT: Ajoutez cette ligne à votre fichier .env :');
-      console.log(`ADMIN_PASSWORD_HASH=${newPasswordHash}`);
-      console.log('⚠️  Puis redémarrez le serveur pour que le changement prenne effet.');
+      logSecurity('✅ Nouveau hash de mot de passe généré pour:', { email: req.admin.email });
+      logWarn('⚠️  IMPORTANT: Ajoutez cette ligne à votre fichier .env :');
+      log(`ADMIN_PASSWORD_HASH=${newPasswordHash}`);
+      logWarn('⚠️  Puis redémarrez le serveur pour que le changement prenne effet.');
       
       res.json({ 
         success: true,
@@ -585,7 +638,8 @@ router.post('/auth/change-password',
       
     } catch (error) {
       // Log détaillé de l'erreur pour diagnostic
-      console.error('❌ Erreur lors du changement de mot de passe:', {
+      // Les erreurs sont toujours loggées même en production
+      logError('❌ Erreur lors du changement de mot de passe:', {
         message: error.message,
         name: error.name,
         stack: error.stack,
@@ -674,7 +728,7 @@ router.post('/contact',
       throw new Error('Le message n\'a pas été correctement sauvegardé');
     }
     
-    console.log('✅ Message de contact reçu et sauvegardé:', {
+    logSuccess('✅ Message de contact reçu et sauvegardé:', {
       id: newMessageId,
       email: email,
       subject: subject || 'Sans objet',
@@ -690,7 +744,8 @@ router.post('/contact',
     
   } catch (error) {
     // Log détaillé de l'erreur pour diagnostic
-    console.error('❌ Erreur lors de l\'envoi du message:', {
+    // Les erreurs sont toujours loggées même en production
+    logError('❌ Erreur lors de l\'envoi du message:', {
       message: error.message,
       name: error.name,
       stack: error.stack,
@@ -702,7 +757,7 @@ router.post('/contact',
     
     // Gestion d'erreurs spécifiques
     if (error.name === 'MongoServerError' || error.message.includes('MongoDB') || error.message.includes('connection')) {
-      console.error('❌ Erreur MongoDB détectée');
+      logError('❌ Erreur MongoDB détectée');
       return res.status(503).json({ 
         error: 'Service temporairement indisponible',
         message: 'La base de données est temporairement indisponible. Veuillez réessayer dans quelques instants.',

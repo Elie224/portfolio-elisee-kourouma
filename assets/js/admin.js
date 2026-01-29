@@ -21,9 +21,10 @@ document.addEventListener('DOMContentLoaded', function() {
   const logError = estEnDeveloppement ? console.error.bind(console) : () => {};
   const logWarn = estEnDeveloppement ? console.warn.bind(console) : () => {};
   
-  // Adresse de mon serveur
-  const MON_SERVEUR = window.location.hostname === 'localhost'
-    ? 'http://localhost:3001/api'
+  // Adresse de mon serveur backend
+  // Configuration centralisée pour faciliter la maintenance
+  const MON_SERVEUR = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:3000/api'
     : 'https://portfolio-backend-elisee.fly.dev/api';
   
   // Données actuelles en cours d'édition

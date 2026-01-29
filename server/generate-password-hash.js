@@ -1,14 +1,26 @@
 #!/usr/bin/env node
 
-const bcrypt = require('bcryptjs');
-
 /**
- * Script pour générer le hash d'un mot de passe pour l'authentification admin
+ * Script utilitaire pour générer le hash bcrypt d'un mot de passe admin
  * 
- * Usage: node generate-password-hash.js [mot_de_passe]
+ * Ce script permet de générer un hash sécurisé pour le mot de passe administrateur.
+ * Le hash généré doit être ajouté à la variable d'environnement ADMIN_PASSWORD_HASH.
  * 
- * Si aucun mot de passe n'est fourni en argument, un prompt sera affiché
+ * Usage:
+ *   node generate-password-hash.js [mot_de_passe]
+ * 
+ * Si aucun mot de passe n'est fourni en argument, un prompt interactif sera affiché.
+ * 
+ * Sécurité:
+ *   - Utilise bcrypt avec 12 rounds de salt (équilibre sécurité/performance)
+ *   - Le hash généré est unique à chaque exécution (salt aléatoire)
+ *   - Ne jamais partager le hash publiquement
+ * 
+ * @author Nema Elisée Kourouma
+ * @date 2026
  */
+
+const bcrypt = require('bcryptjs');
 
 async function generatePasswordHash() {
   try {
