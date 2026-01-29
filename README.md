@@ -61,7 +61,7 @@ Pour plus de détails, consultez :
 ## 📞 Contact
 
 **Nema Elisée Kourouma**  
-📧 Email : [smartshift12@gmail.com](mailto:smartshift12@gmail.com)  
+📧 Email : [kouroumaelisee@gmail.com](mailto:kouroumaelisee@gmail.com)  
 📱 Téléphone : +33 6 89 30 64 32  
 💼 LinkedIn : [linkedin.com/in/nema-kourouma](https://linkedin.com/in/nema-kourouma)  
 🌐 Site web : [elisee-kourouma.fr](https://elisee-kourouma.fr)  

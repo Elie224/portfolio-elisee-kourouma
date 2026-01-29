@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Mon email et informations de contact
   const MES_CONTACTS = {
-    email: 'smartshift12@gmail.com',
+    email: 'kouroumaelisee@gmail.com',
     telephone: '+33689306432',
     whatsapp: 'https://wa.me/33689306432',
     facebook: 'https://www.facebook.com/share/17xGVe29cL/',

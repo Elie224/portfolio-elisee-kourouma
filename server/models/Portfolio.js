@@ -134,7 +134,7 @@ const portfolioSchema = new mongoose.Schema({
 const MINIMAL_PORTFOLIO_DATA = {
   personal: {
     fullName: "Nema Elisée Kourouma",
-    email: "smartshift12@gmail.com",
+    email: "kouroumaelisee@gmail.com",
     phone: "",
     photo: "assets/photo.jpeg",
     currentEducation: "Master IA",
