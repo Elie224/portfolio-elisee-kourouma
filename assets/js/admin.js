@@ -199,7 +199,6 @@ document.addEventListener('DOMContentLoaded', function() {
             googleAnalytics: mesDonneesActuelles.settings.analytics?.googleAnalytics || '(vide)'
           });
         }
-        };
         
         // Sauvegarder aussi dans localStorage comme backup
         localStorage.setItem('portfolioData', JSON.stringify(mesDonneesActuelles));
