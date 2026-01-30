@@ -222,6 +222,29 @@ PORTFOLIO_DOMAIN=https://elisee-kourouma.fr
 - `ALLOWED_ORIGINS` contient votre domaine
 - L'origine de la requête correspond exactement
 
+#### Je n'ai plus accès à la page admin (identifiants refusés)
+
+**Cause :** La connexion admin est vérifiée **uniquement côté serveur** via les variables d'environnement du backend (Fly.io, etc.) : `ADMIN_EMAIL` et `ADMIN_PASSWORD_HASH`. Ces valeurs ne sont **pas** dans le code ; elles sont configurées sur le serveur. Si tu as un jour changé l'email de contact dans le code et mis à jour les secrets Fly.io en conséquence, puis qu'on a tout remis à `kouroumaelisee@gmail.com`, le backend peut encore attendre l'ancien email → la connexion échoue.
+
+**Solution :**
+
+1. **Sur Fly.io** (backend en ligne), remettre l'email admin et le hash du mot de passe :
+   ```bash
+   cd server
+   fly secrets set ADMIN_EMAIL=kouroumaelisee@gmail.com
+   fly secrets set ADMIN_PASSWORD_HASH='<hash_généré_ci-dessous>'
+   fly apps restart
+   ```
+
+2. **Générer le hash** du mot de passe que tu utilises (ex. `kourouma`) :
+   ```bash
+   cd server
+   node generate-password-hash.js kourouma
+   ```
+   Copier la ligne `ADMIN_PASSWORD_HASH=...` affichée et l'utiliser dans la commande `fly secrets set` (sans le préfixe `ADMIN_PASSWORD_HASH=`).
+
+3. **En local** : vérifier que `server/.env` contient bien `ADMIN_EMAIL=kouroumaelisee@gmail.com` et `ADMIN_PASSWORD_HASH=<même hash>`, puis redémarrer le serveur.
+
 ---
 
 ## 🏗️ Architecture technique
