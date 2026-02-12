@@ -1860,6 +1860,13 @@
                     <textarea id="tech-event-description" required></textarea>
                   </div>
                   <div class="form-group">
+                    <label for="tech-event-photo">Photo de l'événement</label>
+                    <input type="url" id="tech-event-photo-url" placeholder="URL de l'image (https://...)" style="margin-bottom: 8px;" />
+                    <input type="file" id="tech-event-photo-file" accept="image/*" style="margin-bottom: 8px;" />
+                    <div id="tech-event-photo-preview" style="margin-top: 8px;"></div>
+                    <small style="color: #b4bcc8;">Vous pouvez soit saisir une URL, soit uploader une image (max 5MB). L'image sera convertie en base64.</small>
+                  </div>
+                  <div class="form-group">
                     <label for="tech-event-link">Lien (optionnel)</label>
                     <input type="url" id="tech-event-link" placeholder="https://..." />
                   </div>

@@ -96,7 +96,8 @@ const portfolioSchema = new mongoose.Schema({
     location: String,
     date: String,
     description: String,
-    link: String
+    link: String,
+    photo: { type: String, trim: true, maxlength: 300 } // URL ou base64
   }],
   contactMessages: [{
     id: Number,

@@ -3,443 +3,160 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>À propos - Nema Elisée Kourouma | Étudiant Master IA</title>
-    <meta name="description" content="Découvrez mon parcours : Master Intelligence Artificielle. Passionné par l'Intelligence Artificielle, l'analyse des données et le data engineering." />
-    <meta name="robots" content="index,follow" />
-    <link rel="canonical" href="https://elisee-kourouma.fr/about.html" />
-    
-    <!-- Open Graph -->
-    <meta property="og:title" content="À propos - Nema Elisée Kourouma | Étudiant Master IA" />
-    <meta property="og:description" content="Découvrez mon parcours : Master Intelligence Artificielle, spécialisé en IA, analyse des données et data engineering." />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://elisee-kourouma.fr/about.html" />
-    <meta property="og:image" content="https://elisee-kourouma.fr/assets/photo.jpeg" />
-    
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="À propos - Nema Elisée Kourouma" />
-    <meta name="twitter:description" content="Étudiant en Master Intelligence Artificielle" />
-    <meta name="twitter:image" content="https://elisee-kourouma.fr/assets/photo.jpeg" />
-    
+    <title>À propos - Portfolio</title>
     <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💼</text></svg>" />
     <link rel="stylesheet" href="assets/css/styles.css" />
-    
-    <!-- FIX MOBILE CRITIQUE PHOENIX : Style inline qui fonctionne MÊME si JavaScript est désactivé -->
-    <style id="mobile-fix-inline-critical">
-      @media (max-width: 1024px) {
-        body::before,
-        body.no-before-pseudo::before,
-        html body::before,
-        html body.no-before-pseudo::before {
-          content: none !important;
-          display: none !important;
-          visibility: hidden !important;
-          opacity: 0 !important;
-          pointer-events: none !important;
-          position: absolute !important;
-          width: 0 !important;
-          height: 0 !important;
-          z-index: -9999 !important;
-          background: none !important;
-          background-image: none !important;
-          background-color: transparent !important;
-          transform: scale(0) !important;
-          overflow: hidden !important;
-        }
-        body {
-          background: #0a0a0f !important;
-          background-image: none !important;
-          background-attachment: scroll !important;
-        }
-        .menu-mobile-overlay,
-        #mobile-menu-overlay {
-          background: transparent !important;
-          backdrop-filter: none !important;
-          -webkit-backdrop-filter: none !important;
-        }
-        .noise {
-          display: none !important;
-        }
-      }
-    </style>
-    
-    <!-- FIX MOBILE CRITIQUE : Script externe compatible avec tous les navigateurs (Phoenix inclus) -->
-    <script src="assets/js/mobile-fix.js"></script>
-    
-    <!-- FIX MOBILE CRITIQUE : Script inline qui s'exécute IMMÉDIATEMENT pour corriger le body::before -->
-    <script>
-      (function() {
-        console.log('🚀 FIX MOBILE: Script inline démarré');
-        const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
-        const isMobileMedia = window.matchMedia && window.matchMedia('(max-width: 1024px)').matches;
-        const isMobile = isMobileMedia || viewportWidth <= 1024;
-        console.log('📱 Détection mobile:', isMobile, 'Viewport:', viewportWidth, 'Window:', window.innerWidth, 'MediaQuery:', isMobileMedia);
-        
-        if (isMobile) {
-          // SOLUTION RADICALE : Injecter un style tag dans le head
-          const styleTag = document.createElement('style');
-          styleTag.id = 'mobile-fix-inline';
-          styleTag.textContent = `
-            body::before,
-            body.no-before-pseudo::before,
-            html body::before,
-            html body.no-before-pseudo::before {
-              content: none !important;
-              display: none !important;
-              visibility: hidden !important;
-              opacity: 0 !important;
-              pointer-events: none !important;
-              position: absolute !important;
-              width: 0 !important;
-              height: 0 !important;
-              z-index: -9999 !important;
-              background: none !important;
-              background-image: none !important;
-              background-color: transparent !important;
-              transform: scale(0) !important;
-              overflow: hidden !important;
-            }
-            @media (max-width: 1024px) {
-              body::before,
-              body.no-before-pseudo::before,
-              html body::before,
-              html body.no-before-pseudo::before {
-                content: none !important;
-                display: none !important;
-                visibility: hidden !important;
-                opacity: 0 !important;
-                pointer-events: none !important;
-                position: absolute !important;
-                width: 0 !important;
-                height: 0 !important;
-                z-index: -9999 !important;
-                background: none !important;
-                background-image: none !important;
-                background-color: transparent !important;
-                transform: scale(0) !important;
-                overflow: hidden !important;
-              }
-            }
-          `;
-          document.head.appendChild(styleTag);
-          console.log('✅ Style tag injecté dans head');
-          
-          function applyMobileFix() {
-            if (document.body) {
-              console.log('✅ Body trouvé, application du fix mobile...');
-              document.body.classList.add('no-before-pseudo');
-              document.body.style.setProperty('background', '#0a0a0f', 'important');
-              document.body.style.setProperty('background-image', 'none', 'important');
-              document.body.style.setProperty('background-attachment', 'scroll', 'important');
-              document.body.style.setProperty('background-color', '#0a0a0f', 'important');
-              document.documentElement.style.setProperty('background', '#0a0a0f', 'important');
-              document.documentElement.style.setProperty('background-image', 'none', 'important');
-              document.documentElement.style.setProperty('background-attachment', 'scroll', 'important');
-              const overlay = document.getElementById('mobile-menu-overlay');
-              if (overlay) {
-                overlay.style.setProperty('background', 'transparent', 'important');
-                overlay.style.setProperty('backdrop-filter', 'none', 'important');
-                overlay.style.setProperty('-webkit-backdrop-filter', 'none', 'important');
-                console.log('✅ Overlay désactivé');
-              }
-              const noise = document.querySelector('.noise');
-              if (noise) {
-                noise.style.setProperty('display', 'none', 'important');
-                console.log('✅ Noise désactivé');
-              }
-              console.log('✅ Fix mobile appliqué avec succès!', {
-                hasClass: document.body.classList.contains('no-before-pseudo'),
-                bodyBg: document.body.style.background
-              });
-              return true;
-            }
-            return false;
-          }
-          
-          if (!applyMobileFix()) {
-            console.log('⏳ Body pas encore créé, attente...');
-            const observer = new MutationObserver(function(mutations, obs) {
-              if (applyMobileFix()) {
-                obs.disconnect();
-              }
-            });
-            observer.observe(document.documentElement, {
-              childList: true,
-              subtree: true
-            });
-            setTimeout(function() {
-              applyMobileFix();
-              observer.disconnect();
-            }, 0);
-          }
-        } else {
-          console.log('🖥️ Desktop détecté, fix mobile ignoré');
-        }
-      })();
-    </script>
   </head>
   <body id="top" class="dark">
-    <!-- Skip Link pour accessibilité -->
-    <a href="#main-content" class="skip-link">Aller au contenu principal</a>
-    
     <header class="container">
       <nav class="nav">
-        <a class="brand" href="index.html">Mon Portfolio</a>
-        <button id="mobile-menu-toggle" class="menu-mobile-toggle" aria-label="Menu" aria-expanded="false">
+        <a class="brand" href="/">Mon Portfolio</a>
+        <button id="mobile-menu-toggle" class="mobile-menu-toggle" aria-label="Menu" aria-expanded="false">
           <span></span>
           <span></span>
           <span></span>
         </button>
-        <div class="menu-mobile-overlay" id="mobile-menu-overlay" style="display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; z-index: -1 !important;"></div>
-        <div class="nav-links" id="nav-links">
-          <a href="index.html">Accueil</a>
-          <a href="about.html" aria-current="page">À propos</a>
+        <div class="mobile-menu-overlay" id="mobile-menu-overlay"></div>
+        <div class="links" id="nav-links">
+          <a href="/">Accueil</a>
+          <a href="about.html">À propos</a>
           <a href="projects.html">Projets</a>
           <a href="contact.html">Contact</a>
-          <a href="#" target="_blank" rel="noopener noreferrer" data-cv-link="true">CV</a>
-          <a href="admin.html" class="admin-nav-link admin-nav-hidden">
+          <a href="assets/CV.pdf" target="_blank" rel="noopener" data-cv-link="true">CV</a>
+          <a href="admin.html" class="admin-nav-link" style="display: none;">
             <span>🔐</span> <span class="admin-text">Admin</span>
           </a>
         </div>
       </nav>
     </header>
-
-    <main class="container" role="main" id="main-content">
-      <!-- Hero Section - Structure Améliorée -->
-      <section class="hero hero-structured" data-animate>
-        <div class="hero-content">
-          <!-- Photo de profil centrée -->
-          <div class="hero-avatar-wrapper">
-            <img class="hero-avatar" src="assets/photo.jpeg" alt="Photo de Nema Elisée Kourouma" 
-                 width="220" height="220" loading="eager" style="border-radius: 50% !important; display: block; margin: 0 auto;" />
-            <div class="hero-avatar-border"></div>
-          </div>
-          
-          <!-- Titre et description -->
-          <div class="hero-text">
-            <h1 class="gradient-text" id="about-name">Nema Elisée Kourouma</h1>
-            <p class="hero-subtitle" id="about-title">
-              Étudiant en Master Intelligence Artificielle
-            </p>
-            <p class="hero-description" id="about-hero-description">
-              Actuellement en Master Intelligence Artificielle, 
-              mon parcours académique, enrichi par une licence en mathématiques et informatique obtenue à l'USMBA de Fès, 
-              me permet d'allier rigueur mathématique et créativité technique dans les domaines de l'IA, de l'analyse des données et du data engineering.
-            </p>
-          </div>
-          
-          <!-- Actions principales -->
-          <div class="hero-actions">
-            <a href="#" target="_blank" rel="noopener noreferrer" class="btn btn-primary" data-cv-link="true">
+    <main class="container">
+      <!-- Hero Section -->
+      <section class="hero" data-animate style="padding: 60px 0; text-align: center;">
+        <div class="gradient" style="font-size: 48px; font-weight: 700; margin-bottom: 16px;" data-shimmer>À propos de moi</div>
+        <p style="font-size: 18px; color: var(--muted); max-width: 700px; margin: 0 auto 32px;" id="about-hero-description">
+          Master 1 en Intelligence Artificielle à l'École Supérieure d'Informatique de Paris. Titulaire d'une licence en mathématiques et informatique (USMBA Fès).
+        </p>
+        <div style="display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap;margin-top:32px;">
+          <img src="assets/photo.jpeg" alt="Photo de Nema Elisée Kourouma" class="avatar" loading="lazy" style="width:180px;height:180px;object-fit:cover;border-radius:50%;border:3px solid var(--accent);box-shadow: 0 10px 30px rgba(91, 124, 250, 0.3);" data-scroll-reveal="bottom" />
+          <div style="text-align: left;" data-scroll-reveal="left">
+            <h2 style="margin-bottom: 8px;" id="about-name">Nema Elisée Kourouma</h2>
+            <p class="muted" style="margin-bottom: 16px;" id="about-title">Développeur Full-Stack & IA</p>
+            <a href="assets/CV.pdf" target="_blank" rel="noopener" class="btn" data-cv-link="true" style="display: inline-flex; align-items: center; gap: 8px;">
               <span>📄</span> Télécharger mon CV
-            </a>
-            <a href="projects.html" class="btn btn-secondary">
-              <span>💼</span> Mes projets
-            </a>
-            <a href="contact.html" class="btn btn-outline">
-              <span>📧</span> Me contacter
             </a>
           </div>
         </div>
       </section>
 
-      <!-- Section Statistiques -->
-      <section class="section-structured" data-animate aria-labelledby="stats-heading">
-        <div class="section-header">
-          <h2 id="stats-heading">En quelques chiffres</h2>
-          <div class="section-divider"></div>
-        </div>
-        <div class="stats-grid">
+      <!-- Stats Section -->
+      <section data-animate style="margin: 48px 0;">
+        <h2 style="text-align: center; margin-bottom: 32px;" data-shimmer>En quelques chiffres</h2>
+        <div class="grid cols-3 stats-grid">
           <div class="card stat-card" data-scroll-reveal="bottom">
-            <div class="stat-number" id="about-stat-projects">0</div>
+            <div class="stat-number" data-count="4">0</div>
             <div class="stat-label">Projets réalisés</div>
           </div>
           <div class="card stat-card" data-scroll-reveal="bottom" style="transition-delay: 0.1s;">
-            <div class="stat-number" id="about-stat-experience">0</div>
+            <div class="stat-number" data-count="2">0</div>
             <div class="stat-label">Années d'expérience</div>
           </div>
           <div class="card stat-card" data-scroll-reveal="bottom" style="transition-delay: 0.2s;">
-            <div class="stat-number" id="about-stat-technologies">0</div>
+            <div class="stat-number" data-count="15">0</div>
             <div class="stat-label">Technologies maîtrisées</div>
           </div>
         </div>
       </section>
 
-      <!-- Section Qui suis-je -->
-      <section class="section-structured" data-animate aria-labelledby="about-heading">
-        <div class="section-header">
-          <h2 id="about-heading">Qui suis-je ?</h2>
-          <div class="section-divider"></div>
-        </div>
-        <div class="section-content">
-          <div class="card" style="padding: var(--espacement-2xl);" data-scroll-reveal="left">
-            <div id="about-description-content" style="line-height: 1.8; font-size: 1.125rem; color: var(--couleur-texte-secondaire);">
-              <p style="margin-bottom: var(--espacement-lg);">
-                Mon parcours académique débute par une licence en mathématiques et informatique à l'USMBA de Fès, 
-                qui m'a fourni une solide base théorique et pratique. Aujourd'hui, je poursuis ma spécialisation 
-                en Master Intelligence Artificielle, où j'approfondis mes connaissances en machine learning, deep learning, 
-                analyse des données et architectures de systèmes intelligents.
-              </p>
-              <p>
-                Au-delà de mes études, je m'investis activement dans la création de projets personnels et collaboratifs 
-                qui me permettent d'explorer les dernières innovations en intelligence artificielle et data engineering. 
-                Mon objectif est de créer des solutions qui combinent efficacité, élégance et impact positif, 
-                tout en continuant à apprendre et à évoluer dans l'écosystème technologique en constante évolution.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Section Parcours (Timeline) -->
-      <section class="section-structured" data-animate aria-labelledby="timeline-heading">
-        <div class="section-header">
-          <h2 id="timeline-heading">Mon parcours</h2>
-          <div class="section-divider"></div>
-        </div>
-        <div class="section-content">
-          <div class="timeline timeline-container" id="about-timeline" data-stagger style="max-width: 800px; margin: 0 auto;">
-            <!-- Timeline items will be loaded dynamically -->
-          </div>
-        </div>
-      </section>
-
-      <!-- Section Certifications & Expériences -->
-      <section class="section-structured" data-animate aria-labelledby="experience-heading">
-        <div class="section-header">
-          <h2 id="experience-heading">Certifications & Expériences</h2>
-          <div class="section-divider"></div>
-        </div>
-        <p class="section-description">
-          Un aperçu de mon parcours professionnel et académique : certifications, expériences en entreprise et participation à l'écosystème tech
-        </p>
-        
-        <!-- Certifications -->
-        <div class="section-content" style="margin-bottom: var(--espacement-3xl);">
-          <h3 class="experience-section-title" data-scroll-reveal="bottom" style="text-align: center; font-size: 1.75rem; margin-bottom: var(--espacement-xl); color: var(--couleur-accent);">
-            🏆 Certifications
-          </h3>
-          <div class="grid grid-2" id="certifications-container" style="max-width: 1000px; margin: 0 auto;">
-            <!-- Les certifications seront chargées dynamiquement -->
-          </div>
-        </div>
-
-        <!-- Stages -->
-        <div class="section-content" style="margin-bottom: var(--espacement-3xl);">
-          <h3 class="experience-section-title" data-scroll-reveal="bottom" style="text-align: center; font-size: 1.75rem; margin-bottom: var(--espacement-xl); color: var(--couleur-accent);">
-            💼 Stages
-          </h3>
-          <div class="grid grid-2" id="stages-container" style="max-width: 1000px; margin: 0 auto;">
-            <!-- Les stages seront chargés dynamiquement -->
-          </div>
-        </div>
-
-        <!-- Alternances -->
-        <div class="section-content">
-          <h3 class="experience-section-title" data-scroll-reveal="bottom" style="text-align: center; font-size: 1.75rem; margin-bottom: var(--espacement-xl); color: var(--couleur-accent);">
-            🔄 Alternances
-          </h3>
-          <div class="grid grid-2" id="alternances-container" style="max-width: 1000px; margin: 0 auto;">
-            <!-- Les alternances seront chargées dynamiquement -->
-          </div>
-        </div>
-
-        <!-- Événements Technologiques -->
-        <div class="section-content">
-          <h3 class="experience-section-title" data-scroll-reveal="bottom" style="text-align: center; font-size: 1.75rem; margin-bottom: var(--espacement-xl); color: var(--couleur-accent);">
-            🚀 Événements Technologiques
-          </h3>
-          <div class="grid grid-2" id="tech-events-container" style="max-width: 1000px; margin: 0 auto;">
-            <!-- Les événements seront chargés dynamiquement -->
-          </div>
-        </div>
-      </section>
-
-      <!-- Section Compétences -->
-      <section class="section-structured" data-animate aria-labelledby="skills-heading">
-        <div class="section-header">
-          <h2 id="skills-heading">Mes compétences</h2>
-          <div class="section-divider"></div>
-        </div>
-        <div class="section-content">
-          <div class="grid grid-3" id="about-skills">
-            <!-- Skills will be loaded dynamically -->
-          </div>
-        </div>
-      </section>
-
-      <!-- Section Mes valeurs -->
-      <section class="section-structured" data-animate aria-labelledby="values-heading">
-        <div class="section-header">
-          <h2 id="values-heading">Mes valeurs</h2>
-          <div class="section-divider"></div>
-        </div>
-        <div class="section-content">
-          <div class="grid grid-2" style="max-width: 900px; margin: 0 auto; gap: var(--espacement-lg);">
-            <div class="card" data-scroll-reveal="left" style="text-align: center; padding: var(--espacement-2xl); transition: all 0.3s ease;">
-              <div style="font-size: 48px; margin-bottom: var(--espacement-md);">💡</div>
-              <h3>Innovation</h3>
-              <p class="muted" style="line-height: 1.6;">Recherche constante de solutions innovantes et efficaces pour répondre aux défis techniques en IA et data engineering.</p>
-            </div>
-            <div class="card" data-scroll-reveal="right" style="text-align: center; padding: var(--espacement-2xl); transition: all 0.3s ease;">
-              <div style="font-size: 48px; margin-bottom: var(--espacement-md);">🎯</div>
-              <h3>Excellence</h3>
-              <p class="muted" style="line-height: 1.6;">Engagement à produire des solutions de qualité, maintenables et suivant les meilleures pratiques en intelligence artificielle.</p>
-            </div>
-            <div class="card" data-scroll-reveal="left" style="text-align: center; padding: var(--espacement-2xl); transition: all 0.3s ease;">
-              <div style="font-size: 48px; margin-bottom: var(--espacement-md);">📚</div>
-              <h3>Apprentissage continu</h3>
-              <p class="muted" style="line-height: 1.6;">Développement permanent de mes compétences et veille technologique pour rester à jour avec les dernières innovations en IA et data science.</p>
-            </div>
-            <div class="card" data-scroll-reveal="right" style="text-align: center; padding: var(--espacement-2xl); transition: all 0.3s ease;">
-              <div style="font-size: 48px; margin-bottom: var(--espacement-md);">✨</div>
-              <h3>Rigueur & Qualité</h3>
-              <p class="muted" style="line-height: 1.6;">Respect des standards scientifiques et techniques, validation rigoureuse des modèles et livraison de solutions de haute qualité.</p>
-            </div>
-            <div class="card" data-scroll-reveal="left" style="text-align: center; padding: var(--espacement-2xl); transition: all 0.3s ease;">
-              <div style="font-size: 48px; margin-bottom: var(--espacement-md);">👥</div>
-              <h3>Esprit d'équipe</h3>
-              <p class="muted" style="line-height: 1.6;">Collaboration efficace, communication claire et contribution positive à l'atteinte des objectifs communs.</p>
-            </div>
-            <div class="card" data-scroll-reveal="right" style="text-align: center; padding: var(--espacement-2xl); transition: all 0.3s ease;">
-              <div style="font-size: 48px; margin-bottom: var(--espacement-md);">🚀</div>
-              <h3>Autonomie & Initiative</h3>
-              <p class="muted" style="line-height: 1.6;">Capacité à prendre des décisions, proposer des solutions et agir de manière proactive pour résoudre les problèmes complexes.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Section Contact CTA -->
-      <section class="section-structured" data-animate aria-labelledby="contact-cta-heading">
-        <div class="section-header">
-          <h2 id="contact-cta-heading">Travaillons ensemble</h2>
-          <div class="section-divider"></div>
-        </div>
-        <div class="section-content">
-          <div class="card" style="text-align: center; padding: var(--espacement-3xl); background: linear-gradient(135deg, rgba(91, 124, 250, 0.1), rgba(124, 147, 255, 0.05));" data-glass>
-            <p class="section-text" style="margin-bottom: var(--espacement-xl);">
-              Si mon profil vous intéresse ou si vous souhaitez explorer une collaboration, je serais ravi d'échanger 
-              sur vos projets en intelligence artificielle, analyse des données ou data engineering. 
-              Ensemble, nous pouvons créer des solutions innovantes et impactantes.
+      <!-- About Description -->
+      <section data-animate style="margin: 48px 0;">
+        <div class="card" style="padding: 32px;" data-scroll-reveal="left">
+          <h2 style="margin-bottom: 20px; color: var(--accent);">Qui suis-je ?</h2>
+          <div id="about-description-content" style="line-height: 1.8; font-size: 16px;">
+            <p>
+              Master 1 en Intelligence Artificielle à l'École Supérieure d'Informatique de Paris. 
+              Titulaire d'une licence en mathématiques et informatique (USMBA Fès).
             </p>
-            <div class="contact-actions">
-              <a href="contact.html" class="btn btn-primary">
-                <span>📧</span> Me contacter
-              </a>
-              <a href="projects.html" class="btn btn-secondary">
-                <span>💼</span> Voir mes projets
-              </a>
-            </div>
+            <p>
+              Passionné par le développement web et l'intelligence artificielle, je crée des applications 
+              modernes et performantes qui résolvent des problèmes réels. Mon expertise couvre le développement 
+              full-stack, l'IA, et le DevOps.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Timeline Section -->
+      <section data-animate style="margin: 48px 0;">
+        <h2 style="text-align: center; margin-bottom: 32px;" data-shimmer>Mon parcours</h2>
+        <div class="timeline-container" id="about-timeline" data-stagger style="max-width: 800px; margin: 0 auto;">
+          <!-- Timeline items will be loaded dynamically -->
+        </div>
+      </section>
+
+      <!-- Skills Section -->
+      <section data-animate style="margin: 48px 0;" id="about-skills-section">
+        <h2 style="text-align: center; margin-bottom: 32px;" data-shimmer>Mes compétences</h2>
+        <div class="grid cols-3" id="about-skills">
+          <!-- Skills will be loaded dynamically -->
+        </div>
+      </section>
+
+      <!-- Values Section -->
+      <section data-animate style="margin: 48px 0;">
+        <h2 style="text-align: center; margin-bottom: 32px;" data-shimmer>Mes valeurs</h2>
+        <div class="grid cols-2" style="max-width: 900px; margin: 0 auto; gap: 24px;">
+          <div class="card" data-scroll-reveal="left" style="text-align: center; padding: 32px; transition: all 0.3s ease;">
+            <div style="font-size: 48px; margin-bottom: 16px;">💡</div>
+            <h3>Innovation</h3>
+            <p class="muted" style="line-height: 1.6;">Recherche constante de solutions innovantes et efficaces pour répondre aux défis techniques.</p>
+          </div>
+          <div class="card" data-scroll-reveal="right" style="text-align: center; padding: 32px; transition: all 0.3s ease;">
+            <div style="font-size: 48px; margin-bottom: 16px;">🎯</div>
+            <h3>Excellence</h3>
+            <p class="muted" style="line-height: 1.6;">Engagement à produire un code de qualité, maintenable et suivant les meilleures pratiques.</p>
+          </div>
+          <div class="card" data-scroll-reveal="left" style="text-align: center; padding: 32px; transition: all 0.3s ease;">
+            <div style="font-size: 48px; margin-bottom: 16px;">📚</div>
+            <h3>Apprentissage continu</h3>
+            <p class="muted" style="line-height: 1.6;">Développement permanent de mes compétences et veille technologique pour rester à jour avec les dernières innovations.</p>
+          </div>
+          <div class="card" data-scroll-reveal="right" style="text-align: center; padding: 32px; transition: all 0.3s ease;">
+            <div style="font-size: 48px; margin-bottom: 16px;">✨</div>
+            <h3>Rigueur & Qualité</h3>
+            <p class="muted" style="line-height: 1.6;">Respect des standards de développement, tests rigoureux et livraison de produits de haute qualité.</p>
+          </div>
+          <div class="card" data-scroll-reveal="left" style="text-align: center; padding: 32px; transition: all 0.3s ease;">
+            <div style="font-size: 48px; margin-bottom: 16px;">👥</div>
+            <h3>Esprit d'équipe</h3>
+            <p class="muted" style="line-height: 1.6;">Collaboration efficace, communication claire et contribution positive à l'atteinte des objectifs communs.</p>
+          </div>
+          <div class="card" data-scroll-reveal="right" style="text-align: center; padding: 32px; transition: all 0.3s ease;">
+            <div style="font-size: 48px; margin-bottom: 16px;">🚀</div>
+            <h3>Autonomie & Initiative</h3>
+            <p class="muted" style="line-height: 1.6;">Capacité à prendre des décisions, proposer des solutions et agir de manière proactive pour résoudre les problèmes.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Contact CTA -->
+      <section data-animate style="margin: 48px 0;">
+        <div class="card" style="text-align: center; padding: 48px; background: linear-gradient(135deg, rgba(91, 124, 250, 0.1), rgba(124, 147, 255, 0.05));" data-glass>
+          <h2 style="margin-bottom: 16px;">Travaillons ensemble</h2>
+          <p class="muted" style="margin-bottom: 24px; max-width: 600px; margin-left: auto; margin-right: auto;">
+            Vous avez un projet en tête ? N'hésitez pas à me contacter pour discuter de vos besoins.
+          </p>
+          <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+            <a href="contact.html" class="btn">Me contacter</a>
+            <a href="projects.html" class="btn secondary">Voir mes projets</a>
           </div>
         </div>
       </section>
     </main>
-
     <button id="scroll-top" class="scroll-top" aria-label="Retour en haut" title="Retour en haut">
       ↑
     </button>
     <footer class="container footer">© Mon Portfolio · <span data-year></span></footer>
-    <script src="assets/js/portfolio.js"></script>
+    <script src="assets/js/main.js"></script>
   </body>
-</html>
+  </html>
+
