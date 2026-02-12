@@ -1555,6 +1555,15 @@
                     <label for="testimonial-rating">Note (1-5 étoiles)</label>
                     <input type="number" id="testimonial-rating" min="1" max="5" value="5" />
                   </div>
+                  <div class="form-group">
+                    <label for="testimonial-photo-url">Photo (URL ou base64)</label>
+                    <input type="text" id="testimonial-photo-url" placeholder="URL de la photo ou base64" />
+                  </div>
+                  <div class="form-group">
+                    <label for="testimonial-photo-file">Télécharger une photo</label>
+                    <input type="file" id="testimonial-photo-file" accept="image/*" />
+                    <div id="testimonial-photo-preview" class="photo-preview-container"></div>
+                  </div>
                   <div style="display: flex; gap: 12px; margin-top: 20px;">
                     <button type="submit" class="btn">Enregistrer</button>
                     <button type="button" class="btn secondary" onclick="hideTestimonialForm()">Annuler</button>
