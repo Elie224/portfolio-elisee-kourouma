@@ -1818,6 +1818,65 @@
             <h2>🚀 Gestion des Événements Technologiques</h2>
             <button class="btn" onclick="showTechEventForm()" style="margin-bottom: 20px;">+ Ajouter un événement</button>
             <div id="tech-events-list" class="item-list"></div>
+            <!-- Tech Event Form Modal -->
+            <div id="tech-event-form-modal" style="display: none;">
+              <div class="admin-section" style="margin-top: 20px; border: 2px solid var(--accent);">
+                <h3 id="tech-event-form-title">Ajouter un événement</h3>
+                <form id="tech-event-form">
+                  <input type="hidden" id="tech-event-id" />
+                  <div class="form-group">
+                    <label for="tech-event-name">Nom de l'événement *</label>
+                    <input type="text" id="tech-event-name" required />
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="tech-event-type">Type *</label>
+                      <select id="tech-event-type" required>
+                        <option value="conference">Conférence</option>
+                        <option value="hackathon">Hackathon</option>
+                        <option value="workshop">Workshop</option>
+                        <option value="meetup">Meetup</option>
+                        <option value="webinar">Webinar</option>
+                        <option value="competition">Compétition</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label for="tech-event-date">Date</label>
+                      <input type="text" id="tech-event-date" placeholder="Ex: 2024" />
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="tech-event-organizer">Organisateur</label>
+                      <input type="text" id="tech-event-organizer" />
+                    </div>
+                    <div class="form-group">
+                      <label for="tech-event-location">Lieu</label>
+                      <input type="text" id="tech-event-location" />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="tech-event-description">Description *</label>
+                    <textarea id="tech-event-description" required></textarea>
+                  </div>
+                  <div class="form-group">
+                    <label for="tech-event-photo">Photo de l'événement</label>
+                    <input type="url" id="tech-event-photo-url" placeholder="URL de l'image (https://...)" style="margin-bottom: 8px;" />
+                    <input type="file" id="tech-event-photo-file" accept="image/*" style="margin-bottom: 8px;" />
+                    <div id="tech-event-photo-preview" style="margin-top: 8px;"></div>
+                    <small style="color: #b4bcc8;">Vous pouvez soit saisir une URL, soit uploader une image (max 5MB). L'image sera convertie en base64.</small>
+                  </div>
+                  <div class="form-group">
+                    <label for="tech-event-link">Lien (optionnel)</label>
+                    <input type="url" id="tech-event-link" placeholder="https://..." />
+                  </div>
+                  <div style="display: flex; gap: 12px; margin-top: 20px;">
+                    <button type="submit" class="btn">Enregistrer</button>
+                    <button type="button" class="btn secondary" onclick="hideTechEventForm()">Annuler</button>
+                  </div>
+                </form>
+              </div>
+            </div>
             
             <div id="tech-event-form-modal" style="display: none;">
               <div class="admin-section" style="margin-top: 20px; border: 2px solid var(--accent);">
