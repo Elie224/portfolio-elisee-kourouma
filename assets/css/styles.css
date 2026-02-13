@@ -1943,15 +1943,17 @@ header.scrolled {
   left: 30px;
   top: 0;
   bottom: 0;
-  width: 2px;
-  background: var(--gradient-accent);
-    opacity: 0.3;
+  width: 3px;
+  background: rgba(99, 102, 241, 0.5);
+  opacity: 0.6;
+  z-index: 0;
   }
 
 .timeline-item {
   position: relative;
   padding-left: 80px;
   margin-bottom: var(--espacement-xl);
+  z-index: 1;
 }
 
 .timeline-marker {
@@ -3186,6 +3188,9 @@ header.scrolled {
   
   .timeline::before {
     left: 20px;
+    width: 3px;
+    background: rgba(99, 102, 241, 0.5);
+    opacity: 0.6;
   }
   
   .timeline-item {
