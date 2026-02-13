@@ -21,6 +21,37 @@ document.addEventListener('DOMContentLoaded', function() {
   const logError = estEnDeveloppement ? console.error.bind(console) : () => {};
   const logWarn = estEnDeveloppement ? console.warn.bind(console) : () => {};
   
+  // Jeux de données d'exemple pour afficher l'UI même sans backend
+  const PROJETS_FALLBACK = [
+    {
+      title: 'Dashboard IA & Analytics',
+      description: 'Dashboard temps réel avec visualisations, alertes et modèles IA légers pour suivre les indicateurs clés.',
+      shortDesc: 'Visualisations temps réel + scoring IA.',
+      tags: ['React', 'Node.js', 'MongoDB', 'Chart.js'],
+      type: 'Projet Majeur',
+      featured: true,
+      public: true
+    },
+    {
+      title: 'API Portfolio sécurisée',
+      description: 'API REST avec authentification admin, rate limiting et validations pour alimenter le portfolio.',
+      shortDesc: 'API Node sécurisée pour le portfolio.',
+      tags: ['Express', 'JWT', 'MongoDB', 'Security'],
+      type: 'Projet Personnel',
+      featured: false,
+      public: true
+    },
+    {
+      title: 'Site vitrine IA & Web',
+      description: 'Landing page performante avec animations légères, formulaires validés et tracking analytics.',
+      shortDesc: 'Landing page optimisée et animée.',
+      tags: ['HTML', 'CSS', 'JavaScript'],
+      type: 'Projet Personnel',
+      featured: false,
+      public: true
+    }
+  ];
+  
   // Adresse de mon serveur backend
   // Configuration centralisée pour faciliter la maintenance
   const MON_SERVEUR = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -194,10 +225,22 @@ document.addEventListener('DOMContentLoaded', function() {
             analytics: { googleAnalytics: '' }
           }
         };
+
+        // Fallback visuel si aucun projet récupéré
+        if (!Array.isArray(mesDonneesActuelles.projects) || mesDonneesActuelles.projects.length === 0) {
+          mesDonneesActuelles.projects = PROJETS_FALLBACK;
+          logWarn('⚠️ Aucun projet depuis le backend, affichage des exemples');
+        }
         
         // S'assurer que les settings ont bien la structure analytics
         if (!mesDonneesActuelles.settings.analytics) {
           mesDonneesActuelles.settings.analytics = { googleAnalytics: '' };
+        }
+
+        // Fallback visuel si aucun projet en local
+        if (!Array.isArray(mesDonneesActuelles.projects) || mesDonneesActuelles.projects.length === 0) {
+          mesDonneesActuelles.projects = PROJETS_FALLBACK;
+          logWarn('⚠️ Aucun projet en localStorage, affichage des exemples');
         }
         
         // Log pour debug
@@ -244,6 +287,10 @@ document.addEventListener('DOMContentLoaded', function() {
         mesDonneesActuelles = JSON.parse(donneesLocales);
         afficherToutesMesDonnees();
         afficherErreur(null, 'Serveur indisponible, utilisation des données locales');
+      } else if (!mesDonneesActuelles.projects || mesDonneesActuelles.projects.length === 0) {
+        mesDonneesActuelles.projects = PROJETS_FALLBACK;
+        afficherToutesMesDonnees();
+        afficherErreur(null, 'Serveur indisponible, affichage de projets exemples');
       }
     } finally {
       isLoading = false;
