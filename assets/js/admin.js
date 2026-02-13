@@ -21,11 +21,36 @@ document.addEventListener('DOMContentLoaded', function() {
   const logError = estEnDeveloppement ? console.error.bind(console) : () => {};
   const logWarn = estEnDeveloppement ? console.warn.bind(console) : () => {};
   
-  // Adresse de mon serveur backend
-  // Configuration centralisée pour faciliter la maintenance
-  const MON_SERVEUR = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://localhost:3000/api'
-    : 'https://portfolio-backend-elisee.fly.dev/api';
+  // Adresse de mon serveur backend (avec fallback local / réseau / override)
+  function determinerServeur() {
+    const params = new URLSearchParams(window.location.search);
+    const overrideParam = params.get('api');
+    const overrideStorage = localStorage.getItem('portfolioApiBase');
+
+    if (overrideParam) {
+      localStorage.setItem('portfolioApiBase', overrideParam);
+      return overrideParam;
+    }
+
+    if (overrideStorage) {
+      return overrideStorage;
+    }
+
+    const host = window.location.hostname;
+    const isLocalHost = host === 'localhost' || host === '127.0.0.1';
+    const isLocalLan = /^192\.168\.|^10\.|^172\.(1[6-9]|2\d|3[01])\./.test(host);
+
+    if (isLocalHost || isLocalLan) {
+      // Si on sert le front sur un autre port que 3000, on pointe quand même l'API sur 3000
+      const proto = window.location.protocol || 'http:';
+      return `${proto}//${host}:3000/api`;
+    }
+
+    return 'https://portfolio-backend-elisee.fly.dev/api';
+  }
+
+  const MON_SERVEUR = determinerServeur();
+  log('🔌 API utilisée:', MON_SERVEUR);
   
   // Données actuelles en cours d'édition
   let mesDonneesActuelles = {
@@ -125,6 +150,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     try {
+      log('🔑 Tentative de connexion via', MON_SERVEUR);
       const reponse = await fetch(`${MON_SERVEUR}/portfolio/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -138,11 +164,13 @@ document.addEventListener('DOMContentLoaded', function() {
         afficherDashboard();
         afficherSucces('Connexion réussie !');
       } else {
-        afficherErreur(messageErreur, resultat.error || resultat.message || 'Email ou mot de passe incorrect');
+        const msg = resultat.error || resultat.message || `Connexion refusée (code ${reponse.status})`;
+        afficherErreur(messageErreur, msg);
       }
       
     } catch (erreur) {
-      afficherErreur(messageErreur, 'Impossible de se connecter au serveur. Vérifiez que le backend est démarré.');
+      logError('❌ Erreur réseau login:', erreur);
+      afficherErreur(messageErreur, `Impossible de se connecter au serveur (${MON_SERVEUR}). Vérifiez que le backend est démarré ou utilisez ?api=`);
     }
   }
   
