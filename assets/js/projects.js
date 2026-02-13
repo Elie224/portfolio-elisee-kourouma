@@ -17,36 +17,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const logError = estEnDeveloppement ? console.error.bind(console) : () => {};
   const logWarn = estEnDeveloppement ? console.warn.bind(console) : () => {};
   
-  const PROJETS_FALLBACK = [
-    {
-      title: 'Dashboard IA & Analytics',
-      description: 'Dashboard temps réel avec visualisations, alertes et modèles IA légers pour suivre les indicateurs clés.',
-      shortDesc: 'Visualisations temps réel + scoring IA.',
-      tags: ['React', 'Node.js', 'MongoDB', 'Chart.js'],
-      type: 'Projet Majeur',
-      featured: true,
-      public: true
-    },
-    {
-      title: 'API Portfolio sécurisée',
-      description: 'API REST avec authentification admin, rate limiting et validations pour alimenter le portfolio.',
-      shortDesc: 'API Node sécurisée pour le portfolio.',
-      tags: ['Express', 'JWT', 'MongoDB', 'Security'],
-      type: 'Projet Personnel',
-      featured: false,
-      public: true
-    },
-    {
-      title: 'Site vitrine IA & Web',
-      description: 'Landing page performante avec animations légères, formulaires validés et tracking analytics.',
-      shortDesc: 'Landing page optimisée et animée.',
-      tags: ['HTML', 'CSS', 'JavaScript'],
-      type: 'Projet Personnel',
-      featured: false,
-      public: true
-    }
-  ];
-
   let allProjects = [];
   let filteredProjects = [];
   let currentView = 'grid'; // 'grid' ou 'list'
@@ -102,12 +72,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
 
-      // Fallback : si toujours rien, utiliser des projets exemples pour afficher la section
-      if (projetsCharges.length === 0) {
-        logWarn('⚠️ Aucun projet trouvé, utilisation du fallback local');
-        projetsCharges = PROJETS_FALLBACK;
-      }
-      
       // S'assurer que c'est un tableau
       if (!Array.isArray(projetsCharges)) {
         projetsCharges = [];
