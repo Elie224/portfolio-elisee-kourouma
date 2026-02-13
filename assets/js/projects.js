@@ -146,25 +146,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Si aucun projet
     if (filteredProjects.length === 0) {
       container.style.display = 'none';
-      if (emptyState) {
-        emptyState.style.display = 'block';
-        emptyState.style.opacity = '0';
-        emptyState.style.transform = 'translateY(20px)';
-        setTimeout(() => {
-          emptyState.style.transition = 'all 0.6s ease';
-          emptyState.style.opacity = '1';
-          emptyState.style.transform = 'translateY(0)';
-        }, 100);
-      }
+      if (emptyState) emptyState.style.display = 'none';
       mettreAJourCompteur();
-      
-      // Message neutre sans action admin
-      if (allProjects.length === 0 && !isLoading) {
-        const emptyMsg = emptyState?.querySelector('p');
-        if (emptyMsg) {
-          emptyMsg.innerHTML = 'Aucun projet n\'est disponible pour le moment.';
-        }
-      }
       return;
     }
     
@@ -190,14 +173,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function normaliserEmptyState() {
     const emptyState = document.getElementById('empty-state');
     if (!emptyState) return;
-    emptyState.innerHTML = `
-      <div style="font-size: 64px; margin-bottom: 20px; opacity: 0.5;">🔍</div>
-      <h3 style="margin-bottom: 12px; color: var(--accent);">Aucun projet trouvé</h3>
-      <p class="muted" style="margin-bottom: 24px; max-width: 500px; margin-left: auto; margin-right: auto;">
-        Aucun projet n'est disponible pour le moment.
-      </p>
-      <button id="clear-filters-empty" class="btn">Effacer les filtres</button>
-    `;
+    emptyState.innerHTML = '';
   }
   
   function creerCarteProjet(projet, index) {
