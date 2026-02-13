@@ -531,13 +531,13 @@ document.addEventListener('DOMContentLoaded', function() {
           date: '2025 - Présent',
           title: 'Master Intelligence Artificielle',
           subtitle: 'Formation en cours',
-          description: 'SUPINFO 2025-2027. M1 : bases solides (algèbre linéaire, EDA Python, ML supervisé/non supervisé). M2 : IA appliquée — deep learning (perceptron, CNN, RNN), modèles génératifs (attention, auto-encodeurs, GAN/transformers), déploiement de modèles en production et systèmes de recommandation (similarité, factorisation, cas Netflix). Objectif : livrer des IA utiles en situation réelle.'
+          description: 'SUPINFO 2025-2027. M1 : algèbre linéaire/proba, statistiques appliquées, EDA Python (pandas/visualisation), ML supervisé (régression, classification, ensembles), ML non supervisé (clustering, réduction de dimension), conduite de projets data. M2 : deep learning (perceptron, CNN, RNN), modèles génératifs (attention, auto-encodeurs, GAN/transformers), déploiement de modèles et systèmes de recommandation (similarité, factorisation, cas Netflix). Objectif : livrer des IA utiles en situation réelle.'
         },
         {
           date: '2021 - 2025',
           title: 'Licence en Mathématiques et Informatique',
           subtitle: 'USMBA Fès',
-          description: 'Bases solides en maths (analyse numérique, algèbre, probabilité) et en informatique : algorithmique, C, Java réseau, systèmes Linux, UML, gestion de projet, web (HTML/CSS/JS), structures et bases de données.'
+          description: 'Licence Maroc (USMBA Fès) : analyse et algèbre avancées, probabilité/statistiques, algorithmique, langage C et Java, structures de données, bases de données, systèmes et Linux, réseaux, UML/gestion de projet, développement web (HTML/CSS/JS) et notions de cybersécurité. Un socle rigoureux maths-info pour aborder l’IA.'
         }
       ],
       certifications: [],
