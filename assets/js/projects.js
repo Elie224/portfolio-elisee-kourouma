@@ -54,6 +54,12 @@ document.addEventListener('DOMContentLoaded', function() {
   // État de chargement
   let isLoading = true;
   
+  function fetchAvecTimeout(url, options = {}, timeout = 4000) {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+    return fetch(url, { ...options, signal: controller.signal })
+      .finally(() => clearTimeout(id));
+  }
   /* ===== CHARGEMENT DES PROJETS ===== */
   
   async function chargerProjets() {
@@ -65,7 +71,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Essayer de charger depuis le serveur
       try {
-        const reponse = await fetch(`${MON_SERVEUR}/portfolio`);
+        const reponse = await fetchAvecTimeout(`${MON_SERVEUR}/portfolio`, {}, 4000);
         if (reponse.ok) {
           const donnees = await reponse.json();
           projetsCharges = donnees.projects || [];
