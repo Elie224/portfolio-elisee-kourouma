@@ -711,6 +711,7 @@ document.addEventListener('DOMContentLoaded', function() {
     await sauvegarderSurServeur();
     afficherListeCompetences();
     document.getElementById('skill-category-form').reset();
+    afficherSucces('Compétence ajoutée et publiée');
   }
   
   // Édite une compétence
