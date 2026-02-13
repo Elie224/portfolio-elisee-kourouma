@@ -537,7 +537,7 @@ document.addEventListener('DOMContentLoaded', function() {
           date: '2021 - 2025',
           title: 'Licence en Mathématiques et Informatique',
           subtitle: 'USMBA Fès',
-          description: 'Formation fondamentale en mathématiques appliquées et informatique. Acquisition de solides bases théoriques et pratiques en algorithmique, structures de données et programmation.'
+          description: 'Bases solides en maths (analyse numérique, algèbre, probabilité) et en informatique : algorithmique, C, Java réseau, systèmes Linux, UML, gestion de projet, web (HTML/CSS/JS), structures et bases de données.'
         }
       ],
       certifications: [],
