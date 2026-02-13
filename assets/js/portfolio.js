@@ -531,7 +531,7 @@ document.addEventListener('DOMContentLoaded', function() {
           date: '2025 - Présent',
           title: 'Master Intelligence Artificielle',
           subtitle: 'Formation en cours',
-          description: 'SUPINFO 2025-2027. M1 : algèbre linéaire/proba, statistiques appliquées, EDA Python (pandas/visualisation), ML supervisé (régression, classification, ensembles), ML non supervisé (clustering, réduction de dimension), conduite de projets data. M2 : deep learning (perceptron, CNN, RNN), modèles génératifs (attention, auto-encodeurs, GAN/transformers), déploiement de modèles et systèmes de recommandation (similarité, factorisation, cas Netflix). Objectif : livrer des IA utiles en situation réelle. Plus d’informations : <a href="https://www.supinfo.com/ecole-informatique-paris/" target="_blank" rel="noopener">SUPINFO Paris</a>.',
+          description: 'SUPINFO 2025-2027. M1 : algèbre linéaire/proba, statistiques appliquées, EDA Python (pandas/visualisation), ML supervisé (régression, classification, ensembles), ML non supervisé (clustering, réduction de dimension), conduite de projets data. M2 : deep learning (perceptron, CNN, RNN), modèles génératifs (attention, auto-encodeurs, GAN/transformers), déploiement de modèles et systèmes de recommandation (similarité, factorisation, cas Netflix). Objectif : livrer des IA utiles en situation réelle. Plus d’informations : SUPINFO Paris.',
           link: {
             url: 'https://www.supinfo.com/ecole-informatique-paris/',
             label: 'Site de SUPINFO Paris'
@@ -541,7 +541,7 @@ document.addEventListener('DOMContentLoaded', function() {
           date: '2021 - 2025',
           title: 'Licence en Mathématiques et Informatique',
           subtitle: 'USMBA Fès',
-          description: 'Licence Maroc (USMBA Fès) : analyse et algèbre avancées, probabilité/statistiques, algorithmique, langage C et Java, structures de données, bases de données, systèmes et Linux, réseaux, UML/gestion de projet, développement web (HTML/CSS/JS). Un socle rigoureux maths-info pour aborder l’IA. Plus d’informations : <a href="https://www.fsdm.usmba.ac.ma/" target="_blank" rel="noopener">USMBA FSDM</a>.',
+          description: 'Licence Maroc (USMBA Fès) : analyse et algèbre avancées, probabilité/statistiques, algorithmique, langage C et Java, structures de données, bases de données, systèmes et Linux, réseaux, UML/gestion de projet, développement web (HTML/CSS/JS). Un socle rigoureux maths-info pour aborder l’IA. Plus d’informations : USMBA FSDM.',
           link: {
             url: 'https://www.fsdm.usmba.ac.ma/',
             label: 'Site de la FSDM (USMBA)'

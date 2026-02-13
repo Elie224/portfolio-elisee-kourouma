@@ -2026,6 +2026,28 @@ header.scrolled {
   margin: 0;
 }
 
+.timeline-link a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: var(--espacement-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--couleur-accent);
+  text-decoration: none;
+  letter-spacing: 0.01em;
+}
+
+.timeline-link a::after {
+  content: '↗';
+  font-size: 0.85em;
+  color: var(--couleur-accent-light);
+}
+
+.timeline-link a:hover {
+  color: var(--couleur-accent-hover);
+  text-decoration: underline;
+}
+
 /* ===== CERTIFICATIONS, STAGES & ÉVÉNEMENTS - Design Premium ===== */
 .experience-section {
   margin-bottom: var(--espacement-3xl);
