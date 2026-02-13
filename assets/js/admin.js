@@ -1204,6 +1204,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <h4>${item.title || 'Événement'}</h4>
         <p class="item-meta">${item.date || ''} ${item.subtitle ? '· ' + item.subtitle : ''}</p>
         <p class="muted">${item.description || ''}</p>
+        ${item.link?.url ? `<p class="muted">Lien : <a href="${item.link.url}" target="_blank" rel="noopener">${item.link.label || item.link.url}</a></p>` : ''}
         <div class="item-actions">
           <button class="btn-small" onclick="editTimeline(${index})">Modifier</button>
           <button class="btn-small btn-secondary" onclick="deleteTimeline(${index})">Supprimer</button>
@@ -1232,6 +1233,8 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('timeline-date').value = item.date || '';
       document.getElementById('timeline-title').value = item.title || '';
       document.getElementById('timeline-subtitle').value = item.subtitle || '';
+      document.getElementById('timeline-link-label').value = item.link?.label || '';
+      document.getElementById('timeline-link-url').value = item.link?.url || '';
       document.getElementById('timeline-description').value = item.description || '';
     } else {
       form.reset();
@@ -1256,8 +1259,18 @@ document.addEventListener('DOMContentLoaded', function() {
       date: document.getElementById('timeline-date').value.trim(),
       title: document.getElementById('timeline-title').value.trim(),
       subtitle: document.getElementById('timeline-subtitle').value.trim(),
-      description: document.getElementById('timeline-description').value.trim()
+      description: document.getElementById('timeline-description').value.trim(),
+      link: {
+        label: document.getElementById('timeline-link-label').value.trim(),
+        url: document.getElementById('timeline-link-url').value.trim()
+      }
     };
+
+    if (!item.link.label && !item.link.url) {
+      delete item.link;
+    } else if (item.link.url && !item.link.label) {
+      item.link.label = 'Voir le site';
+    }
     
     if (!item.date || !item.title || !item.description) {
       afficherErreur(null, 'La date, le titre et la description sont obligatoires');
