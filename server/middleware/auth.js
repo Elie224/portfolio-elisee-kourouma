@@ -9,7 +9,13 @@
  */
 
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const { logSecurity, logError } = require('../utils/logger');
+
+// Valeurs admin avec fallback pour éviter le blocage si les variables d'environnement sont absentes
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@portfolio.local';
+const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH
+  || (process.env.ADMIN_PASSWORD ? bcrypt.hashSync(process.env.ADMIN_PASSWORD, 10) : null);
 
 /**
  * Middleware pour authentifier les requêtes admin
@@ -62,7 +68,7 @@ const authenticateAdmin = (req, res, next) => {
     
     // Vérifier que l'email correspond à l'admin autorisé
     // Comparaison stricte pour éviter les attaques par injection
-    if (decoded.email !== process.env.ADMIN_EMAIL) {
+    if (decoded.email !== ADMIN_EMAIL) {
       logSecurity('❌ Email non autorisé dans le token:', { email: decoded.email });
       return res.status(403).json({ 
         error: 'Accès refusé - Email non autorisé',
@@ -104,4 +110,4 @@ const authenticateAdmin = (req, res, next) => {
   }
 };
 
-module.exports = { authenticateAdmin };
+module.exports = { authenticateAdmin, ADMIN_EMAIL, ADMIN_PASSWORD_HASH };

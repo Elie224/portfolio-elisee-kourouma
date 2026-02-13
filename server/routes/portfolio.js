@@ -13,7 +13,7 @@
 const express = require('express');
 const router = express.Router();
 const Portfolio = require('../models/Portfolio');
-const { authenticateAdmin } = require('../middleware/auth');
+const { authenticateAdmin, ADMIN_EMAIL, ADMIN_PASSWORD_HASH } = require('../middleware/auth');
 const { 
   validatePortfolioData, 
   validateLoginData, 
@@ -549,7 +549,7 @@ router.post('/login', validateLoginData, async (req, res) => {
     
     // Vérification de l'email admin
     // Comparaison stricte pour éviter les attaques par injection
-    if (email !== process.env.ADMIN_EMAIL) {
+    if (email !== ADMIN_EMAIL) {
       logSecurity('❌ Tentative de connexion avec email invalide:', { email: email });
       return res.status(401).json({ 
         error: 'Identifiants invalides' 
@@ -559,7 +559,19 @@ router.post('/login', validateLoginData, async (req, res) => {
     // Vérification du mot de passe avec bcrypt
     // Utilisation de bcrypt pour comparer le hash de manière sécurisée
     const bcrypt = require('bcryptjs');
-    const isValidPassword = await bcrypt.compare(password, process.env.ADMIN_PASSWORD_HASH);
+    let isValidPassword = false;
+
+    if (ADMIN_PASSWORD_HASH) {
+      isValidPassword = await bcrypt.compare(password, ADMIN_PASSWORD_HASH);
+    } else if (process.env.ADMIN_PASSWORD) {
+      // Fallback si le hash n'est pas fourni mais le mot de passe clair est présent
+      isValidPassword = password === process.env.ADMIN_PASSWORD;
+    }
+
+    // Fallback de développement : mot de passe par défaut si aucune variable n'est définie
+    if (!ADMIN_PASSWORD_HASH && !process.env.ADMIN_PASSWORD) {
+      isValidPassword = password === 'admin123';
+    }
     
     if (!isValidPassword) {
       logSecurity('❌ Mot de passe incorrect pour:', { email: email });
@@ -570,13 +582,14 @@ router.post('/login', validateLoginData, async (req, res) => {
     
     // Génération du token JWT
     const jwt = require('jsonwebtoken');
+    const secret = process.env.JWT_SECRET || 'dev-secret-change-me';
     const token = jwt.sign(
       { 
         email: email,
         role: 'admin',
         iat: Math.floor(Date.now() / 1000)
       },
-      process.env.JWT_SECRET,
+      secret,
       { expiresIn: '2h', audience: 'portfolio-admin', issuer: 'portfolio-backend' }
     );
     
