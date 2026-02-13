@@ -148,6 +148,17 @@ document.addEventListener('DOMContentLoaded', function() {
       afficherErreur();
     }
   }
+
+  // Sécurité : si le chargement reste bloqué, forcer l'affichage avec le fallback
+  function forcerAffichageFallback() {
+    if (!isLoading) return;
+    logWarn('⏱️ Chargement trop long, affichage du fallback projets');
+    isLoading = false;
+    allProjects = PROJETS_FALLBACK;
+    filteredProjects = [...allProjects];
+    mettreAJourStats();
+    afficherProjets();
+  }
   
   /* ===== AFFICHAGE DES PROJETS ===== */
   
@@ -500,6 +511,8 @@ document.addEventListener('DOMContentLoaded', function() {
     chargerProjets();
     configurerFiltres();
     configurerToggleVue();
+    // Si après 5s rien ne s'affiche, forcer le fallback
+    setTimeout(forcerAffichageFallback, 5000);
   }
   
   // Démarrer
