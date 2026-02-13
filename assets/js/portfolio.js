@@ -519,7 +519,7 @@ document.addEventListener('DOMContentLoaded', function() {
       personal: {
         name: 'Nema Elisée Kourouma',
         title: 'Étudiant en Master Intelligence Artificielle',
-        description: 'Actuellement en Master Intelligence Artificielle. Mon parcours académique, enrichi par une licence en mathématiques et informatique obtenue à l\'USMBA de Fès, me permet d\'allier rigueur mathématique et créativité technique.',
+        description: 'En Master Intelligence Artificielle à SUPINFO (2025-2027). J\'allie la rigueur maths-info (Licence USMBA) à un sens produit : comprendre le besoin, prototyper vite, industrialiser des modèles utiles.',
         email: MES_CONTACTS.email,
         phone: MES_CONTACTS.telephone,
         photo: 'assets/photo.jpeg'
@@ -531,7 +531,7 @@ document.addEventListener('DOMContentLoaded', function() {
           date: '2025 - Présent',
           title: 'Master Intelligence Artificielle',
           subtitle: 'Formation en cours',
-          description: 'Spécialisation IA (SUPINFO 2025-2026) : algèbre linéaire (matrices, vecteurs, déterminants), analyse exploratoire Python (pandas/visualisation), apprentissage supervisé (préparation des données, régression, classification, ensembles) et non supervisé (partitionnement, réduction de dimension).'
+          description: 'SUPINFO 2025-2027. M1 : bases solides (algèbre linéaire, EDA Python, ML supervisé/non supervisé). M2 : IA appliquée — deep learning (perceptron, CNN, RNN), modèles génératifs (attention, auto-encodeurs, GAN/transformers), déploiement de modèles en production et systèmes de recommandation (similarité, factorisation, cas Netflix). Objectif : livrer des IA utiles en situation réelle.'
         },
         {
           date: '2021 - 2025',
@@ -546,8 +546,8 @@ document.addEventListener('DOMContentLoaded', function() {
       techEvents: [],
       links: {}, // Pas de CV par défaut - sera chargé depuis le serveur
       about: {
-        heroDescription: 'Passionné par les technologies émergentes, je me consacre à l\'exploration de l\'Intelligence Artificielle et au développement d\'applications web performantes.',
-        aboutDescription: 'Je conçois et développe des solutions innovantes qui combinent intelligence artificielle et technologies web modernes, avec un focus sur la qualité, la performance et l\'expérience utilisateur.',
+        heroDescription: 'Actuellement en Master IA (SUPINFO), je conçois des produits web et data pensés pour l\'usage réel : robustes, sécurisés et mesurables.',
+        aboutDescription: 'Je construis des expériences web et IA en gardant le produit au centre : cadrage clair, prototypes rapides, puis industrialisation (tests, sécurité, observabilité). Mon M2 couvre deep learning, modèles génératifs, déploiement de modèles et systèmes de recommandation, pour passer des modèles aux usages.',
         stats: {
           projects: 0,
           experience: 2,
