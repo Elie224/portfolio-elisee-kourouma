@@ -141,8 +141,8 @@ const sanitizeData = (req, res, next) => {
     // EXCEPTION : Autoriser les données base64 (data:application/pdf;base64,...)
     // Les données base64 peuvent contenir des caractères qui ressemblent à du code mais qui sont valides
     const isBase64Data = bodyString.includes('data:application/pdf') || 
-                         bodyString.includes('data:image/') ||
-                         (req.body.links && req.body.links.cvFile && req.body.links.cvFile.startsWith('data:'));
+               bodyString.includes('data:image/') ||
+               (req.body.links && req.body.links.cvFile && req.body.links.cvFile.startsWith('data:'));
     
     // EXCEPTION : Autoriser les données base64 (data:application/pdf;base64,...)
     // Les données base64 peuvent contenir des caractères qui ressemblent à du code mais qui sont valides
@@ -156,7 +156,9 @@ const sanitizeData = (req, res, next) => {
         /<script.*?>/gi,                  // Script tags HTML
         /javascript:/gi,                  // Protocole JavaScript dans les URLs
         /eval\s*\(/g,                     // Appels à eval() (très dangereux)
-        /document\.write/gi               // Écriture directe dans le DOM
+        /document\.write/gi,              // Écriture directe dans le DOM
+        /data:text\/html/gi,              // Données inline HTML
+        /on(click|load|error|mouse)/gi     // Handlers inline
       ];
       
       for (const pattern of criticalPatterns) {

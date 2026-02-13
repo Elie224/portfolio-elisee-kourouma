@@ -16,6 +16,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
+const compression = require('compression');
 require('dotenv').config();
 
 // Importer le système de logging centralisé
@@ -41,10 +42,24 @@ if (estEnDeveloppement) {
 
 const app = express();
 
+// ETag fort pour de meilleures revalidations côté client/CDN
+app.set('etag', 'strong');
+
 // Activer trust proxy pour Fly.io (nécessaire pour rate limiting et IP correcte)
 // Utiliser 1 au lieu de true pour éviter l'avertissement express-rate-limit
 // Fly.io utilise un seul proxy, donc 1 est suffisant
 app.set('trust proxy', 1);
+
+// Forcer HTTPS en production (derrière proxy Fly.io)
+app.use((req, res, next) => {
+  if (process.env.NODE_ENV === 'production') {
+    const proto = req.headers['x-forwarded-proto'];
+    if (proto && proto !== 'https') {
+      return res.redirect(301, 'https://' + req.headers.host + req.originalUrl);
+    }
+  }
+  next();
+});
 
 // Middleware pour stocker le chemin de la requête (pour CORS - doit être avant /health)
 app.use((req, res, next) => {
@@ -61,6 +76,8 @@ app.get('/health', (req, res) => {
 // Configuration de sécurité avec Helmet
 app.use(helmet({
   crossOriginEmbedderPolicy: false, // Pour permettre les images externes
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  referrerPolicy: { policy: 'same-origin' },
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
@@ -72,10 +89,17 @@ app.use(helmet({
   }
 }));
 
+// En-têtes de durcissement supplémentaires
+app.use((req, res, next) => {
+  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  next();
+});
+
 // Rate limiting (augmenté pour le développement)
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1000, // Limite augmentée à 1000 requêtes pour le développement
+  max: process.env.NODE_ENV === 'development' ? 1000 : 300, // Limite réduite en production
   message: {
     error: 'Trop de requêtes, veuillez réessayer plus tard.',
     retryAfter: '15 minutes'
@@ -178,13 +202,9 @@ const corsOptions = {
     
     // Vérification stricte des origines
     if (!origin) {
-      // En production, bloquer silencieusement les requêtes sans origin (sauf /health)
-      // Ne pas logger comme erreur car c'est normal (health checks, curl, etc.)
       if (process.env.NODE_ENV === 'production') {
-        // Retourner une erreur silencieuse (ne sera pas loggée comme erreur serveur)
-        return callback(null, false); // false = bloquer sans erreur
+        return callback(null, false);
       } else {
-        // En développement, autoriser
         return callback(null, true);
       }
     }
@@ -197,7 +217,7 @@ const corsOptions = {
       callback(null, false); // false = bloquer sans erreur
     }
   },
-  credentials: true,
+  credentials: false,
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: [
     'Content-Type', 
@@ -240,6 +260,7 @@ app.use((req, res, next) => {
 
 app.use(express.json({ limit: '10mb' })); // Augmenter la limite pour les gros objets
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(compression());
 
 // Gérer explicitement les requêtes OPTIONS (preflight) - exclure /health
 app.options('*', (req, res, next) => {
@@ -264,16 +285,16 @@ const portfolioRoutes = require('./routes/portfolio');
 app.use('/api/portfolio', portfolioRoutes);
 
 // Validation des variables d'environnement obligatoires
-// Note: Ne pas bloquer le démarrage, mais logger un avertissement
-const requiredEnvVars = ['MONGODB_URI', 'JWT_SECRET', 'ADMIN_EMAIL', 'ADMIN_PASSWORD_HASH'];
+const requiredEnvVars = ['MONGODB_URI', 'JWT_SECRET', 'ADMIN_EMAIL', 'ADMIN_PASSWORD_HASH', 'ALLOWED_ORIGINS'];
 const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
 
 if (missingVars.length > 0) {
-  // Logger les variables manquantes (toujours actif car critique)
   logError('❌ Variables d\'environnement manquantes:', { missing: missingVars.join(', ') });
   logError('💡 Vérifiez vos secrets Fly.io avec: flyctl secrets list -a portfolio-backend-elisee');
-  logWarn('⚠️ Le serveur démarre quand même, mais certaines fonctionnalités peuvent ne pas fonctionner');
-  // Ne pas faire process.exit(1) - laisser le serveur démarrer pour le diagnostic
+  if (process.env.NODE_ENV === 'production') {
+    logError('⛔ Arrêt du serveur: variables critiques manquantes en production');
+    process.exit(1);
+  }
 }
 
 // Démarrer le serveur APRÈS tous les middlewares

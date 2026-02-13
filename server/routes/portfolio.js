@@ -85,7 +85,17 @@ router.get('/', async (req, res) => {
       };
     }
     
-    res.json(portfolio);
+    // Version publique : retirer les données sensibles (messages de contact, fichiers CV bruts)
+    const publicPortfolio = JSON.parse(JSON.stringify(portfolio));
+    delete publicPortfolio.contactMessages;
+    if (publicPortfolio.links) {
+      delete publicPortfolio.links.cvFile;
+      delete publicPortfolio.links.cvFileName;
+      delete publicPortfolio.links.cvFileSize;
+    }
+
+    res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=60');
+    res.json(publicPortfolio);
   } catch (error) {
     // Log détaillé de l'erreur pour diagnostic
     // Les erreurs sont toujours loggées même en production pour le debugging
@@ -114,7 +124,6 @@ router.get('/', async (req, res) => {
         timeline: [],
         services: [],
         certifications: [],
-        contactMessages: [],
         faq: [],
         settings: {
           maintenance: { enabled: false, message: 'Le site est actuellement en maintenance. Nous serons bientôt de retour !' },
@@ -136,13 +145,34 @@ router.get('/', async (req, res) => {
       timeline: [],
       services: [],
       certifications: [],
-      contactMessages: [],
       faq: [],
       settings: {
         maintenance: { enabled: false, message: 'Le site est actuellement en maintenance. Nous serons bientôt de retour !' },
         seo: { title: '', description: '', keywords: '' },
         analytics: { googleAnalytics: '' }
       }
+    });
+  }
+});
+
+// GET /api/portfolio/admin - Données complètes (protégées)
+router.get('/admin', authenticateAdmin, async (req, res) => {
+  try {
+    const portfolio = await Portfolio.getPortfolio();
+    res.json(portfolio);
+  } catch (error) {
+    logError('❌ Erreur lors de la récupération admin du portfolio:', {
+      message: error.message,
+      stack: error.stack,
+      path: req.path,
+      method: req.method,
+      origin: req.headers.origin,
+      adminEmail: req.admin?.email,
+      timestamp: new Date().toISOString()
+    });
+    res.status(500).json({
+      error: 'Erreur serveur lors de la récupération du portfolio',
+      code: 'SERVER_ERROR'
     });
   }
 });
@@ -547,7 +577,7 @@ router.post('/login', validateLoginData, async (req, res) => {
         iat: Math.floor(Date.now() / 1000)
       },
       process.env.JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: '2h', audience: 'portfolio-admin', issuer: 'portfolio-backend' }
     );
     
     logSecurity('✅ Connexion admin réussie:', { email: email });

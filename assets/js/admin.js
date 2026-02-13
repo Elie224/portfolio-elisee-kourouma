@@ -161,7 +161,16 @@ document.addEventListener('DOMContentLoaded', function() {
     
     try {
       // Essayer de charger depuis le serveur
-      const reponse = await fetch(`${MON_SERVEUR}/portfolio`);
+      const token = obtenirToken();
+      const endpoint = token ? `${MON_SERVEUR}/portfolio/admin` : `${MON_SERVEUR}/portfolio`;
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const reponse = await fetch(endpoint, { headers });
+      
+      if ((reponse.status === 401 || reponse.status === 403) && token) {
+        seDeconnecter();
+        isLoading = false;
+        return;
+      }
       
       if (reponse.ok) {
         const donnees = await reponse.json();
