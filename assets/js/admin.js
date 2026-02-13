@@ -2504,12 +2504,13 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Affiche un message de succès
   function afficherSucces(message) {
-    const successMsg = document.getElementById('success-message');
-    if (successMsg) {
-      successMsg.classList.remove('error');
-      successMsg.textContent = message;
-      successMsg.classList.add('active');
-      setTimeout(() => successMsg.classList.remove('active'), 5000);
+    const toast = document.getElementById('global-toast') || document.getElementById('success-message');
+    if (toast) {
+      toast.classList.remove('error');
+      toast.textContent = message;
+      toast.style.display = 'block';
+      toast.classList.add('active');
+      setTimeout(() => toast.classList.remove('active'), 5000);
     }
   }
   
@@ -2524,8 +2525,9 @@ document.addEventListener('DOMContentLoaded', function() {
       element.classList.add('active');
       setTimeout(() => element.classList.remove('active'), 5000);
     } else {
-      const globalToast = document.getElementById('success-message');
+      const globalToast = document.getElementById('global-toast') || document.getElementById('success-message');
       if (globalToast) {
+        globalToast.style.display = 'block';
         globalToast.classList.add('error');
         globalToast.textContent = message;
         globalToast.classList.add('active');
