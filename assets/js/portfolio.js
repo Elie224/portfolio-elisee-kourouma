@@ -94,6 +94,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const aProjets = donnees.projects && donnees.projects.length > 0;
     const aCompetences = donnees.skills && donnees.skills.length > 0;
     const aParcours = donnees.timeline && donnees.timeline.length > 0;
+    const aSettings = !!donnees.settings; // Conserver les données si des réglages sont présents (ex: maintenance)
     
     // Vérifier si le portfolio contient un CV base64
     // Un CV base64 est considéré comme une donnée importante
@@ -102,8 +103,8 @@ document.addEventListener('DOMContentLoaded', function() {
       (donnees.links.cv && donnees.links.cv.startsWith('data:'))
     );
     
-    // Ne pas considérer comme vide si un CV base64 est présent
-    return !aProjets && !aCompetences && !aParcours && !aCvBase64;
+    // Ne pas considérer comme vide si un CV base64 est présent ou si des réglages existent
+    return !aProjets && !aCompetences && !aParcours && !aCvBase64 && !aSettings;
   }
   
   // Données actuelles affichées (pour comparaison)
