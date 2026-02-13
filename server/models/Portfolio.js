@@ -152,7 +152,15 @@ const MINIMAL_PORTFOLIO_DATA = {
   internships: [],
   techEvents: [],
   contactMessages: [],
-  faq: []
+  faq: [],
+  settings: {
+    maintenance: {
+      enabled: false,
+      message: 'Le site est actuellement en maintenance. Nous serons bientôt de retour !'
+    },
+    seo: { title: '', description: '', keywords: '' },
+    analytics: { googleAnalytics: '' }
+  }
 };
 
 // FONCTION WRAPPER simple qui retourne les données statiques
@@ -181,6 +189,7 @@ portfolioSchema.statics.getPortfolio = async function() {
       const projectsCount = Array.isArray(portfolio.projects) ? portfolio.projects.length : 0;
       const skillsCount = Array.isArray(portfolio.skills) ? portfolio.skills.length : 0;
       const timelineCount = Array.isArray(portfolio.timeline) ? portfolio.timeline.length : 0;
+      const hasSettings = !!portfolio.settings;
       
       console.log('🔍 Portfolio existant trouvé:', {
         projects: projectsCount,
@@ -210,16 +219,16 @@ portfolioSchema.statics.getPortfolio = async function() {
         timelineCount
       });
       
-      // Si toutes les données importantes sont vides MAIS qu'il y a un CV, NE PAS réinitialiser
-      // Ne réinitialiser que si vraiment vide ET sans CV
-      if (projectsCount === 0 && skillsCount === 0 && timelineCount === 0 && !hasCvBase64) {
+      // Si toutes les données importantes sont vides MAIS qu'il y a un CV ou des settings, NE PAS réinitialiser
+      // Ne réinitialiser que si vraiment vide ET sans CV ET sans réglages
+      if (projectsCount === 0 && skillsCount === 0 && timelineCount === 0 && !hasCvBase64 && !hasSettings) {
         console.log('📦 Portfolio vide détecté (sans CV), réinitialisation...');
         await this.deleteOne({ _id: portfolio._id });
         const dataToCreate = getDefaultPortfolioData();
         portfolio = await this.create(dataToCreate);
         console.log('✅ Portfolio réinitialisé avec succès');
-      } else if (projectsCount === 0 && skillsCount === 0 && timelineCount === 0 && hasCvBase64) {
-        console.log('✅ Portfolio avec CV base64 conservé (projets/skills/timeline vides mais CV présent)');
+      } else if (projectsCount === 0 && skillsCount === 0 && timelineCount === 0 && (hasCvBase64 || hasSettings)) {
+        console.log('✅ Portfolio conservé (données vides mais CV base64 ou réglages présents)');
       }
     }
     
