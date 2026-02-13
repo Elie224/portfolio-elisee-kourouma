@@ -531,13 +531,21 @@ document.addEventListener('DOMContentLoaded', function() {
           date: '2025 - Présent',
           title: 'Master Intelligence Artificielle',
           subtitle: 'Formation en cours',
-          description: 'SUPINFO 2025-2027. M1 : algèbre linéaire/proba, statistiques appliquées, EDA Python (pandas/visualisation), ML supervisé (régression, classification, ensembles), ML non supervisé (clustering, réduction de dimension), conduite de projets data. M2 : deep learning (perceptron, CNN, RNN), modèles génératifs (attention, auto-encodeurs, GAN/transformers), déploiement de modèles et systèmes de recommandation (similarité, factorisation, cas Netflix). Objectif : livrer des IA utiles en situation réelle. Plus d’informations : <a href="https://www.supinfo.com/ecole-informatique-paris/" target="_blank" rel="noopener">SUPINFO Paris</a>.'
+          description: 'SUPINFO 2025-2027. M1 : algèbre linéaire/proba, statistiques appliquées, EDA Python (pandas/visualisation), ML supervisé (régression, classification, ensembles), ML non supervisé (clustering, réduction de dimension), conduite de projets data. M2 : deep learning (perceptron, CNN, RNN), modèles génératifs (attention, auto-encodeurs, GAN/transformers), déploiement de modèles et systèmes de recommandation (similarité, factorisation, cas Netflix). Objectif : livrer des IA utiles en situation réelle. Plus d’informations : <a href="https://www.supinfo.com/ecole-informatique-paris/" target="_blank" rel="noopener">SUPINFO Paris</a>.',
+          link: {
+            url: 'https://www.supinfo.com/ecole-informatique-paris/',
+            label: 'Site de SUPINFO Paris'
+          }
         },
         {
           date: '2021 - 2025',
           title: 'Licence en Mathématiques et Informatique',
           subtitle: 'USMBA Fès',
-          description: 'Licence Maroc (USMBA Fès) : analyse et algèbre avancées, probabilité/statistiques, algorithmique, langage C et Java, structures de données, bases de données, systèmes et Linux, réseaux, UML/gestion de projet, développement web (HTML/CSS/JS). Un socle rigoureux maths-info pour aborder l’IA. Plus d’informations : <a href="https://www.fsdm.usmba.ac.ma/" target="_blank" rel="noopener">USMBA FSDM</a>.'
+          description: 'Licence Maroc (USMBA Fès) : analyse et algèbre avancées, probabilité/statistiques, algorithmique, langage C et Java, structures de données, bases de données, systèmes et Linux, réseaux, UML/gestion de projet, développement web (HTML/CSS/JS). Un socle rigoureux maths-info pour aborder l’IA. Plus d’informations : <a href="https://www.fsdm.usmba.ac.ma/" target="_blank" rel="noopener">USMBA FSDM</a>.',
+          link: {
+            url: 'https://www.fsdm.usmba.ac.ma/',
+            label: 'Site de la FSDM (USMBA)'
+          }
         }
       ],
       certifications: [],
@@ -1904,19 +1912,25 @@ document.addEventListener('DOMContentLoaded', function() {
       container.classList.add('timeline');
     }
     
-    container.innerHTML = parcours.map(etape => `
-      <div class="timeline-item">
-        <div class="timeline-marker"></div>
-        <div class="timeline-content">
-          <div class="timeline-header">
-            <h3 class="timeline-title">${etape.title || 'Étape'}</h3>
-            <span class="timeline-date">${etape.date || ''}</span>
+    container.innerHTML = parcours.map(etape => {
+      const lienFormation = etape.link && etape.link.url
+        ? `<div class="timeline-link" style="margin-top: var(--espacement-xs);"><a href="${etape.link.url}" target="_blank" rel="noopener" class="link-primary">${etape.link.label || 'Découvrir le programme'}</a></div>`
+        : '';
+      return `
+        <div class="timeline-item">
+          <div class="timeline-marker"></div>
+          <div class="timeline-content">
+            <div class="timeline-header">
+              <h3 class="timeline-title">${etape.title || 'Étape'}</h3>
+              <span class="timeline-date">${etape.date || ''}</span>
+            </div>
+            ${etape.subtitle ? `<p class="timeline-subtitle" style="color: var(--couleur-texte-muted); font-size: 0.9rem; margin-bottom: var(--espacement-sm);">${etape.subtitle}</p>` : ''}
+            <p class="timeline-description">${etape.description || ''}</p>
+            ${lienFormation}
           </div>
-          ${etape.subtitle ? `<p class="timeline-subtitle" style="color: var(--couleur-texte-muted); font-size: 0.9rem; margin-bottom: var(--espacement-sm);">${etape.subtitle}</p>` : ''}
-          <p class="timeline-description">${etape.description || ''}</p>
         </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
   
   // Met à jour les statistiques (page d'accueil ET page À propos)
