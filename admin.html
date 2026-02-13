@@ -930,6 +930,7 @@
           <button class="admin-tab" data-tab="about">📝 Descriptions</button>
           <button class="admin-tab" data-tab="testimonials">💬 Témoignages</button>
           <button class="admin-tab" data-tab="timeline">📅 Timeline</button>
+          <button class="admin-tab" data-tab="active-search">🔍 Recherche active</button>
           <button class="admin-tab" data-tab="services">🛠️ Services</button>
           <button class="admin-tab" data-tab="certifications">🏆 Certifications</button>
           <button class="admin-tab" data-tab="stages">💼 Stages</button>
@@ -1616,6 +1617,61 @@
                   <div style="display: flex; gap: 12px; margin-top: 20px;">
                     <button type="submit" class="btn">Enregistrer</button>
                     <button type="button" class="btn secondary" onclick="hideTimelineForm()">Annuler</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active Search Tab -->
+        <div id="tab-active-search" class="admin-tab-content">
+          <div class="admin-section">
+            <h2>🔍 Recherche active</h2>
+            <p class="muted">Ajoute tes recherches d'opportunités, mets-les à jour ou mets-les en pause.</p>
+            <button class="btn" onclick="showActiveSearchForm()" style="margin-bottom: 20px;">+ Ajouter une recherche</button>
+            <div id="active-search-list" class="item-list"></div>
+            
+            <div id="active-search-form-modal" style="display: none;">
+              <div class="admin-section" style="margin-top: 20px; border: 2px solid var(--accent);">
+                <h3 id="active-search-form-title">Ajouter une recherche active</h3>
+                <form id="active-search-form">
+                  <input type="hidden" id="active-search-id" />
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="active-search-title">Intitulé *</label>
+                      <input type="text" id="active-search-title" required />
+                    </div>
+                    <div class="form-group">
+                      <label for="active-search-status">Statut</label>
+                      <select id="active-search-status">
+                        <option value="active">Active</option>
+                        <option value="paused">En pause</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="active-search-location">Localisation / format</label>
+                      <input type="text" id="active-search-location" placeholder="Ex : Paris, Remote, Alternance" />
+                    </div>
+                    <div class="form-group">
+                      <label for="active-search-link">Lien (optionnel)</label>
+                      <input type="text" id="active-search-link" placeholder="URL d'une offre ou d'un profil" />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="active-search-notes">Détails</label>
+                    <textarea id="active-search-notes" placeholder="Stack visée, rythme, disponibilités..."></textarea>
+                  </div>
+                  <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                      <input type="checkbox" id="active-search-visible" checked /> Visible publiquement
+                    </label>
+                  </div>
+                  <div style="display: flex; gap: 12px; margin-top: 20px;">
+                    <button type="submit" class="btn">Enregistrer</button>
+                    <button type="button" class="btn secondary" onclick="hideActiveSearchForm()">Annuler</button>
                   </div>
                 </form>
               </div>

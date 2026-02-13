@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', function() {
     projects: [],
     skills: [],
     timeline: [],
+    activeSearches: [],
     certifications: [],
     stages: [],
     alternances: [],
@@ -49,6 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
   let selectedItems = {
     projects: new Set(),
     skills: new Set(),
+    activeSearches: new Set(),
     certifications: new Set(),
     timeline: new Set(),
     services: new Set(),
@@ -179,6 +181,7 @@ document.addEventListener('DOMContentLoaded', function() {
           projects: donnees.projects || [],
           skills: donnees.skills || [],
           timeline: donnees.timeline || [],
+          activeSearches: donnees.activeSearches || [],
           certifications: donnees.certifications || [],
           stages: donnees.stages || [],
           alternances: donnees.alternances || [],
@@ -422,6 +425,7 @@ document.addEventListener('DOMContentLoaded', function() {
     afficherListeAlternances();
     afficherListeTechEvents();
     afficherListeTimeline();
+    afficherListeActiveSearches();
     afficherListeServices();
     afficherListeFAQ();
     afficherListeMessages();
@@ -1285,6 +1289,110 @@ document.addEventListener('DOMContentLoaded', function() {
       afficherListeTimeline();
     }
   };
+
+
+  /* ===== GESTION DES RECHERCHES ACTIVES ===== */
+
+  function afficherListeActiveSearches() {
+    const container = document.getElementById('active-search-list');
+    if (!container) return;
+    const recherches = mesDonneesActuelles.activeSearches || [];
+    if (recherches.length === 0) {
+      container.innerHTML = '<p class="muted">Aucune recherche active pour le moment.</p>';
+      return;
+    }
+    container.innerHTML = recherches.map((item, index) => `
+      <div class="item-card">
+        <h4>${item.title || 'Recherche'}</h4>
+        <p class="item-meta">${item.status === 'active' ? '🟢 Active' : '⏸️ Désactivée'}${item.location ? ' · ' + item.location : ''}${item.visible === false ? ' · Privée' : ''}</p>
+        <p class="muted">${item.notes || ''}</p>
+        ${item.link ? `<p class="muted">Lien : <a href="${item.link}" target="_blank" rel="noopener">${item.link}</a></p>` : ''}
+        <div class="item-actions">
+          <button class="btn-small" onclick="toggleActiveSearch(${index})">${item.status === 'active' ? 'Désactiver' : 'Activer'}</button>
+          <button class="btn-small" onclick="editActiveSearch(${index})">Modifier</button>
+          <button class="btn-small btn-secondary" onclick="deleteActiveSearch(${index})">Supprimer</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  window.showActiveSearchForm = function(editIndex = null) {
+    const modal = document.getElementById('active-search-form-modal');
+    const form = document.getElementById('active-search-form');
+    const title = document.getElementById('active-search-form-title');
+    if (!modal || !form) return;
+    currentEditingId = editIndex;
+    if (title) {
+      title.textContent = editIndex !== null ? 'Modifier une recherche active' : 'Ajouter une recherche active';
+    }
+    if (editIndex !== null) {
+      const item = mesDonneesActuelles.activeSearches[editIndex] || {};
+      document.getElementById('active-search-id').value = editIndex;
+      document.getElementById('active-search-title').value = item.title || '';
+      document.getElementById('active-search-status').value = item.status === 'paused' ? 'paused' : 'active';
+      document.getElementById('active-search-location').value = item.location || '';
+      document.getElementById('active-search-link').value = item.link || '';
+      document.getElementById('active-search-notes').value = item.notes || '';
+      document.getElementById('active-search-visible').checked = item.visible !== false;
+    } else {
+      form.reset();
+      document.getElementById('active-search-id').value = '';
+      document.getElementById('active-search-status').value = 'active';
+      document.getElementById('active-search-visible').checked = true;
+    }
+    modal.style.display = 'block';
+  };
+
+  window.hideActiveSearchForm = function() {
+    const modal = document.getElementById('active-search-form-modal');
+    if (modal) modal.style.display = 'none';
+    currentEditingId = null;
+  };
+
+  async function sauvegarderActiveSearch(e) {
+    e.preventDefault();
+    const item = {
+      title: document.getElementById('active-search-title').value.trim(),
+      status: document.getElementById('active-search-status').value === 'paused' ? 'paused' : 'active',
+      location: document.getElementById('active-search-location').value.trim(),
+      link: document.getElementById('active-search-link').value.trim(),
+      notes: document.getElementById('active-search-notes').value.trim(),
+      visible: document.getElementById('active-search-visible').checked
+    };
+    if (!item.title) {
+      afficherErreur(null, 'Le titre est obligatoire');
+      return;
+    }
+    const editIndex = currentEditingId;
+    if (editIndex !== null) {
+      mesDonneesActuelles.activeSearches[editIndex] = item;
+    } else {
+      mesDonneesActuelles.activeSearches.push(item);
+    }
+    await sauvegarderSurServeur();
+    afficherListeActiveSearches();
+    window.hideActiveSearchForm();
+  }
+
+  window.editActiveSearch = function(index) {
+    window.showActiveSearchForm(index);
+  };
+
+  window.toggleActiveSearch = async function(index) {
+    const item = mesDonneesActuelles.activeSearches[index];
+    if (!item) return;
+    item.status = item.status === 'active' ? 'paused' : 'active';
+    await sauvegarderSurServeur();
+    afficherListeActiveSearches();
+  };
+
+  window.deleteActiveSearch = function(index) {
+    if (confirm('Supprimer cette recherche active ?')) {
+      mesDonneesActuelles.activeSearches.splice(index, 1);
+      sauvegarderSurServeur();
+      afficherListeActiveSearches();
+    }
+  };
   
   
   /* ===== GESTION DES SERVICES ===== */
@@ -1945,6 +2053,7 @@ document.addEventListener('DOMContentLoaded', function() {
           projects: [],
           skills: [],
           timeline: [],
+          activeSearches: [],
           certifications: [],
           stages: [],
           alternances: [],
@@ -2437,6 +2546,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Formulaire timeline
     const timelineForm = document.getElementById('timeline-form');
     if (timelineForm) timelineForm.addEventListener('submit', sauvegarderTimeline);
+
+    const activeSearchForm = document.getElementById('active-search-form');
+    if (activeSearchForm) activeSearchForm.addEventListener('submit', sauvegarderActiveSearch);
     
     // Formulaire service
     const serviceForm = document.getElementById('service-form');
