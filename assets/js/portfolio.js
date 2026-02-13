@@ -537,7 +537,7 @@ document.addEventListener('DOMContentLoaded', function() {
           date: '2021 - 2025',
           title: 'Licence en Mathématiques et Informatique',
           subtitle: 'USMBA Fès',
-          description: 'Licence Maroc (USMBA Fès) : analyse et algèbre avancées, probabilité/statistiques, algorithmique, langage C et Java, structures de données, bases de données, systèmes et Linux, réseaux, UML/gestion de projet, développement web (HTML/CSS/JS) et notions de cybersécurité. Un socle rigoureux maths-info pour aborder l’IA.'
+          description: 'Licence Maroc (USMBA Fès) : analyse et algèbre avancées, probabilité/statistiques, algorithmique, langage C et Java, structures de données, bases de données, systèmes et Linux, réseaux, UML/gestion de projet, développement web (HTML/CSS/JS). Un socle rigoureux maths-info pour aborder l’IA.'
         }
       ],
       certifications: [],
