@@ -17,6 +17,36 @@ document.addEventListener('DOMContentLoaded', function() {
   const logError = estEnDeveloppement ? console.error.bind(console) : () => {};
   const logWarn = estEnDeveloppement ? console.warn.bind(console) : () => {};
   
+  const PROJETS_FALLBACK = [
+    {
+      title: 'Dashboard IA & Analytics',
+      description: 'Dashboard temps réel avec visualisations, alertes et modèles IA légers pour suivre les indicateurs clés.',
+      shortDesc: 'Visualisations temps réel + scoring IA.',
+      tags: ['React', 'Node.js', 'MongoDB', 'Chart.js'],
+      type: 'Projet Majeur',
+      featured: true,
+      public: true
+    },
+    {
+      title: 'API Portfolio sécurisée',
+      description: 'API REST avec authentification admin, rate limiting et validations pour alimenter le portfolio.',
+      shortDesc: 'API Node sécurisée pour le portfolio.',
+      tags: ['Express', 'JWT', 'MongoDB', 'Security'],
+      type: 'Projet Personnel',
+      featured: false,
+      public: true
+    },
+    {
+      title: 'Site vitrine IA & Web',
+      description: 'Landing page performante avec animations légères, formulaires validés et tracking analytics.',
+      shortDesc: 'Landing page optimisée et animée.',
+      tags: ['HTML', 'CSS', 'JavaScript'],
+      type: 'Projet Personnel',
+      featured: false,
+      public: true
+    }
+  ];
+
   let allProjects = [];
   let filteredProjects = [];
   let currentView = 'grid'; // 'grid' ou 'list'
@@ -64,6 +94,12 @@ document.addEventListener('DOMContentLoaded', function() {
             logError('Erreur parsing localStorage:', e);
           }
         }
+      }
+
+      // Fallback : si toujours rien, utiliser des projets exemples pour afficher la section
+      if (projetsCharges.length === 0) {
+        logWarn('⚠️ Aucun projet trouvé, utilisation du fallback local');
+        projetsCharges = PROJETS_FALLBACK;
       }
       
       // S'assurer que c'est un tableau
@@ -141,17 +177,11 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       mettreAJourCompteur();
       
-      // Si vraiment aucun projet dans la base
+      // Message neutre sans action admin
       if (allProjects.length === 0 && !isLoading) {
         const emptyMsg = emptyState?.querySelector('p');
         if (emptyMsg) {
-          emptyMsg.innerHTML = `
-            Aucun projet n'a été ajouté pour le moment. 
-            <br><br>
-            <a href="admin.html" class="btn" style="margin-top: 16px; display: inline-block;">
-              ➕ Ajouter des projets
-            </a>
-          `;
+          emptyMsg.innerHTML = 'Aucun projet n\'est disponible pour le moment.';
         }
       }
       return;
@@ -274,7 +304,6 @@ document.addEventListener('DOMContentLoaded', function() {
           </p>
           <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
             <button class="btn" onclick="location.reload()">🔄 Recharger la page</button>
-            <a href="admin.html" class="btn secondary">➕ Ajouter des projets</a>
           </div>
         </div>
       `;
