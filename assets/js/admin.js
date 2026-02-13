@@ -254,7 +254,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   // Sauvegarde les données sur le serveur
-  async function sauvegarderSurServeur() {
+  async function sauvegarderSurServeur(messageSucces = 'Action sauvegardée avec succès') {
     const token = obtenirToken();
     if (!token) {
       afficherErreur(null, 'Vous devez être connecté pour sauvegarder');
@@ -353,7 +353,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Sauvegarder aussi dans localStorage avec les données mises à jour
         localStorage.setItem('portfolioData', JSON.stringify(mesDonneesActuelles));
-        afficherSucces('Portfolio sauvegardé sur le serveur avec succès !');
+        afficherSucces(messageSucces || 'Action sauvegardée avec succès');
         
         // Forcer le rechargement des données sur toutes les pages ouvertes
         if (window.portfolioAPI && window.portfolioAPI.actualiser) {
@@ -708,10 +708,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     mesDonneesActuelles.skills.push(skill);
-    await sauvegarderSurServeur();
+    await sauvegarderSurServeur('Compétence ajoutée et publiée');
     afficherListeCompetences();
     document.getElementById('skill-category-form').reset();
-    afficherSucces('Compétence ajoutée et publiée');
   }
   
   // Édite une compétence
