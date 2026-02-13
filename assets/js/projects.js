@@ -210,6 +210,20 @@ document.addEventListener('DOMContentLoaded', function() {
     // Mettre à jour le compteur
     mettreAJourCompteur();
   }
+
+  // Forcer le contenu de l'état vide pour ne pas afficher d'appel admin sur la page publique
+  function normaliserEmptyState() {
+    const emptyState = document.getElementById('empty-state');
+    if (!emptyState) return;
+    emptyState.innerHTML = `
+      <div style="font-size: 64px; margin-bottom: 20px; opacity: 0.5;">🔍</div>
+      <h3 style="margin-bottom: 12px; color: var(--accent);">Aucun projet trouvé</h3>
+      <p class="muted" style="margin-bottom: 24px; max-width: 500px; margin-left: auto; margin-right: auto;">
+        Aucun projet n'est disponible pour le moment.
+      </p>
+      <button id="clear-filters-empty" class="btn">Effacer les filtres</button>
+    `;
+  }
   
   function creerCarteProjet(projet, index) {
     // Gérer différents formats de données
@@ -482,6 +496,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   function initialiser() {
     log('🚀 Initialisation de la page projets...');
+    normaliserEmptyState();
     chargerProjets();
     configurerFiltres();
     configurerToggleVue();
