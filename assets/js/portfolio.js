@@ -491,9 +491,6 @@ document.addEventListener('DOMContentLoaded', function() {
       // Remplir les données vides avec les données par défaut
       // Cela évite d'afficher des sections vides qui pourraient confondre l'utilisateur
       const donneesParDefaut = creerDonneesParDefaut();
-      if (!donnees.skills || donnees.skills.length === 0) {
-        donnees.skills = donneesParDefaut.skills;
-      }
       if (!donnees.timeline || donnees.timeline.length === 0) {
         donnees.timeline = donneesParDefaut.timeline;
       }
@@ -528,33 +525,7 @@ document.addEventListener('DOMContentLoaded', function() {
         photo: 'assets/photo.jpeg'
       },
       projects: [],
-      skills: [
-        {
-          category: 'Langages de programmation',
-          icon: '💻',
-          items: ['Python', 'JavaScript', 'TypeScript', 'Java', 'C++']
-        },
-        {
-          category: 'Développement Web',
-          icon: '🌐',
-          items: ['React', 'Node.js', 'Express', 'HTML5', 'CSS3']
-        },
-        {
-          category: 'Bases de données',
-          icon: '🗄️',
-          items: ['MongoDB', 'MySQL', 'PostgreSQL']
-        },
-        {
-          category: 'Intelligence Artificielle',
-          icon: '🤖',
-          items: ['Machine Learning', 'Deep Learning', 'TensorFlow', 'Scikit-learn']
-        },
-        {
-          category: 'Outils & Technologies',
-          icon: '🛠️',
-          items: ['Git', 'Docker', 'REST API', 'GraphQL', 'Linux']
-        }
-      ],
+      skills: [],
       timeline: [
         {
           date: '2025 - Présent',
@@ -662,10 +633,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Remplir les données vides avec les données par défaut
         const donneesParDefaut = creerDonneesParDefaut();
-        if (!donneesServeur.skills || donneesServeur.skills.length === 0) {
-          donneesServeur.skills = donneesParDefaut.skills;
-          log('📋 Skills vides, utilisation des données par défaut');
-        }
         if (!donneesServeur.timeline || donneesServeur.timeline.length === 0) {
           donneesServeur.timeline = donneesParDefaut.timeline;
           log('📋 Timeline vide, utilisation des données par défaut');
