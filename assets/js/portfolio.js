@@ -531,7 +531,7 @@ document.addEventListener('DOMContentLoaded', function() {
           date: '2025 - Présent',
           title: 'Master Intelligence Artificielle',
           subtitle: 'Formation en cours',
-          description: 'Spécialisation en Intelligence Artificielle, Machine Learning et Deep Learning. Développement de projets avancés en IA et applications intelligentes.'
+          description: 'Spécialisation IA (SUPINFO 2025-2026) : algèbre linéaire (matrices, vecteurs, déterminants), analyse exploratoire Python (pandas/visualisation), apprentissage supervisé (préparation des données, régression, classification, ensembles) et non supervisé (partitionnement, réduction de dimension).'
         },
         {
           date: '2021 - 2025',
