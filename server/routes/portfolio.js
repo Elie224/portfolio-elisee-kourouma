@@ -187,6 +187,17 @@ router.get('/', async (req, res) => {
       });
     }
 
+    // Nettoyer les alternances publiques (pas de rapport, pas de hash)
+    if (Array.isArray(publicPortfolio.alternances)) {
+      publicPortfolio.alternances = publicPortfolio.alternances.map(alternance => {
+        const clone = { ...alternance };
+        delete clone.docFile;
+        delete clone.docPasswordHash;
+        clone.docAvailable = !!alternance.docFile;
+        return clone;
+      });
+    }
+
     // Ne renvoyer au public que les recherches marquées comme visibles
     if (Array.isArray(publicPortfolio.activeSearches)) {
       publicPortfolio.activeSearches = publicPortfolio.activeSearches.filter(item => item && item.visible !== false);
@@ -296,6 +307,20 @@ router.post('/',
   async (req, res) => {
   try {
     logSuccess('📥 Requête de mise à jour reçue de:', { email: req.admin.email });
+
+    // Récupérer l'état actuel pour préserver les fichiers/photos si non renvoyés par le front
+    const portfolioActuel = await Portfolio.findOne();
+
+    // Diagnostic : résumé des fichiers reçus (stages/alternances) avant merge
+    const diagPayload = (items = []) => (Array.isArray(items) ? items.map((x, i) => ({
+      idx: i,
+      hasDoc: !!x?.docFile,
+      docSize: x?.docFile ? (x.docFileSize || (x.docFile.split(',')[1]?.length || 0)) : 0,
+      hasPhoto: !!x?.photo,
+      photoPreview: x?.photo ? x.photo.substring(0, 30) : ''
+    })) : []);
+    log('🔎 Payload stages reçu (avant merge):', diagPayload(req.body.stages));
+    log('🔎 Payload alternances reçu (avant merge):', diagPayload(req.body.alternances));
     
     // Vérifier les settings reçues dans req.body (logging en développement uniquement)
     if (req.body.settings) {
@@ -339,6 +364,44 @@ router.post('/',
         analytics: { googleAnalytics: '' }
       };
     }
+
+    // Préserver doc/photo existants si non renvoyés par le front (évite écrasement silencieux)
+    const mergeExistingFileData = (nouveaux = [], existants = [], options = {}) => {
+      if (!Array.isArray(nouveaux) || !Array.isArray(existants)) return nouveaux;
+      return nouveaux.map((item, idx) => {
+        const merged = { ...item };
+        const id = item && (item._id || item.id);
+        const existant = existants.find(e => e && (String(e._id) === String(id) || String(e.id) === String(id))) || existants[idx];
+
+        if (existant) {
+          if (!merged.docFile && existant.docFile) {
+            merged.docFile = existant.docFile;
+            merged.docFileName = existant.docFileName;
+            merged.docFileSize = existant.docFileSize;
+          }
+
+          if (!merged.docPasswordHash && existant.docPasswordHash && !merged.docPassword) {
+            merged.docPasswordHash = existant.docPasswordHash;
+          }
+
+          if (options.preservePhoto && !merged.photo && existant.photo) {
+            merged.photo = existant.photo;
+          }
+        }
+
+        return merged;
+      });
+    };
+
+    if (portfolioActuel) {
+      updateData.projects = mergeExistingFileData(updateData.projects, portfolioActuel.projects || []);
+      updateData.stages = mergeExistingFileData(updateData.stages, portfolioActuel.stages || [], { preservePhoto: true });
+      updateData.alternances = mergeExistingFileData(updateData.alternances, portfolioActuel.alternances || [], { preservePhoto: true });
+    }
+
+    // Diagnostic : résumé des données après merge
+    log('🔎 Stages après merge:', diagPayload(updateData.stages));
+    log('🔎 Alternances après merge:', diagPayload(updateData.alternances));
     
     // Gestion des documents protégés sur les projets
     try {
@@ -378,12 +441,34 @@ router.post('/',
           return copie;
         });
       }
+
+      // Gestion des rapports protégés sur les alternances
+      if (Array.isArray(updateData.alternances)) {
+        updateData.alternances = updateData.alternances.map((alternance, idx) => {
+          const copie = { ...alternance };
+          if (copie.docFile) {
+            const taille = copie.docFileSize || calculerTailleBase64(copie.docFile);
+            if (taille > 50 * 1024 * 1024) {
+              throw new Error(`ALTERNANCE_DOC_TOO_LARGE_${idx}`);
+            }
+            copie.docFileSize = taille;
+          }
+          if (copie.docPassword) {
+            copie.docPasswordHash = bcrypt.hashSync(copie.docPassword, 10);
+            delete copie.docPassword;
+          }
+          return copie;
+        });
+      }
     } catch (err) {
       if (err.message && err.message.startsWith('DOC_TOO_LARGE')) {
         return res.status(400).json({ error: 'Le document dépasse la limite de 50 Mo', code: 'DOC_TOO_LARGE' });
       }
       if (err.message && err.message.startsWith('STAGE_DOC_TOO_LARGE')) {
         return res.status(400).json({ error: 'Le rapport de stage dépasse la limite de 50 Mo', code: 'STAGE_DOC_TOO_LARGE' });
+      }
+      if (err.message && err.message.startsWith('ALTERNANCE_DOC_TOO_LARGE')) {
+        return res.status(400).json({ error: 'Le rapport d\'alternance dépasse la limite de 50 Mo', code: 'ALTERNANCE_DOC_TOO_LARGE' });
       }
       logError('❌ Erreur traitement document projet:', err);
       return res.status(400).json({ error: 'Erreur lors du traitement du document du projet' });
@@ -392,8 +477,6 @@ router.post('/',
     // PROTECTION : Ne pas écraser un CV base64 existant avec 'assets/CV.pdf'
     // Si links.cv est 'assets/CV.pdf' mais qu'il existe un cvFile base64, garder le base64
     if (updateData.links) {
-      // Récupérer le portfolio actuel pour vérifier s'il y a un CV base64
-      const portfolioActuel = await Portfolio.findOne();
       if (portfolioActuel && portfolioActuel.links) {
         // Si le portfolio actuel a un CV base64, ne pas l'écraser
         if (portfolioActuel.links.cvFile && portfolioActuel.links.cvFile.startsWith('data:')) {
@@ -1009,6 +1092,145 @@ router.get('/stages/:title/download-report', async (req, res) => {
   } catch (error) {
     logError('❌ Erreur téléchargement rapport stage:', error);
     res.status(500).json({ error: 'Erreur serveur', code: 'STAGE_REPORT_DOWNLOAD_ERROR' });
+  }
+});
+
+// Demande d'accès au rapport d'alternance (code requis)
+router.post(
+  '/alternances/:title/request-report',
+  strictLimiter,
+  limitDataSize,
+  sanitizeData,
+  validateRequestDoc,
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      const { title } = req.params;
+      const { firstName, lastName, email, message, subject } = req.body;
+
+      const portfolio = await Portfolio.findOne();
+      if (!portfolio || !Array.isArray(portfolio.alternances)) {
+        return res.status(404).json({ error: 'Aucune alternance', code: 'NO_ALTERNANCE' });
+      }
+
+      const alternance = portfolio.alternances.find(a => (a.title || '').toLowerCase() === decodeURIComponent(title).toLowerCase());
+      if (!alternance || !alternance.docFile || !alternance.docPasswordHash) {
+        return res.status(404).json({ error: 'Rapport introuvable pour cette alternance', code: 'ALTERNANCE_REPORT_NOT_FOUND' });
+      }
+
+      const demande = {
+        id: Date.now(),
+        name: `${firstName || ''} ${lastName || ''}`.trim() || 'Demandeur',
+        email: email.trim().toLowerCase(),
+        subject: subject?.trim() || `Demande code rapport - ${alternance.title}`,
+        message: message?.trim() || 'Demande de code pour rapport d\'alternance',
+        date: new Date().toISOString(),
+        read: false
+      };
+      await Portfolio.findOneAndUpdate({}, { $push: { contactMessages: demande } }, { upsert: true });
+
+      const transporter = getMailTransporter();
+      if (transporter && ADMIN_EMAIL) {
+        await transporter.sendMail({
+          from: process.env.SMTP_FROM || process.env.SMTP_USER,
+          to: ADMIN_EMAIL,
+          replyTo: email,
+          subject: subject?.trim() || `Demande code rapport - ${alternance.title}`,
+          text: `Demande de code pour le rapport d'alternance "${alternance.title}"
+Nom: ${firstName || ''} ${lastName || ''}
+Email: ${email}
+Message: ${message || ''}`
+        }).catch(err => logWarn('⚠️ Notification admin non envoyée (rapport alternance)', err));
+      }
+
+      res.json({ success: true, message: 'Demande envoyée. Vous recevrez un code si votre demande est acceptée.' });
+    } catch (error) {
+      logError('❌ Erreur demande rapport alternance:', error);
+      res.status(500).json({ error: 'Erreur serveur', code: 'ALTERNANCE_REPORT_REQUEST_ERROR' });
+    }
+  }
+);
+
+// Validation du code de rapport d'alternance pour obtenir un lien temporaire
+router.post(
+  '/alternances/:title/validate-report',
+  strictLimiter,
+  limitDataSize,
+  sanitizeData,
+  validateDocPassword,
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      const { title } = req.params;
+      const { password } = req.body;
+
+      const portfolio = await Portfolio.findOne();
+      if (!portfolio || !Array.isArray(portfolio.alternances)) {
+        return res.status(404).json({ error: 'Aucune alternance', code: 'NO_ALTERNANCE' });
+      }
+
+      const alternance = portfolio.alternances.find(a => (a.title || '').toLowerCase() === decodeURIComponent(title).toLowerCase());
+      if (!alternance || !alternance.docFile || !alternance.docPasswordHash) {
+        return res.status(404).json({ error: 'Rapport introuvable pour cette alternance', code: 'ALTERNANCE_REPORT_NOT_FOUND' });
+      }
+
+      const ok = await bcrypt.compare(password, alternance.docPasswordHash);
+      if (!ok) {
+        return res.status(401).json({ error: 'Code incorrect', code: 'INVALID_ALTERNANCE_CODE' });
+      }
+
+      if (!process.env.JWT_SECRET) {
+        return res.status(500).json({ error: 'Configuration JWT manquante', code: 'MISSING_JWT' });
+      }
+
+      const token = jwt.sign({ alternanceTitle: alternance.title }, process.env.JWT_SECRET, { expiresIn: '1h' });
+      const base = process.env.BACKEND_PUBLIC_URL || `${req.protocol}://${req.get('host')}`;
+      const downloadLink = `${base}/api/portfolio/alternances/${encodeURIComponent(alternance.title)}/download-report?token=${token}`;
+      res.json({ success: true, downloadLink });
+    } catch (error) {
+      logError('❌ Erreur validation code rapport alternance:', error);
+      res.status(500).json({ error: 'Erreur serveur', code: 'ALTERNANCE_REPORT_CODE_ERROR' });
+    }
+  }
+);
+
+// Téléchargement du rapport d'alternance via token
+router.get('/alternances/:title/download-report', async (req, res) => {
+  try {
+    const { title } = req.params;
+    const { token } = req.query;
+    if (!token) return res.status(401).json({ error: 'Token manquant' });
+    if (!process.env.JWT_SECRET) return res.status(500).json({ error: 'Configuration JWT manquante' });
+
+    let payload;
+    try {
+      payload = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (e) {
+      return res.status(401).json({ error: 'Token invalide ou expiré' });
+    }
+
+    // Vérifier que le token correspond à la bonne alternance
+    if (decodeURIComponent(title) !== decodeURIComponent(payload.alternanceTitle)) {
+      return res.status(401).json({ error: 'Token invalide pour cette alternance' });
+    }
+
+    const portfolio = await Portfolio.findOne();
+    if (!portfolio || !Array.isArray(portfolio.alternances)) {
+      return res.status(404).json({ error: 'Aucune alternance', code: 'NO_ALTERNANCE' });
+    }
+
+    const alternance = portfolio.alternances.find(a => (a.title || '').toLowerCase() === decodeURIComponent(title).toLowerCase());
+    if (!alternance || !alternance.docFile) {
+      return res.status(404).json({ error: 'Rapport introuvable', code: 'ALTERNANCE_REPORT_NOT_FOUND' });
+    }
+
+    const docBuffer = Buffer.from(alternance.docFile.split(',')[1], 'base64');
+    res.setHeader('Content-Disposition', `attachment; filename="${alternance.docFileName || 'rapport-alternance.pdf'}"`);
+    res.setHeader('Content-Type', 'application/octet-stream');
+    res.send(docBuffer);
+  } catch (error) {
+    logError('❌ Erreur download rapport alternance:', error);
+    res.status(500).json({ error: 'Erreur serveur', code: 'ALTERNANCE_REPORT_DOWNLOAD_ERROR' });
   }
 });
 

@@ -8,6 +8,7 @@
 /* ===== DOCUMENT PROTÉGÉ (PUBLIC) ===== */
   let docModalElements = null;
   let projetDocCourant = null;
+  let docContext = { type: 'project', showPassword: false };
 
   function creerModalDocSiAbsent() {
     if (docModalElements) return docModalElements;
@@ -26,7 +27,7 @@
       modal.id = 'doc-request-modal';
       modal.style.cssText = 'display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;padding:16px;';
       modal.innerHTML = `
-        <div class="card" style="max-width: 480px; width: 100%; position: relative;">
+        <div class="card" style="max-width: 520px; width: 100%; position: relative;">
           <button id="doc-request-close" aria-label="Fermer" style="position: absolute; top: 12px; right: 12px; background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer;">×</button>
           <h3 style="margin-top: 0;">📂 Demander le document</h3>
           <p class="muted" id="doc-request-project" style="margin-bottom: 12px;"></p>
@@ -35,13 +36,24 @@
               <input type="text" id="doc-firstname" placeholder="Prénom" style="flex: 1; min-width: 140px; padding: 10px 12px;" />
               <input type="text" id="doc-lastname" placeholder="Nom" style="flex: 1; min-width: 140px; padding: 10px 12px;" />
             </div>
-            <input type="email" id="doc-email" placeholder="Email pour recevoir le lien" style="padding: 10px 12px;" required />
+            <input type="email" id="doc-email" placeholder="Email pour recevoir le code" style="padding: 10px 12px;" required />
+            <textarea id="doc-message" placeholder="Message (contexte, motivation...)" style="padding: 10px 12px; min-height: 90px; resize: vertical;"></textarea>
             <div id="doc-request-status" class="muted" style="min-height: 18px; font-size: 13px;"></div>
-            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+            <div style="display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap;">
+              <button type="button" class="btn secondary" id="doc-password-toggle">J'ai déjà un code</button>
+              <div style="flex:1;"></div>
               <button type="button" class="btn secondary" id="doc-request-cancel">Annuler</button>
-              <button type="submit" class="btn" id="doc-request-submit">Envoyer le lien</button>
+              <button type="submit" class="btn" id="doc-request-submit">Envoyer la demande</button>
             </div>
           </form>
+          <div id="doc-password-block" style="display:none; margin-top: 14px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--card-bg, #0f172a);">
+            <p class="muted" style="margin: 0 0 8px 0; font-size: 13px;">Déjà un code ? Saisissez-le pour télécharger.</p>
+            <div style="display:flex; gap:8px; flex-wrap: wrap;">
+              <input type="password" id="doc-password" placeholder="Code" style="flex:1; min-width: 200px; padding: 10px 12px;" />
+              <button type="button" class="btn" id="doc-password-submit">Valider le code</button>
+            </div>
+            <div id="doc-password-status" class="muted" style="min-height: 16px; font-size: 13px; margin-top:6px;"></div>
+          </div>
         </div>`;
       document.body.appendChild(modal);
     }
@@ -57,13 +69,20 @@
       firstname: modal.querySelector('#doc-firstname'),
       lastname: modal.querySelector('#doc-lastname'),
       email: modal.querySelector('#doc-email'),
-      status: modal.querySelector('#doc-request-status')
+      status: modal.querySelector('#doc-request-status'),
+      message: modal.querySelector('#doc-message'),
+      passwordBlock: modal.querySelector('#doc-password-block'),
+      passwordInput: modal.querySelector('#doc-password'),
+      passwordStatus: modal.querySelector('#doc-password-status'),
+      passwordSubmit: modal.querySelector('#doc-password-submit'),
+      passwordToggle: modal.querySelector('#doc-password-toggle')
     };
 
     const fermer = () => {
       if (docModalElements.overlay) docModalElements.overlay.style.display = 'none';
       if (docModalElements.modal) docModalElements.modal.style.display = 'none';
       projetDocCourant = null;
+      docContext = { type: 'project', showPassword: false };
     };
 
     const fermerEtReset = () => {
@@ -75,20 +94,34 @@
       }
     };
 
+    const afficherBlocPassword = (show) => {
+      if (!docModalElements.passwordBlock) return;
+      docModalElements.passwordBlock.style.display = show ? 'block' : 'none';
+      docContext.showPassword = !!show;
+    };
+
     const ouvrir = () => {
       if (docModalElements.overlay) docModalElements.overlay.style.display = 'block';
       if (docModalElements.modal) docModalElements.modal.style.display = 'flex';
+      afficherBlocPassword(docContext.showPassword);
     };
 
-    window.openDocRequest = function(titreEncode) {
+    window.openDocRequest = function(titreEncode, type = 'project', showPassword = false) {
       const titre = decodeURIComponent(titreEncode || '');
       projetDocCourant = titre;
-      if (docModalElements.projectLabel) docModalElements.projectLabel.textContent = titre ? `Projet : ${titre}` : '';
+      docContext = { type, showPassword };
+      const labelPrefix = type === 'stage' ? 'Rapport de stage' : (type === 'alternance' ? "Rapport d'alternance" : 'Projet');
+      if (docModalElements.projectLabel) docModalElements.projectLabel.textContent = titre ? `${labelPrefix} : ${titre}` : labelPrefix;
       if (docModalElements.status) {
         docModalElements.status.textContent = '';
         docModalElements.status.style.color = 'var(--muted)';
       }
+      if (docModalElements.passwordStatus) {
+        docModalElements.passwordStatus.textContent = '';
+        docModalElements.passwordStatus.style.color = 'var(--muted)';
+      }
       if (docModalElements.form) docModalElements.form.reset();
+      if (docModalElements.passwordInput) docModalElements.passwordInput.value = '';
       ouvrir();
     };
 
@@ -287,60 +320,120 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Log pour debug (uniquement en développement) - Réduire la verbosité
     // Ne logger que si le mode maintenance change ou si c'est la première vérification
-    if (estEnDeveloppement) {
-      // Créer un identifiant unique pour cette vérification
-      const maintenanceKey = `${maintenanceEnabled ? 'ON' : 'OFF'}-${maintenanceMessage.substring(0, 20)}`;
-      if (!window.lastMaintenanceLog || window.lastMaintenanceLog !== maintenanceKey) {
-        window.lastMaintenanceLog = maintenanceKey;
-        log('🔧 Vérification mode maintenance:', {
-          enabled: maintenanceEnabled,
-          message: maintenanceMessage,
-          hasSettings: !!donnees?.settings
-        });
-      }
+    const resolveRequestUrl = (type, titre) => {
+      if (type === 'stage') return `${MON_SERVEUR}/portfolio/stages/${encodeURIComponent(titre)}/request-report`;
+      if (type === 'alternance') return `${MON_SERVEUR}/portfolio/alternances/${encodeURIComponent(titre)}/request-report`;
+      return `${MON_SERVEUR}/portfolio/projects/${encodeURIComponent(titre)}/request-doc`;
+    };
+
+    const resolveValidateUrl = (type, titre) => {
+      if (type === 'stage') return `${MON_SERVEUR}/portfolio/stages/${encodeURIComponent(titre)}/validate-report`;
+      if (type === 'alternance') return `${MON_SERVEUR}/portfolio/alternances/${encodeURIComponent(titre)}/validate-report`;
+      return `${MON_SERVEUR}/portfolio/projects/${encodeURIComponent(titre)}/validate-doc`;
+    };
+
+    if (docModalElements.passwordToggle) {
+      docModalElements.passwordToggle.addEventListener('click', () => {
+        afficherBlocPassword(!(docContext.showPassword));
+      });
     }
-    
-    // Vérifier si on est sur la page admin (ne pas afficher la maintenance sur admin)
-    const isAdminPage = window.location.pathname.includes('admin.html');
-    if (isAdminPage) {
-      if (estEnDeveloppement) {
-        log('🔧 Mode maintenance ignoré - page admin');
-      }
-      return; // Ne pas afficher la maintenance sur la page admin
+
+    if (docModalElements.form) {
+      docModalElements.form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!projetDocCourant) return;
+        const firstName = docModalElements.firstname?.value.trim() || '';
+        const lastName = docModalElements.lastname?.value.trim() || '';
+        const email = docModalElements.email?.value.trim() || '';
+        const message = docModalElements.message?.value.trim() || '';
+        if (!email || !validerEmail(email)) {
+          if (docModalElements.status) docModalElements.status.textContent = 'Email invalide';
+          return;
+        }
+        if (docModalElements.submitBtn) {
+          docModalElements.submitBtn.disabled = true;
+          docModalElements.submitBtn.textContent = 'Envoi...';
+        }
+        if (docModalElements.status) docModalElements.status.textContent = '';
+        try {
+          const url = resolveRequestUrl(docContext.type, projetDocCourant);
+          const reponse = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ firstName, lastName, email, message })
+          });
+          const resultat = await reponse.json().catch(() => ({}));
+          if (reponse.ok) {
+            if (docModalElements.status) {
+              docModalElements.status.textContent = resultat.message || 'Demande envoyée. Vous recevrez un code si elle est acceptée.';
+              docModalElements.status.style.color = 'var(--accent)';
+            }
+            setTimeout(() => {
+              if (docModalElements.submitBtn) {
+                docModalElements.submitBtn.disabled = false;
+                docModalElements.submitBtn.textContent = 'Envoyer la demande';
+              }
+              fermer();
+            }, 1200);
+          } else {
+            if (docModalElements.status) {
+              docModalElements.status.textContent = resultat.error || 'Erreur lors de la demande';
+              docModalElements.status.style.color = 'var(--accent)';
+            }
+          }
+        } catch (err) {
+          if (docModalElements.status) {
+            docModalElements.status.textContent = 'Erreur réseau';
+            docModalElements.status.style.color = 'var(--accent)';
+          }
+        } finally {
+          if (docModalElements.submitBtn) {
+            docModalElements.submitBtn.disabled = false;
+            docModalElements.submitBtn.textContent = 'Envoyer la demande';
+          }
+        }
+      });
     }
-    
-    // Créer ou mettre à jour l'overlay de maintenance
-    let maintenanceOverlay = document.getElementById('maintenance-overlay');
-    
-    if (maintenanceEnabled) {
-      if (!maintenanceOverlay) {
-        // Créer l'overlay de maintenance
-        maintenanceOverlay = document.createElement('div');
-        maintenanceOverlay.id = 'maintenance-overlay';
-        maintenanceOverlay.style.cssText = `
-          position: fixed !important;
-          top: 0 !important;
-          left: 0 !important;
-          width: 100% !important;
-          height: 100% !important;
-          background: linear-gradient(135deg, #0a0a0f 0%, #1a1a22 100%) !important;
-          z-index: 999999 !important;
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          flex-direction: column !important;
-          padding: 20px !important;
-          text-align: center !important;
-          margin: 0 !important;
-        `;
-        
-        // Utiliser textContent pour éviter XSS et préserver les sauts de ligne
-        maintenanceOverlay.innerHTML = `
-          <div style="max-width: 600px; padding: 48px; background: var(--couleur-fond-carte, #0f0f15); border-radius: 24px; border: 1px solid var(--couleur-bordure, #1f1f28); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);">
-            <div style="font-size: 64px; margin-bottom: 24px;">🔧</div>
-            <h1 style="font-size: 32px; margin-bottom: 16px; color: var(--couleur-texte, #ffffff);">Mode Maintenance</h1>
-            <p id="maintenance-message-text" style="font-size: 18px; line-height: 1.6; color: var(--couleur-texte-muted, #9ca3af); margin-bottom: 32px; white-space: pre-wrap; word-wrap: break-word;"></p>
-            <div style="width: 60px; height: 4px; background: var(--couleur-accent, #6366f1); border-radius: 2px; margin: 0 auto;"></div>
+
+    if (docModalElements.passwordSubmit) {
+      docModalElements.passwordSubmit.addEventListener('click', async () => {
+        if (!projetDocCourant) return;
+        const password = docModalElements.passwordInput?.value.trim();
+        if (!password) {
+          if (docModalElements.passwordStatus) docModalElements.passwordStatus.textContent = 'Code requis';
+          return;
+        }
+        if (docModalElements.passwordStatus) docModalElements.passwordStatus.textContent = '';
+        docModalElements.passwordSubmit.disabled = true;
+        docModalElements.passwordSubmit.textContent = 'Vérification...';
+        try {
+          const url = resolveValidateUrl(docContext.type, projetDocCourant);
+          const reponse = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password })
+          });
+          const data = await reponse.json().catch(() => ({}));
+          if (reponse.ok && data.downloadLink) {
+            window.open(data.downloadLink, '_blank');
+            fermer();
+          } else {
+            if (docModalElements.passwordStatus) {
+              docModalElements.passwordStatus.textContent = data.error || 'Code incorrect ou erreur.';
+              docModalElements.passwordStatus.style.color = 'var(--accent)';
+            }
+          }
+        } catch (err) {
+          if (docModalElements.passwordStatus) {
+            docModalElements.passwordStatus.textContent = 'Erreur réseau';
+            docModalElements.passwordStatus.style.color = 'var(--accent)';
+          }
+        } finally {
+          docModalElements.passwordSubmit.disabled = false;
+          docModalElements.passwordSubmit.textContent = 'Valider le code';
+        }
+      });
+    }
           </div>
         `;
         
@@ -830,54 +923,19 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Vérifier le mode maintenance IMMÉDIATEMENT (avant d'afficher le contenu)
       // Utiliser requestAnimationFrame pour s'assurer que le DOM est prêt
-      requestAnimationFrame(() => {
-        verifierModeMaintenance(mesDonnees);
+      requestButtons.forEach(btn => {
+        btn.onclick = () => {
+          const title = decodeURIComponent(btn.getAttribute('data-stage-request'));
+          openDocRequest(title, 'stage', false);
+        };
       });
-      
-      
-      // S'assurer que le contenu est visible (fallback pour éviter l'écran noir)
-      const mainContentDisplay = document.querySelector('main');
-      if (mainContentDisplay) {
-        mainContentDisplay.style.display = '';
-        mainContentDisplay.style.visibility = 'visible';
-        mainContentDisplay.style.opacity = '1';
-      }
-      const headerDisplay = document.querySelector('header');
-      if (headerDisplay) {
-        headerDisplay.style.display = '';
-        headerDisplay.style.visibility = 'visible';
-      }
-      
-      // S'assurer que le DOM est prêt avant d'afficher
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-          afficherMesDonnees(mesDonnees);
-        });
-      } else {
-        // Si le DOM est déjà chargé, utiliser un petit délai pour s'assurer que tous les éléments sont prêts
-        setTimeout(() => {
-          afficherMesDonnees(mesDonnees);
-        }, 100);
-      }
-      
-      // Afficher les certifications, stages et événements
-      afficherCertifications(mesDonnees.certifications || []);
-      afficherStages(mesDonnees.stages || []);
-      afficherAlternances(mesDonnees.alternances || []);
-      afficherEvenementsTech(mesDonnees.techEvents || []);
-      
-      // Charger Google Analytics si configuré
-      // Charger Google Analytics immédiatement (priorité haute)
-      if (mesDonnees.settings?.analytics?.googleAnalytics) {
-        setTimeout(() => {
-          chargerGoogleAnalytics(mesDonnees.settings.analytics.googleAnalytics);
-        }, 0);
-      }
-      
-      // Vérifier le mode maintenance après affichage (répétition pour être sûr)
-      setTimeout(() => {
-        verifierModeMaintenance(mesDonnees);
-      }, 100);
+
+      validateButtons.forEach(btn => {
+        btn.onclick = () => {
+          const title = decodeURIComponent(btn.getAttribute('data-stage-validate'));
+          openDocRequest(title, 'stage', true);
+        };
+      });
       
       // Réessayer d'afficher les projets après un délai pour s'assurer que le DOM est prêt
       setTimeout(() => {
@@ -3093,9 +3151,13 @@ document.addEventListener('DOMContentLoaded', function() {
   // Affiche les stages
   function afficherStages(stages) {
     const container = document.getElementById('stages-container');
+    const subtitle = document.getElementById('stages-subtitle');
+    const subtitleDefault = 'Demandes de code et téléchargements pour les stages réalisés.';
+    const subtitleEmpty = 'Les rapports seront bientôt disponibles.';
     if (!container) return;
     
     if (!stages || stages.length === 0) {
+      if (subtitle) subtitle.textContent = subtitleEmpty;
       container.innerHTML = `
         <div class="experience-card" style="grid-column: 1 / -1; text-align: center; padding: var(--espacement-2xl);">
           <p style="color: var(--couleur-texte-muted);">Aucun stage pour le moment</p>
@@ -3103,12 +3165,17 @@ document.addEventListener('DOMContentLoaded', function() {
       `;
       return;
     }
+
+    if (subtitle) subtitle.textContent = subtitleDefault;
     
     container.innerHTML = stages.map((stage, index) => {
+      const docDisponible = stage.docAvailable || (!!stage.docFile);
       return `
         <div class="experience-card" style="animation-delay: ${index * 0.1}s;">
           <div class="experience-card-header">
-            <div class="experience-card-icon">💼</div>
+            <div class="experience-card-icon" style="overflow:hidden;">
+              ${stage.photo ? `<img src="${stage.photo}" alt="Visuel stage" style="width:48px; height:48px; object-fit:cover; border-radius:12px;" />` : '💼'}
+            </div>
             <div style="flex: 1;">
               <h4 class="experience-card-title">${stage.title || stage.company || 'Stage'}</h4>
               <p class="experience-card-issuer">${stage.company || ''} ${stage.location ? `· ${stage.location}` : ''}</p>
@@ -3131,7 +3198,7 @@ document.addEventListener('DOMContentLoaded', function() {
               En savoir plus
             </a>
           ` : ''}
-          ${stage.docAvailable ? `
+          ${docDisponible ? `
             <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top: var(--espacement-sm);">
               <button class="btn" data-stage-request="${encodeURIComponent(stage.title || stage.company || 'stage')}" style="padding:10px 14px; font-size:0.9rem;">
                 Demander le code du rapport
@@ -3216,9 +3283,13 @@ document.addEventListener('DOMContentLoaded', function() {
   // Affiche les alternances
   function afficherAlternances(alternances) {
     const container = document.getElementById('alternances-container');
+    const subtitle = document.getElementById('alternances-subtitle');
+    const subtitleDefault = 'Demandes de code et téléchargements pour les alternances.';
+    const subtitleEmpty = 'Les rapports seront bientôt disponibles.';
     if (!container) return;
     
     if (!alternances || alternances.length === 0) {
+      if (subtitle) subtitle.textContent = subtitleEmpty;
       container.innerHTML = `
         <div class="experience-card" style="grid-column: 1 / -1; text-align: center; padding: var(--espacement-2xl);">
           <p style="color: var(--couleur-texte-muted);">Aucune alternance pour le moment</p>
@@ -3226,12 +3297,17 @@ document.addEventListener('DOMContentLoaded', function() {
       `;
       return;
     }
+
+    if (subtitle) subtitle.textContent = subtitleDefault;
     
     container.innerHTML = alternances.map((alternance, index) => {
+      const docDisponible = alternance.docAvailable || (!!alternance.docFile);
       return `
         <div class="experience-card" style="animation-delay: ${index * 0.1}s;">
           <div class="experience-card-header">
-            <div class="experience-card-icon">🔄</div>
+            <div class="experience-card-icon" style="overflow:hidden;">
+              ${alternance.photo ? `<img src="${alternance.photo}" alt="Visuel alternance" style="width:48px; height:48px; object-fit:cover; border-radius:12px;" />` : '🔄'}
+            </div>
             <div style="flex: 1;">
               <h4 class="experience-card-title">${alternance.title || alternance.company || 'Alternance'}</h4>
               <p class="experience-card-issuer">${alternance.company || ''} ${alternance.location ? `· ${alternance.location}` : ''}</p>
@@ -3254,6 +3330,16 @@ document.addEventListener('DOMContentLoaded', function() {
               En savoir plus
             </a>
           ` : ''}
+          ${docDisponible ? `
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top: var(--espacement-sm);">
+              <button class="btn" data-alternance-request="${encodeURIComponent(alternance.title || alternance.company || 'alternance')}" style="padding:10px 14px; font-size:0.9rem;">
+                Demander le code du rapport
+              </button>
+              <button class="btn secondary" data-alternance-validate="${encodeURIComponent(alternance.title || alternance.company || 'alternance')}" style="padding:10px 14px; font-size:0.9rem;">
+                J'ai un code
+              </button>
+            </div>
+          ` : ''}
         </div>
       `;
     }).join('');
@@ -3268,6 +3354,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }, i * 100);
       });
     }, 200);
+
+    attacherActionsRapportAlternance();
+  }
+
+  async function attacherActionsRapportAlternance() {
+    const requestButtons = document.querySelectorAll('[data-alternance-request]');
+    const validateButtons = document.querySelectorAll('[data-alternance-validate]');
+
+    requestButtons.forEach(btn => {
+      btn.onclick = () => {
+        const title = decodeURIComponent(btn.getAttribute('data-alternance-request'));
+        openDocRequest(title, 'alternance', false);
+      };
+    });
+
+    validateButtons.forEach(btn => {
+      btn.onclick = () => {
+        const title = decodeURIComponent(btn.getAttribute('data-alternance-validate'));
+        openDocRequest(title, 'alternance', true);
+      };
+    });
   }
   
   // Affiche les événements technologiques

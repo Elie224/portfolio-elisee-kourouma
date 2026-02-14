@@ -288,6 +288,25 @@ document.addEventListener('DOMContentLoaded', function() {
       afficherErreur(null, 'Vous devez être connecté pour sauvegarder');
       return false;
     }
+
+    // Trace rapide pour savoir si le clic déclenche bien le fetch
+    const debugSave = estEnDeveloppement || localStorage.getItem('debugSauvegarde') === 'true';
+    const endpoint = `${MON_SERVEUR}/portfolio`;
+    if (debugSave) {
+      console.log('🚀 Sauvegarde déclenchée', {
+        endpoint,
+        tokenPresent: !!token,
+        stages: mesDonneesActuelles.stages?.length || 0,
+        alternances: mesDonneesActuelles.alternances?.length || 0,
+        projects: mesDonneesActuelles.projects?.length || 0,
+        timestamp: new Date().toISOString()
+      });
+    }
+    const watchdog = setTimeout(() => {
+      if (debugSave) {
+        console.warn('⏱️ POST /portfolio toujours en cours (5s)...', { endpoint });
+      }
+    }, 5000);
     
     // Log pour déboguer le CV avant envoi
     if (mesDonneesActuelles.links) {
@@ -329,7 +348,7 @@ document.addEventListener('DOMContentLoaded', function() {
         settingsComplete: JSON.stringify(donneesAEnvoyer.settings)
       });
       
-      const reponse = await fetch(`${MON_SERVEUR}/portfolio`, {
+      const reponse = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -337,6 +356,17 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         body: JSON.stringify(donneesAEnvoyer)
       });
+
+      clearTimeout(watchdog);
+
+      if (debugSave) {
+        console.log('✅ POST /portfolio envoyé', {
+          status: reponse.status,
+          ok: reponse.ok,
+          endpoint,
+          contentLength: JSON.stringify(donneesAEnvoyer).length
+        });
+      }
       
       const resultat = await reponse.json();
       
@@ -398,7 +428,12 @@ document.addEventListener('DOMContentLoaded', function() {
         return false;
       }
     } catch (erreur) {
+      clearTimeout(watchdog);
       logError('Erreur sauvegarde:', erreur);
+      if (debugSave) {
+        console.error('❌ Sauvegarde non envoyée ou échouée', { endpoint, erreur });
+        alert('Sauvegarde bloquée avant POST: ' + (erreur?.message || erreur));
+      }
       afficherErreur(null, 'Impossible de sauvegarder sur le serveur');
       // Sauvegarder quand même dans localStorage
       localStorage.setItem('portfolioData', JSON.stringify(mesDonneesActuelles));
@@ -1008,6 +1043,20 @@ document.addEventListener('DOMContentLoaded', function() {
   
   /* ===== GESTION DES STAGES ===== */
 
+  async function lireImageBase64(input) {
+    return new Promise((resolve, reject) => {
+      const file = input?.files?.[0];
+      if (!file) return resolve(null);
+      if (file.size > 5 * 1024 * 1024) {
+        return reject(new Error('IMAGE_TOO_LARGE'));
+      }
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target.result);
+      reader.onerror = () => reject(new Error('IMAGE_READ_ERROR'));
+      reader.readAsDataURL(file);
+    });
+  }
+
   async function lireFichierDocBase64(input) {
     return new Promise((resolve, reject) => {
       const file = input?.files?.[0];
@@ -1062,6 +1111,12 @@ document.addEventListener('DOMContentLoaded', function() {
       const item = mesDonneesActuelles.stages[editIndex];
       document.getElementById('stage-id').value = editIndex;
       document.getElementById('stage-title').value = item.title || '';
+      const stagePhotoUrl = document.getElementById('stage-photo-url');
+      if (stagePhotoUrl) stagePhotoUrl.value = item.photo && !item.photo.startsWith('data:') ? item.photo : '';
+      const stagePhotoPreview = document.getElementById('stage-photo-preview');
+      if (stagePhotoPreview) {
+        stagePhotoPreview.innerHTML = item.photo ? `<img src="${item.photo}" alt="Visuel stage" style="max-width:100%; height:auto; border-radius: 8px;" />` : '';
+      }
       document.getElementById('stage-company').value = item.company || '';
       document.getElementById('stage-location').value = item.location || '';
       document.getElementById('stage-date').value = item.date || '';
@@ -1076,6 +1131,8 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
       form.reset();
       document.getElementById('stage-id').value = '';
+      const stagePhotoPreview = document.getElementById('stage-photo-preview');
+      if (stagePhotoPreview) stagePhotoPreview.innerHTML = '';
       const info = document.getElementById('stage-report-info');
       if (info) info.textContent = 'Aucun rapport chargé';
     }
@@ -1097,6 +1154,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const docInfoEl = document.getElementById('stage-report-info');
     const docInput = document.getElementById('stage-report-file');
     const docPassword = document.getElementById('stage-report-password')?.value.trim();
+    const photoUrlInput = document.getElementById('stage-photo-url');
+    const photoFileInput = document.getElementById('stage-photo-file');
+
+    const editIndex = currentEditingId;
+    const ancien = editIndex !== null ? mesDonneesActuelles.stages[editIndex] || {} : {};
 
     const item = {
       title: document.getElementById('stage-title').value.trim(),
@@ -1109,6 +1171,28 @@ document.addEventListener('DOMContentLoaded', function() {
       link: document.getElementById('stage-link').value.trim()
     };
     
+    // Photo du stage : fichier prioritaire, sinon URL, sinon conserver l'existant
+    try {
+      const nouvellePhotoBase64 = await lireImageBase64(photoFileInput);
+      const photoUrl = photoUrlInput?.value.trim();
+      if (nouvellePhotoBase64) {
+        item.photo = nouvellePhotoBase64;
+        const stagePhotoPreview = document.getElementById('stage-photo-preview');
+        if (stagePhotoPreview) stagePhotoPreview.innerHTML = `<img src="${nouvellePhotoBase64}" alt="Visuel stage" style="max-width:100%; height:auto; border-radius: 8px;" />`;
+      } else if (photoUrl) {
+        item.photo = photoUrl;
+      } else {
+        item.photo = ancien.photo;
+      }
+    } catch (err) {
+      if (err.message === 'IMAGE_TOO_LARGE') {
+        afficherErreur(null, 'Image trop volumineuse (max 5 Mo)');
+        return;
+      }
+      afficherErreur(null, 'Impossible de lire l\'image du stage');
+      return;
+    }
+
     if (!item.title || !item.company || !item.description || !item.date) {
       afficherErreur(null, 'Le titre, l\'entreprise, la date et la description sont obligatoires');
       return;
@@ -1126,6 +1210,12 @@ document.addEventListener('DOMContentLoaded', function() {
         item.docFileName = fichier.name;
         item.docFileSize = fichier.size;
         if (docInfoEl) docInfoEl.textContent = `Rapport chargé: ${fichier.name}`;
+      } else {
+        // Pas de nouveau fichier : conserver l'existant pour ne pas le neutraliser
+        item.docFile = ancien.docFile;
+        item.docFileName = ancien.docFileName;
+        item.docFileSize = ancien.docFileSize;
+        item.docPasswordHash = ancien.docPasswordHash;
       }
     } catch (err) {
       afficherErreur(null, 'Impossible de lire le rapport de stage');
@@ -1136,7 +1226,6 @@ document.addEventListener('DOMContentLoaded', function() {
       item.docPassword = docPassword;
     }
 
-    const editIndex = currentEditingId;
     if (editIndex !== null) {
       mesDonneesActuelles.stages[editIndex] = item;
     } else {
@@ -1207,6 +1296,12 @@ document.addEventListener('DOMContentLoaded', function() {
       const item = mesDonneesActuelles.alternances[editIndex];
       document.getElementById('alternance-id').value = editIndex;
       document.getElementById('alternance-title').value = item.title || '';
+      const altPhotoUrl = document.getElementById('alternance-photo-url');
+      if (altPhotoUrl) altPhotoUrl.value = item.photo && !item.photo.startsWith('data:') ? item.photo : '';
+      const altPhotoPreview = document.getElementById('alternance-photo-preview');
+      if (altPhotoPreview) {
+        altPhotoPreview.innerHTML = item.photo ? `<img src="${item.photo}" alt="Visuel alternance" style="max-width:100%; height:auto; border-radius: 8px;" />` : '';
+      }
       document.getElementById('alternance-company').value = item.company || '';
       document.getElementById('alternance-location').value = item.location || '';
       document.getElementById('alternance-date').value = item.date || '';
@@ -1214,9 +1309,17 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('alternance-description').value = item.description || '';
       document.getElementById('alternance-technologies').value = (item.technologies || []).join(', ');
       document.getElementById('alternance-link').value = item.link || '';
+      const info = document.getElementById('alternance-report-info');
+      if (info) info.textContent = item.docFileName ? `Rapport chargé: ${item.docFileName}` : 'Aucun rapport chargé';
+      const passInput = document.getElementById('alternance-report-password');
+      if (passInput) passInput.value = '';
     } else {
       form.reset();
       document.getElementById('alternance-id').value = '';
+      const altPhotoPreview = document.getElementById('alternance-photo-preview');
+      if (altPhotoPreview) altPhotoPreview.innerHTML = '';
+      const info = document.getElementById('alternance-report-info');
+      if (info) info.textContent = 'Aucun rapport chargé';
     }
     
     modal.style.display = 'block';
@@ -1233,6 +1336,15 @@ document.addEventListener('DOMContentLoaded', function() {
   async function sauvegarderAlternance(e) {
     e.preventDefault();
     
+    const docInfoEl = document.getElementById('alternance-report-info');
+    const docInput = document.getElementById('alternance-report-file');
+    const docPassword = document.getElementById('alternance-report-password')?.value.trim();
+    const photoUrlInput = document.getElementById('alternance-photo-url');
+    const photoFileInput = document.getElementById('alternance-photo-file');
+
+    const editIndex = currentEditingId;
+    const ancien = editIndex !== null ? mesDonneesActuelles.alternances[editIndex] || {} : {};
+
     const item = {
       title: document.getElementById('alternance-title').value.trim(),
       company: document.getElementById('alternance-company').value.trim(),
@@ -1244,12 +1356,60 @@ document.addEventListener('DOMContentLoaded', function() {
       link: document.getElementById('alternance-link').value.trim()
     };
     
+    // Photo d'alternance : fichier prioritaire, sinon URL, sinon conserver l'existant
+    try {
+      const nouvellePhotoBase64 = await lireImageBase64(photoFileInput);
+      const photoUrl = photoUrlInput?.value.trim();
+      if (nouvellePhotoBase64) {
+        item.photo = nouvellePhotoBase64;
+        const preview = document.getElementById('alternance-photo-preview');
+        if (preview) preview.innerHTML = `<img src="${nouvellePhotoBase64}" alt="Visuel alternance" style="max-width:100%; height:auto; border-radius: 8px;" />`;
+      } else if (photoUrl) {
+        item.photo = photoUrl;
+      } else {
+        item.photo = ancien.photo;
+      }
+    } catch (err) {
+      if (err.message === 'IMAGE_TOO_LARGE') {
+        afficherErreur(null, 'Image trop volumineuse (max 5 Mo)');
+        return;
+      }
+      afficherErreur(null, 'Impossible de lire l\'image de l\'alternance');
+      return;
+    }
+
     if (!item.title || !item.company || !item.description || !item.date) {
       afficherErreur(null, 'Le titre, l\'entreprise, la date et la description sont obligatoires');
       return;
     }
-    
-    const editIndex = currentEditingId;
+
+    // Charger le rapport d'alternance si fourni
+    try {
+      const fichier = await lireFichierDocBase64(docInput);
+      if (fichier) {
+        if (fichier.size > 50 * 1024 * 1024) {
+          afficherErreur(null, 'Rapport trop volumineux (max 50 Mo)');
+          return;
+        }
+        item.docFile = fichier.base64;
+        item.docFileName = fichier.name;
+        item.docFileSize = fichier.size;
+        if (docInfoEl) docInfoEl.textContent = `Rapport chargé: ${fichier.name}`;
+      } else {
+        item.docFile = ancien.docFile;
+        item.docFileName = ancien.docFileName;
+        item.docFileSize = ancien.docFileSize;
+        item.docPasswordHash = ancien.docPasswordHash;
+      }
+    } catch (err) {
+      afficherErreur(null, 'Impossible de lire le rapport d\'alternance');
+      return;
+    }
+
+    if (docPassword) {
+      item.docPassword = docPassword;
+    }
+
     if (editIndex !== null) {
       mesDonneesActuelles.alternances[editIndex] = item;
     } else {

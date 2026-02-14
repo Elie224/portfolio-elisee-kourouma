@@ -237,9 +237,12 @@ const sanitizeData = (req, res, next) => {
     
     // EXCEPTION : Autoriser les données base64 (data:application/pdf;base64,...)
     // Les données base64 peuvent contenir des caractères qui ressemblent à du code mais qui sont valides
-    const isBase64Data = bodyString.includes('data:application/pdf') || 
-               bodyString.includes('data:image/') ||
-               (req.body.links && req.body.links.cvFile && req.body.links.cvFile.startsWith('data:'));
+    const isBase64Data = bodyString.includes('data:application/pdf') ||
+           bodyString.includes('data:application/msword') ||
+           bodyString.includes('data:application/vnd.openxmlformats-officedocument.wordprocessingml.document') ||
+           bodyString.includes('data:application/zip') ||
+           bodyString.includes('data:image/') ||
+           (req.body.links && req.body.links.cvFile && req.body.links.cvFile.startsWith('data:'));
     
     // EXCEPTION : Autoriser les données base64 (data:application/pdf;base64,...)
     // Les données base64 peuvent contenir des caractères qui ressemblent à du code mais qui sont valides
@@ -322,7 +325,8 @@ const sanitizeData = (req, res, next) => {
 const limitDataSize = (req, res, next) => {
   try {
     const bodySize = JSON.stringify(req.body).length;
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    // Autoriser des payloads plus grands (docs base64 ~50 Mo => ~70 Mo en JSON)
+    const maxSize = 80 * 1024 * 1024; // 80MB
     
     if (bodySize > maxSize) {
       console.log('❌ Données trop volumineuses:', bodySize, 'bytes');

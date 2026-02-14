@@ -258,8 +258,9 @@ app.use((req, res, next) => {
   });
 });
 
-app.use(express.json({ limit: '10mb' })); // Augmenter la limite pour les gros objets
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Autoriser des payloads volumineux (rapports base64 ~50 Mo => ~70+ Mo JSON)
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 app.use(compression());
 
 // Gérer explicitement les requêtes OPTIONS (preflight) - exclure /health

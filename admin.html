@@ -865,6 +865,7 @@
           <a href="index.html">Accueil</a>
           <a href="about.html">À propos</a>
           <a href="projects.html">Projets</a>
+          <a href="reports.html">Mes rapports</a>
           <a href="contact.html">Contact</a>
           <a href="#" target="_blank" rel="noopener" data-cv-link="true">CV</a>
           <a href="admin.html" class="admin-nav-link">
@@ -1984,6 +1985,16 @@
                   <div class="form-group">
                     <label for="alternance-description">Description *</label>
                     <textarea id="alternance-description" placeholder="Décrivez vos missions, projets et responsabilités..." required></textarea>
+                  </div>
+                  <div class="form-group">
+                    <label for="alternance-report-file">Rapport d'alternance (PDF/Doc/Zip) - protégé</label>
+                    <input type="file" id="alternance-report-file" accept=".pdf,.doc,.docx,.zip" />
+                    <div class="muted" id="alternance-report-info" style="margin-top:8px; font-size: 13px;">Aucun rapport chargé</div>
+                  </div>
+                  <div class="form-group">
+                    <label for="alternance-report-password">Code d'accès au rapport</label>
+                    <input type="password" id="alternance-report-password" placeholder="Code requis pour lire le rapport" />
+                    <p class="muted" style="font-size: 13px; margin-top: 6px;">Partagez ce code seulement aux personnes autorisées. Il sera nécessaire pour télécharger le rapport.</p>
                   </div>
                   <div class="form-group">
                     <label for="alternance-technologies">Technologies utilisées (séparées par des virgules)</label>
