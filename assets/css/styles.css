@@ -4359,10 +4359,10 @@ header.scrolled {
               linear-gradient(120deg, rgba(124, 147, 255, 0.24), transparent 45%),
               url('../img/projet.png');
   background-blend-mode: multiply, soft-light, normal;
-  background-size: 125% 125%;
+  background-size: 110% 110%;
   background-position: center;
   background-repeat: no-repeat;
-  animation: heroPan 18s ease-in-out infinite alternate;
+  animation: heroPan 14s ease-in-out infinite alternate;
   box-shadow: 0 22px 45px rgba(0, 0, 0, 0.3);
 }
 
@@ -4386,12 +4386,12 @@ header.scrolled {
 
 @keyframes heroPan {
   0% { background-position: 50% 50%; }
-  50% { background-position: 52% 48%; }
-  100% { background-position: 48% 52%; }
+  50% { background-position: 55% 45%; }
+  100% { background-position: 45% 55%; }
 }
 
 .projects-hero__lede {
-  font-size: 17px;
+  font-size: 19px;
   color: #d9e1ff;
   line-height: 1.6;
   max-width: 900px;
@@ -4412,10 +4412,10 @@ header.scrolled {
               linear-gradient(120deg, rgba(124, 147, 255, 0.24), transparent 45%),
               url('../img/ia.png');
   background-blend-mode: multiply, soft-light, normal;
-  background-size: 125% 125%;
+  background-size: 110% 110%;
   background-position: center;
   background-repeat: no-repeat;
-  animation: heroPan 18s ease-in-out infinite alternate;
+  animation: heroPan 14s ease-in-out infinite alternate;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.35);
 }
 
@@ -4436,6 +4436,12 @@ header.scrolled {
   align-items: center;
   max-width: 820px;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+
+.about-hero__lede {
+  font-size: 19px;
+  line-height: 1.65;
+  color: #e6ecff;
 }
 
 .about-hero__eyebrow {
@@ -4505,12 +4511,12 @@ header.scrolled {
 .pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
+  gap: 8px;
+  padding: 10px 14px;
   border-radius: var(--rayon-full);
   background: var(--couleur-fond-secondaire);
   border: 1px solid var(--couleur-bordure);
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: var(--couleur-texte);
 }
 
