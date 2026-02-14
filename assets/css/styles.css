@@ -4355,13 +4355,14 @@ header.scrolled {
   text-align: center;
   border-radius: 24px;
   overflow: hidden;
-  background: linear-gradient(135deg, rgba(5, 9, 17, 0.58), rgba(7, 10, 19, 0.62)),
-              linear-gradient(120deg, rgba(124, 147, 255, 0.18), transparent 45%),
+  background: linear-gradient(135deg, rgba(5, 9, 17, 0.75), rgba(7, 10, 19, 0.78)),
+              linear-gradient(120deg, rgba(124, 147, 255, 0.24), transparent 45%),
               url('../img/projet.png');
-  background-blend-mode: soft-light, normal, normal;
-  background-size: cover;
+  background-blend-mode: multiply, soft-light, normal;
+  background-size: 125% 125%;
   background-position: center;
   background-repeat: no-repeat;
+  animation: heroPan 18s ease-in-out infinite alternate;
   box-shadow: 0 22px 45px rgba(0, 0, 0, 0.3);
 }
 
@@ -4374,16 +4375,24 @@ header.scrolled {
   align-items: center;
   position: relative;
   z-index: 1;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
 }
 
 .projects-hero__title {
   font-size: clamp(34px, 5vw, 46px);
   font-weight: 750;
+  color: #eaf0ff;
+}
+
+@keyframes heroPan {
+  0% { background-position: 50% 50%; }
+  50% { background-position: 52% 48%; }
+  100% { background-position: 48% 52%; }
 }
 
 .projects-hero__lede {
   font-size: 17px;
-  color: var(--muted);
+  color: #d9e1ff;
   line-height: 1.6;
   max-width: 900px;
 }
@@ -4399,13 +4408,14 @@ header.scrolled {
   position: relative;
   overflow: hidden;
   border-radius: 24px;
-  background: linear-gradient(135deg, rgba(5, 9, 17, 0.58), rgba(7, 10, 19, 0.62)),
-              linear-gradient(120deg, rgba(124, 147, 255, 0.18), transparent 45%),
+  background: linear-gradient(135deg, rgba(5, 9, 17, 0.75), rgba(7, 10, 19, 0.78)),
+              linear-gradient(120deg, rgba(124, 147, 255, 0.24), transparent 45%),
               url('../img/ia.png');
-  background-blend-mode: soft-light, normal, normal;
-  background-size: cover;
+  background-blend-mode: multiply, soft-light, normal;
+  background-size: 125% 125%;
   background-position: center;
   background-repeat: no-repeat;
+  animation: heroPan 18s ease-in-out infinite alternate;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.35);
 }
 
@@ -4416,6 +4426,7 @@ header.scrolled {
   align-items: center;
   position: relative;
   z-index: 1;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
 }
 
 .about-hero__content {
@@ -4424,6 +4435,7 @@ header.scrolled {
   gap: var(--espacement-md);
   align-items: center;
   max-width: 820px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
 }
 
 .about-hero__eyebrow {
