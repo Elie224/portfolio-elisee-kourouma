@@ -469,7 +469,14 @@ document.addEventListener('DOMContentLoaded', function() {
       firstname: document.getElementById('doc-firstname'),
       lastname: document.getElementById('doc-lastname'),
       email: document.getElementById('doc-email'),
-      status: document.getElementById('doc-request-status')
+      purpose: document.getElementById('doc-purpose'),
+      message: document.getElementById('doc-message'),
+      status: document.getElementById('doc-request-status'),
+      passwordBlock: document.getElementById('doc-password-block'),
+      passwordInput: document.getElementById('doc-password'),
+      passwordSubmit: document.getElementById('doc-password-submit'),
+      passwordStatus: document.getElementById('doc-password-status'),
+      passwordToggle: document.getElementById('doc-password-toggle')
     };
 
     if (!docModalElements.form || !docModalElements.overlay || !docModalElements.modal) {
@@ -507,6 +514,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const firstName = docModalElements.firstname?.value.trim() || '';
       const lastName = docModalElements.lastname?.value.trim() || '';
       const email = docModalElements.email?.value.trim() || '';
+      const subject = docModalElements.purpose?.value || '';
+      const message = docModalElements.message?.value.trim() || '';
       if (!email || !validerEmail(email)) {
         if (docModalElements.status) docModalElements.status.textContent = 'Email invalide';
         return;
@@ -522,15 +531,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const reponse = await fetch(`${MON_SERVEUR}/portfolio/projects/${encodeURIComponent(projetDocCourant)}/request-doc`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ firstName, lastName, email })
+          body: JSON.stringify({ firstName, lastName, email, subject, message })
         });
         const resultat = await reponse.json().catch(() => ({}));
         if (reponse.ok) {
           if (docModalElements.status) {
-            docModalElements.status.textContent = 'Lien envoyé par email. Pensez à vérifier vos spams.';
+            docModalElements.status.textContent = 'Demande envoyée. Vous recevrez un mot de passe de l’auteur.';
             docModalElements.status.style.color = 'var(--accent)';
           }
-          setTimeout(fermer, 1200);
+          setTimeout(fermer, 1500);
         } else {
           const msg = resultat.error || 'Envoi impossible pour le moment.';
           if (docModalElements.status) {
@@ -547,10 +556,68 @@ document.addEventListener('DOMContentLoaded', function() {
       } finally {
         if (docModalElements.submitBtn) {
           docModalElements.submitBtn.disabled = false;
-          docModalElements.submitBtn.textContent = 'Envoyer le lien';
+          docModalElements.submitBtn.textContent = 'Envoyer';
         }
       }
     });
+
+    // Gestion du bloc de validation de mot de passe (étape 2 séparée)
+    if (docModalElements.passwordToggle && docModalElements.passwordBlock) {
+      docModalElements.passwordToggle.addEventListener('click', () => {
+        docModalElements.passwordBlock.style.display = 'block';
+      });
+    }
+
+    if (docModalElements.passwordSubmit) {
+      docModalElements.passwordSubmit.addEventListener('click', async () => {
+        if (!projetDocCourant) return;
+        const password = docModalElements.passwordInput?.value.trim() || '';
+        if (!password) {
+          if (docModalElements.passwordStatus) {
+            docModalElements.passwordStatus.textContent = 'Mot de passe requis';
+            docModalElements.passwordStatus.style.color = 'var(--danger, #f87171)';
+          }
+          return;
+        }
+        if (docModalElements.passwordSubmit) {
+          docModalElements.passwordSubmit.disabled = true;
+          docModalElements.passwordSubmit.textContent = 'Validation...';
+        }
+        if (docModalElements.passwordStatus) docModalElements.passwordStatus.textContent = '';
+        try {
+          const reponse = await fetch(`${MON_SERVEUR}/portfolio/projects/${encodeURIComponent(projetDocCourant)}/validate-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password })
+          });
+          const resultat = await reponse.json().catch(() => ({}));
+          if (reponse.ok && resultat.downloadLink) {
+            if (docModalElements.passwordStatus) {
+              docModalElements.passwordStatus.textContent = 'Mot de passe valide. Téléchargement en cours...';
+              docModalElements.passwordStatus.style.color = 'var(--accent)';
+            }
+            window.location.href = resultat.downloadLink;
+            setTimeout(fermer, 1500);
+          } else {
+            const msg = resultat.error || 'Mot de passe invalide.';
+            if (docModalElements.passwordStatus) {
+              docModalElements.passwordStatus.textContent = msg;
+              docModalElements.passwordStatus.style.color = 'var(--danger, #f87171)';
+            }
+          }
+        } catch (err) {
+          if (docModalElements.passwordStatus) {
+            docModalElements.passwordStatus.textContent = 'Erreur réseau, réessayez.';
+            docModalElements.passwordStatus.style.color = 'var(--danger, #f87171)';
+          }
+        } finally {
+          if (docModalElements.passwordSubmit) {
+            docModalElements.passwordSubmit.disabled = false;
+            docModalElements.passwordSubmit.textContent = 'Valider le mot de passe';
+          }
+        }
+      });
+    }
 
     const fermerEtReset = () => {
       fermer();

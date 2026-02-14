@@ -203,19 +203,35 @@
             docHTML = `
               <div class="card" style="margin-top: 24px;">
                 <h3 style="margin-top: 0; display: flex; align-items: center; gap: 8px;">📂 Document protégé</h3>
-                <p class="muted" style="margin-bottom: 12px;">Ce projet dispose d'un document protégé. Renseignez vos coordonnées pour recevoir un lien de téléchargement temporaire par email.</p>
+                <p class="muted" style="margin-bottom: 8px;">Demandez d'abord le mot de passe. Une fois reçu de l'auteur, saisissez-le pour télécharger.</p>
                 <form id="doc-request-details-form" style="display: flex; flex-direction: column; gap: 10px;">
                   <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                     <input type="text" id="doc-details-firstname" placeholder="Prénom" style="flex:1; min-width: 160px; padding: 10px 12px;" required />
                     <input type="text" id="doc-details-lastname" placeholder="Nom" style="flex:1; min-width: 160px; padding: 10px 12px;" />
                   </div>
-                  <input type="email" id="doc-details-email" placeholder="Email pour recevoir le lien" style="padding: 10px 12px;" required />
+                  <input type="email" id="doc-details-email" placeholder="Email de contact" style="padding: 10px 12px;" required />
+                  <select id="doc-details-purpose" style="padding: 10px 12px;">
+                    <option value="Voir le document">Objet : voir le document</option>
+                    <option value="Télécharger le document">Objet : télécharger le document</option>
+                  </select>
+                  <textarea id="doc-details-message" placeholder="Message (motivation, contexte...)" style="padding: 10px 12px; min-height: 90px; resize: vertical;"></textarea>
                   <div id="doc-details-status" class="muted" style="min-height: 18px; font-size: 13px;"></div>
                   <div style="display: flex; gap: 8px; justify-content: flex-start; flex-wrap: wrap;">
-                    <button type="submit" class="btn">Envoyer le lien</button>
-                    <span class="muted" style="font-size: 12px;">Le lien est valable 1 heure.</span>
+                    <button type="submit" class="btn">Envoyer</button>
+                    <span class="muted" style="font-size: 12px;">Vous recevrez le mot de passe après validation.</span>
                   </div>
                 </form>
+
+                <div id="doc-details-password-block" style="display:none; margin-top: 12px; padding: 12px; border: 1px solid var(--couleur-bordure); border-radius: 10px;">
+                  <p class="muted" style="margin: 0 0 8px 0; font-size: 13px;">Déjà un mot de passe ? Saisissez-le pour télécharger.</p>
+                  <div style="display:flex; gap:8px; flex-wrap: wrap;">
+                    <input type="password" id="doc-details-password" placeholder="Mot de passe" style="flex:1; min-width: 200px; padding: 10px 12px;" />
+                    <button type="button" class="btn" id="doc-details-password-submit">Valider le mot de passe</button>
+                  </div>
+                  <div id="doc-details-password-status" class="muted" style="min-height: 16px; font-size: 13px; margin-top:6px;"></div>
+                </div>
+
+                <button type="button" id="doc-details-password-toggle" class="btn secondary" style="margin-top:10px;">J'ai déjà un mot de passe</button>
               </div>
             `;
           }
@@ -242,6 +258,13 @@
             const firstEl = document.getElementById('doc-details-firstname');
             const lastEl = document.getElementById('doc-details-lastname');
             const emailEl = document.getElementById('doc-details-email');
+            const purposeEl = document.getElementById('doc-details-purpose');
+            const passwordBlock = document.getElementById('doc-details-password-block');
+            const passwordInput = document.getElementById('doc-details-password');
+            const passwordSubmit = document.getElementById('doc-details-password-submit');
+            const passwordStatus = document.getElementById('doc-details-password-status');
+            const passwordToggle = document.getElementById('doc-details-password-toggle');
+            const messageEl = document.getElementById('doc-details-message');
             const validerEmail = (email) => /\S+@\S+\.\S+/.test(email);
             docForm.addEventListener('submit', async (ev) => {
               ev.preventDefault();
@@ -266,13 +289,15 @@
                   body: JSON.stringify({
                     firstName: firstEl?.value.trim() || '',
                     lastName: lastEl?.value.trim() || '',
-                    email
+                      email,
+                      subject: purposeEl?.value || '',
+                      message: messageEl?.value.trim() || ''
                   })
                 });
                 const resultat = await reponse.json().catch(() => ({}));
                 if (reponse.ok) {
                   if (statusEl) {
-                    statusEl.textContent = 'Lien envoyé par email. Pensez à vérifier vos spams.';
+                    statusEl.textContent = 'Demande envoyée. Vous recevrez un mot de passe de l’auteur.';
                     statusEl.style.color = 'var(--accent)';
                   }
                 } else {
@@ -290,10 +315,65 @@
               } finally {
                 if (btn) {
                   btn.disabled = false;
-                  btn.textContent = 'Envoyer le lien';
+                  btn.textContent = 'Envoyer';
                 }
               }
             });
+
+            if (passwordToggle && passwordBlock) {
+              passwordToggle.addEventListener('click', () => {
+                passwordBlock.style.display = 'block';
+              });
+            }
+
+            if (passwordSubmit) {
+              passwordSubmit.addEventListener('click', async () => {
+                const password = passwordInput?.value.trim() || '';
+                if (!password) {
+                  if (passwordStatus) {
+                    passwordStatus.textContent = 'Mot de passe requis';
+                    passwordStatus.style.color = 'var(--danger, #f87171)';
+                  }
+                  return;
+                }
+                if (passwordSubmit) {
+                  passwordSubmit.disabled = true;
+                  passwordSubmit.textContent = 'Validation...';
+                }
+                if (passwordStatus) passwordStatus.textContent = '';
+                try {
+                  const reponse = await fetch(`${MON_SERVEUR}/portfolio/projects/${encodeURIComponent(project.title)}/validate-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                  });
+                  const resultat = await reponse.json().catch(() => ({}));
+                  if (reponse.ok && resultat.downloadLink) {
+                    if (passwordStatus) {
+                      passwordStatus.textContent = 'Mot de passe valide. Téléchargement en cours...';
+                      passwordStatus.style.color = 'var(--accent)';
+                    }
+                    window.location.href = resultat.downloadLink;
+                  } else {
+                    const msg = resultat.error || 'Mot de passe invalide.';
+                    if (passwordStatus) {
+                      passwordStatus.textContent = msg;
+                      passwordStatus.style.color = 'var(--danger, #f87171)';
+                    }
+                  }
+                } catch (err) {
+                  if (passwordStatus) {
+                    passwordStatus.textContent = 'Erreur réseau, réessayez.';
+                    passwordStatus.style.color = 'var(--danger, #f87171)';
+                  }
+                } finally {
+                  if (passwordSubmit) {
+                    passwordSubmit.disabled = false;
+                    passwordSubmit.textContent = 'Valider le mot de passe';
+                  }
+                }
+              });
+            }
           }
         } catch (e) {
           const estEnDeveloppement = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';

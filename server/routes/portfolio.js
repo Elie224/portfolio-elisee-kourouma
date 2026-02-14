@@ -801,11 +801,11 @@ router.post('/auth/change-password',
   }
 );
 
-// Demande de document protégé d'un projet (envoi mail avec lien temporaire)
+// Demande d'accès : enregistre la demande et notifie l'admin, sans envoyer le document
 router.post('/projects/:title/request-doc', limitDataSize, sanitizeData, async (req, res) => {
   try {
     const { title } = req.params;
-    const { firstName, lastName, email } = req.body;
+    const { firstName, lastName, email, message, subject } = req.body;
 
     if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
       return res.status(400).json({ error: 'Email invalide', code: 'INVALID_EMAIL' });
@@ -821,23 +821,72 @@ router.post('/projects/:title/request-doc', limitDataSize, sanitizeData, async (
       return res.status(404).json({ error: 'Document introuvable pour ce projet', code: 'DOC_NOT_FOUND' });
     }
 
+    // Enregistrer la demande dans contactMessages pour suivi admin
+    const demande = {
+      id: Date.now(),
+      name: `${firstName || ''} ${lastName || ''}`.trim() || 'Demandeur',
+      email: email.trim().toLowerCase(),
+      subject: subject || `Demande mot de passe - ${projet.title}`,
+      message: message || 'Demande de mot de passe pour document protégé',
+      date: new Date().toISOString(),
+      read: false
+    };
+    await Portfolio.findOneAndUpdate({}, { $push: { contactMessages: demande } }, { upsert: true });
+
+    // Notifier l'admin par email si SMTP configuré
+    const transporter = getMailTransporter();
+    if (transporter && ADMIN_EMAIL) {
+      await transporter.sendMail({
+        from: process.env.SMTP_FROM || process.env.SMTP_USER,
+        to: ADMIN_EMAIL,
+        replyTo: email, // permet de répondre directement au demandeur
+        subject: subject || `Demande mot de passe - ${projet.title}`,
+        text: `Nouvelle demande pour le document du projet "${projet.title}"\n\nNom: ${firstName || ''} ${lastName || ''}\nEmail: ${email}\nObjet: ${subject || 'Voir/Télécharger le document'}\nMessage: ${message || ''}`
+      }).catch(err => logWarn('⚠️ Notification admin non envoyée', err));
+    }
+
+    res.json({ success: true, message: 'Demande envoyée. Vous recevrez un mot de passe si votre demande est acceptée.' });
+  } catch (error) {
+    logError('❌ Erreur demande doc projet:', error);
+    res.status(500).json({ error: 'Erreur serveur', code: 'DOC_REQUEST_ERROR' });
+  }
+});
+
+// Validation du mot de passe pour obtenir un lien de téléchargement temporaire
+router.post('/projects/:title/validate-password', limitDataSize, sanitizeData, async (req, res) => {
+  try {
+    const { title } = req.params;
+    const { password } = req.body;
+
+    if (!password || password.length < 4) {
+      return res.status(400).json({ error: 'Mot de passe requis', code: 'PASSWORD_REQUIRED' });
+    }
+
+    const portfolio = await Portfolio.findOne();
+    if (!portfolio || !Array.isArray(portfolio.projects)) {
+      return res.status(404).json({ error: 'Aucun projet', code: 'NO_PROJECT' });
+    }
+
+    const projet = portfolio.projects.find(p => (p.title || '').toLowerCase() === decodeURIComponent(title).toLowerCase());
+    if (!projet || !projet.docFile || !projet.docPasswordHash) {
+      return res.status(404).json({ error: 'Document introuvable pour ce projet', code: 'DOC_NOT_FOUND' });
+    }
+
+    const ok = await bcrypt.compare(password, projet.docPasswordHash);
+    if (!ok) {
+      return res.status(401).json({ error: 'Mot de passe incorrect', code: 'INVALID_PASSWORD' });
+    }
+
     if (!process.env.JWT_SECRET) {
       return res.status(500).json({ error: 'Configuration JWT manquante', code: 'MISSING_JWT' });
     }
 
     const token = jwt.sign({ projectTitle: projet.title }, process.env.JWT_SECRET, { expiresIn: '1h' });
     const downloadLink = construireLienTelechargement(req, projet.title, token);
-
-    await envoyerMailMotDePasse({
-      to: email,
-      projectTitle: projet.title,
-      downloadLink
-    });
-
-    res.json({ success: true, message: 'Lien envoyé par email', downloadLink });
+    res.json({ success: true, downloadLink });
   } catch (error) {
-    logError('❌ Erreur demande doc projet:', error);
-    res.status(500).json({ error: 'Erreur serveur', code: 'DOC_REQUEST_ERROR' });
+    logError('❌ Erreur validation mot de passe doc:', error);
+    res.status(500).json({ error: 'Erreur serveur', code: 'DOC_PASSWORD_ERROR' });
   }
 });
 
@@ -964,6 +1013,22 @@ router.post('/contact',
       subject: subject || 'Sans objet',
       totalMessages: portfolioVerifie.contactMessages?.length || 0
     });
+
+    // Envoyer un email de notification à l'admin si SMTP est configuré
+    const transporter = getMailTransporter();
+    if (transporter && ADMIN_EMAIL) {
+      try {
+        await transporter.sendMail({
+          from: process.env.SMTP_FROM || process.env.SMTP_USER,
+          to: ADMIN_EMAIL,
+          replyTo: email,
+          subject: subject || 'Nouveau message de contact',
+          text: `Nouveau message de contact\n\nNom: ${name}\nEmail: ${email}\nSujet: ${subject || 'Sans objet'}\n\nMessage:\n${message}`
+        });
+      } catch (err) {
+        logWarn('⚠️ Notification email contact non envoyée', err);
+      }
+    }
     
     res.json({ 
       success: true, 

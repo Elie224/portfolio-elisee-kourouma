@@ -2774,7 +2774,8 @@ document.addEventListener('DOMContentLoaded', function() {
             log('✅ Message sauvegardé avec succès - ID:', resultat.messageId);
             
             if (messageDiv) {
-              messageDiv.textContent = `✅ Message envoyé et sauvegardé avec succès (ID: ${resultat.messageId}) ! Je vous répondrai dans les plus brefs délais.`;
+              // Message court et rassurant pour l'utilisateur final
+              messageDiv.textContent = '✅ Message envoyé, nous vous répondrons vite.';
               messageDiv.className = 'form-message success';
               messageDiv.style.display = 'block';
             }

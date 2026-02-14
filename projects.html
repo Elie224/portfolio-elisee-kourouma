@@ -152,18 +152,35 @@
         <button id="doc-request-close" aria-label="Fermer" style="position: absolute; top: 12px; right: 12px; background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer;">×</button>
         <h3 style="margin-top: 0;">📂 Demander le document</h3>
         <p class="muted" id="doc-request-project" style="margin-bottom: 12px;"></p>
+        <p class="muted" style="font-size: 13px; margin-top: -4px;">1) Demandez le mot de passe. 2) Quand vous l'avez reçu de l'auteur, saisissez-le pour télécharger.</p>
         <form id="doc-request-form" style="display: flex; flex-direction: column; gap: 12px;">
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
             <input type="text" id="doc-firstname" placeholder="Prénom" style="flex: 1; min-width: 140px; padding: 10px 12px;" required />
             <input type="text" id="doc-lastname" placeholder="Nom" style="flex: 1; min-width: 140px; padding: 10px 12px;" />
           </div>
-          <input type="email" id="doc-email" placeholder="Email pour recevoir le lien" style="padding: 10px 12px;" required />
+          <input type="email" id="doc-email" placeholder="Email de contact" style="padding: 10px 12px;" required />
+          <select id="doc-purpose" style="padding: 10px 12px;">
+            <option value="Voir le document">Objet : voir le document</option>
+            <option value="Télécharger le document">Objet : télécharger le document</option>
+          </select>
+          <textarea id="doc-message" placeholder="Message (motivation, contexte...)" style="padding: 10px 12px; min-height: 90px; resize: vertical;"></textarea>
           <div id="doc-request-status" class="muted" style="min-height: 18px; font-size: 13px;"></div>
           <div style="display: flex; gap: 8px; justify-content: flex-end;">
             <button type="button" class="btn secondary" id="doc-request-cancel">Annuler</button>
-            <button type="submit" class="btn" id="doc-request-submit">Envoyer le lien</button>
+            <button type="submit" class="btn" id="doc-request-submit">Envoyer</button>
           </div>
         </form>
+
+        <div id="doc-password-block" style="display:none; margin-top: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--card-bg, #0f172a);">
+          <p class="muted" style="margin: 0 0 8px 0; font-size: 13px;">Déjà un mot de passe ? Saisissez-le pour télécharger.</p>
+          <div style="display:flex; gap:8px; flex-wrap: wrap;">
+            <input type="password" id="doc-password" placeholder="Mot de passe" style="flex:1; min-width: 200px; padding: 10px 12px;" />
+            <button type="button" class="btn" id="doc-password-submit">Valider le mot de passe</button>
+          </div>
+          <div id="doc-password-status" class="muted" style="min-height: 16px; font-size: 13px; margin-top:6px;"></div>
+        </div>
+
+        <button type="button" id="doc-password-toggle" class="btn secondary" style="width:100%; margin-top:10px;">J'ai déjà un mot de passe</button>
       </div>
     </div>
   </main>

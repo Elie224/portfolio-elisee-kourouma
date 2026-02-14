@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#05080f" />
+      <stop offset="50%" stop-color="#0a1021" />
+      <stop offset="100%" stop-color="#05070d" />
+    </linearGradient>
+    <radialGradient id="glow1" cx="25%" cy="30%" r="40%">
+      <stop offset="0%" stop-color="#7ca3ff" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#0a1021" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="glow2" cx="72%" cy="70%" r="45%">
+      <stop offset="0%" stop-color="#7df5ff" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#0a1021" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="grid" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7ca3ff" stop-opacity="0.16" />
+      <stop offset="50%" stop-color="#7df5ff" stop-opacity="0.22" />
+      <stop offset="100%" stop-color="#b294ff" stop-opacity="0.16" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#bg)" />
+  <rect width="1600" height="900" fill="url(#glow1)" />
+  <rect width="1600" height="900" fill="url(#glow2)" />
+
+  <g stroke="url(#grid)" stroke-width="1">
+    <!-- vertical lines -->
+    <g opacity="0.5">
+      <line x1="200" y1="0" x2="200" y2="900" />
+      <line x1="400" y1="0" x2="400" y2="900" />
+      <line x1="600" y1="0" x2="600" y2="900" />
+      <line x1="800" y1="0" x2="800" y2="900" />
+      <line x1="1000" y1="0" x2="1000" y2="900" />
+      <line x1="1200" y1="0" x2="1200" y2="900" />
+      <line x1="1400" y1="0" x2="1400" y2="900" />
+    </g>
+    <!-- horizontal lines -->
+    <g opacity="0.4">
+      <line x1="0" y1="150" x2="1600" y2="150" />
+      <line x1="0" y1="300" x2="1600" y2="300" />
+      <line x1="0" y1="450" x2="1600" y2="450" />
+      <line x1="0" y1="600" x2="1600" y2="600" />
+      <line x1="0" y1="750" x2="1600" y2="750" />
+    </g>
+  </g>
+
+  <g fill="#9ac7ff" fill-opacity="0.32">
+    <circle cx="360" cy="360" r="46" />
+    <circle cx="1240" cy="540" r="38" />
+    <circle cx="880" cy="280" r="28" />
+  </g>
+
+  <g stroke="#7df5ff" stroke-opacity="0.6" stroke-width="2" fill="none">
+    <path d="M420 520 Q600 420 800 520 T1180 520" />
+    <path d="M460 620 Q640 520 820 620 T1140 620" opacity="0.6" />
+  </g>
+
+  <g stroke="#b294ff" stroke-opacity="0.65" stroke-width="1.4" fill="none">
+    <circle cx="800" cy="460" r="110" />
+    <circle cx="800" cy="460" r="160" opacity="0.45" />
+  </g>
+</svg>
