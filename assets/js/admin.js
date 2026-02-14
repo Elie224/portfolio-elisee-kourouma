@@ -534,7 +534,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="item-card">
         <input type="checkbox" class="select-checkbox" data-type="projects" data-index="${index}" onchange="toggleItemSelection('projects', ${index}, this.checked)" />
         <h4>${projet.title || 'Projet sans titre'}</h4>
-        <p class="item-meta">${projet.type || ''} ${projet.category ? '· ' + projet.category : ''} ${projet.featured ? '· ⭐ En vedette' : ''}</p>
+        <p class="item-meta">${projet.type || ''} ${projet.category ? '· ' + projet.category : ''} ${projet.featured ? '· ⭐ En vedette' : ''} ${projet.docFile ? '· 📂 Doc protégé' : ''}</p>
         <p class="muted">${projet.shortDesc || projet.description || 'Pas de description'}</p>
         <div class="item-actions">
           <button class="btn-small" onclick="editProject(${index})" style="display: inline-flex; align-items: center; gap: 6px;">
@@ -547,6 +547,107 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     `).join('');
   }
+
+  const LIMITE_TAILLE_DOC = 50 * 1024 * 1024;
+
+  function formaterTailleDoc(octets) {
+    if (!octets) return '0 o';
+    if (octets < 1024) return `${octets} o`;
+    if (octets < 1024 * 1024) return `${(octets / 1024).toFixed(1)} Ko`;
+    return `${(octets / (1024 * 1024)).toFixed(1)} Mo`;
+  }
+
+  function mettreAJourAffichageDocProjet({ fileName, fileSize, hasDoc }) {
+    const info = document.getElementById('project-doc-file-info');
+    const hint = document.getElementById('project-doc-remove-hint');
+    if (info) {
+      if (hasDoc && fileName) {
+        info.textContent = `${fileName} (${formaterTailleDoc(fileSize)})`;
+      } else {
+        info.textContent = 'Aucun fichier sélectionné.';
+      }
+    }
+    if (hint) {
+      hint.textContent = hasDoc ? 'Un document est attaché à ce projet' : 'Aucun document chargé';
+    }
+  }
+
+  function viderDocProjet(markRemoved = false) {
+    const fileInput = document.getElementById('project-doc-file');
+    if (fileInput) fileInput.value = '';
+    ['project-doc-file-data', 'project-doc-file-name', 'project-doc-file-size'].forEach(id => {
+      const input = document.getElementById(id);
+      if (input) input.value = '';
+    });
+    const removed = document.getElementById('project-doc-removed');
+    if (removed) removed.value = markRemoved ? 'true' : 'false';
+    const password = document.getElementById('project-doc-password');
+    if (password) password.value = '';
+    mettreAJourAffichageDocProjet({ hasDoc: false });
+  }
+
+  function chargerDocProjetDansForm(projet = {}) {
+    viderDocProjet(false);
+    const removed = document.getElementById('project-doc-removed');
+    if (removed) removed.value = 'false';
+
+    const base64Input = document.getElementById('project-doc-file-data');
+    const nameInput = document.getElementById('project-doc-file-name');
+    const sizeInput = document.getElementById('project-doc-file-size');
+    if (base64Input) base64Input.value = projet.docFile || '';
+    if (nameInput) nameInput.value = projet.docFileName || '';
+    if (sizeInput) sizeInput.value = projet.docFileSize || '';
+
+    const hasDoc = !!projet.docFile;
+    mettreAJourAffichageDocProjet({ fileName: projet.docFileName, fileSize: projet.docFileSize, hasDoc });
+  }
+
+  async function lireFichierGeneriqueBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target.result);
+      reader.onerror = () => reject(new Error('Lecture du fichier échouée'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function gererSelectionDocProjet(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > LIMITE_TAILLE_DOC) {
+      afficherErreur(null, 'Le document dépasse la limite de 50 Mo');
+      event.target.value = '';
+      viderDocProjet(true);
+      return;
+    }
+
+    const extensionAutorisee = /(\.pdf|\.doc|\.docx|\.zip)$/i.test(file.name);
+    if (!extensionAutorisee) {
+      afficherErreur(null, 'Formats autorisés : PDF, DOC, DOCX, ZIP');
+      event.target.value = '';
+      viderDocProjet(true);
+      return;
+    }
+
+    try {
+      const base64 = await lireFichierGeneriqueBase64(file);
+      document.getElementById('project-doc-file-data').value = base64;
+      document.getElementById('project-doc-file-name').value = file.name;
+      document.getElementById('project-doc-file-size').value = file.size.toString();
+      const removed = document.getElementById('project-doc-removed');
+      if (removed) removed.value = 'false';
+      mettreAJourAffichageDocProjet({ fileName: file.name, fileSize: file.size, hasDoc: true });
+    } catch (err) {
+      logError('Erreur lecture doc projet:', err);
+      afficherErreur(null, 'Impossible de lire le document (PDF/DOCX/ZIP)');
+      viderDocProjet(true);
+    }
+  }
+
+  window.removeProjectDoc = function() {
+    viderDocProjet(true);
+  };
   
   // Affiche le formulaire de projet
   window.showProjectForm = function(editIndex = null) {
@@ -557,6 +658,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!modal || !form) return;
     
     currentEditingId = editIndex;
+    viderDocProjet(false);
     
     if (title) {
       title.textContent = editIndex !== null ? 'Modifier le projet' : 'Ajouter un projet';
@@ -576,6 +678,7 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('project-demo-link').value = projet.demoLink || '';
       document.getElementById('project-featured').checked = projet.featured || false;
       document.getElementById('project-public').checked = projet.public !== false;
+      chargerDocProjetDansForm(projet);
       
       // Afficher un message de confirmation
       if (window.location.hostname === 'localhost') {
@@ -586,6 +689,7 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('project-id').value = '';
       document.getElementById('project-featured').checked = false;
       document.getElementById('project-public').checked = true;
+      viderDocProjet(false);
     }
     
     modal.style.display = 'block';
@@ -646,7 +750,16 @@ document.addEventListener('DOMContentLoaded', function() {
   async function sauvegarderProjet(e) {
     e.preventDefault();
     
+    const editIndex = currentEditingId;
+    const projetExistant = editIndex !== null ? (mesDonneesActuelles.projects[editIndex] || {}) : {};
+    const docFileData = document.getElementById('project-doc-file-data')?.value || '';
+    const docFileName = document.getElementById('project-doc-file-name')?.value || '';
+    const docFileSizeValue = document.getElementById('project-doc-file-size')?.value || '';
+    const docPassword = document.getElementById('project-doc-password')?.value.trim() || '';
+    const docRemoved = (document.getElementById('project-doc-removed')?.value || 'false') === 'true';
+
     const projet = {
+      ...projetExistant,
       title: document.getElementById('project-title').value.trim(),
       type: document.getElementById('project-type').value,
       category: document.getElementById('project-category').value.trim(),
@@ -664,8 +777,28 @@ document.addEventListener('DOMContentLoaded', function() {
       afficherErreur(null, 'Le titre est obligatoire');
       return;
     }
+
+    if (docRemoved) {
+      delete projet.docFile;
+      delete projet.docFileName;
+      delete projet.docFileSize;
+      delete projet.docPasswordHash;
+    } else if (docFileData) {
+      projet.docFile = docFileData;
+      if (docFileName) projet.docFileName = docFileName;
+      if (docFileSizeValue) {
+        projet.docFileSize = parseInt(docFileSizeValue, 10) || 0;
+      }
+    }
+
+    if (docPassword) {
+      projet.docPassword = docPassword;
+      delete projet.docPasswordHash;
+    } else if (projet.docFile && !projet.docPasswordHash) {
+      afficherErreur(null, 'Ajoutez un mot de passe pour protéger le document');
+      return;
+    }
     
-    const editIndex = currentEditingId;
     if (editIndex !== null) {
       mesDonneesActuelles.projects[editIndex] = projet;
     } else {
@@ -2718,6 +2851,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Formulaire projet
     const projectForm = document.getElementById('project-form');
     if (projectForm) projectForm.addEventListener('submit', sauvegarderProjet);
+    const projectDocInput = document.getElementById('project-doc-file');
+    if (projectDocInput) projectDocInput.addEventListener('change', gererSelectionDocProjet);
+    const projectDocRemoveBtn = document.getElementById('project-doc-remove-btn');
+    if (projectDocRemoveBtn) projectDocRemoveBtn.addEventListener('click', removeProjectDoc);
     
     // Formulaire compétence
     const skillForm = document.getElementById('skill-category-form');

@@ -144,6 +144,28 @@
         <p class="muted" style="margin-top: 16px;">Chargement des projets...</p>
       </div>
     </section>
+    
+    <!-- Modal demande de document protégé -->
+    <div id="doc-request-overlay" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9998;"></div>
+    <div id="doc-request-modal" style="display: none; position: fixed; inset: 0; z-index: 9999; align-items: center; justify-content: center; padding: 16px;">
+      <div class="card" style="max-width: 480px; width: 100%; position: relative;">
+        <button id="doc-request-close" aria-label="Fermer" style="position: absolute; top: 12px; right: 12px; background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer;">×</button>
+        <h3 style="margin-top: 0;">📂 Demander le document</h3>
+        <p class="muted" id="doc-request-project" style="margin-bottom: 12px;"></p>
+        <form id="doc-request-form" style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <input type="text" id="doc-firstname" placeholder="Prénom" style="flex: 1; min-width: 140px; padding: 10px 12px;" required />
+            <input type="text" id="doc-lastname" placeholder="Nom" style="flex: 1; min-width: 140px; padding: 10px 12px;" />
+          </div>
+          <input type="email" id="doc-email" placeholder="Email pour recevoir le lien" style="padding: 10px 12px;" required />
+          <div id="doc-request-status" class="muted" style="min-height: 18px; font-size: 13px;"></div>
+          <div style="display: flex; gap: 8px; justify-content: flex-end;">
+            <button type="button" class="btn secondary" id="doc-request-cancel">Annuler</button>
+            <button type="submit" class="btn" id="doc-request-submit">Envoyer le lien</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </main>
 
   <button id="scroll-top" class="scroll-top" aria-label="Retour en haut" title="Retour en haut">↑</button>

@@ -3,6 +3,153 @@
  * Script principal - Code écrit pour être compris par un humain
  * 
  * Ce fichier gère toute l'interactivité du portfolio :
+  /* ===== DOCUMENT PROTÉGÉ (PUBLIC) ===== */
+  let docModalElements = null;
+  let projetDocCourant = null;
+
+  function creerModalDocSiAbsent() {
+    if (docModalElements) return docModalElements;
+
+    let overlay = document.getElementById('doc-request-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'doc-request-overlay';
+      overlay.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9998;';
+      document.body.appendChild(overlay);
+    }
+
+    let modal = document.getElementById('doc-request-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'doc-request-modal';
+      modal.style.cssText = 'display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;padding:16px;';
+      modal.innerHTML = `
+        <div class="card" style="max-width: 480px; width: 100%; position: relative;">
+          <button id="doc-request-close" aria-label="Fermer" style="position: absolute; top: 12px; right: 12px; background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer;">×</button>
+          <h3 style="margin-top: 0;">📂 Demander le document</h3>
+          <p class="muted" id="doc-request-project" style="margin-bottom: 12px;"></p>
+          <form id="doc-request-form" style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <input type="text" id="doc-firstname" placeholder="Prénom" style="flex: 1; min-width: 140px; padding: 10px 12px;" />
+              <input type="text" id="doc-lastname" placeholder="Nom" style="flex: 1; min-width: 140px; padding: 10px 12px;" />
+            </div>
+            <input type="email" id="doc-email" placeholder="Email pour recevoir le lien" style="padding: 10px 12px;" required />
+            <div id="doc-request-status" class="muted" style="min-height: 18px; font-size: 13px;"></div>
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+              <button type="button" class="btn secondary" id="doc-request-cancel">Annuler</button>
+              <button type="submit" class="btn" id="doc-request-submit">Envoyer le lien</button>
+            </div>
+          </form>
+        </div>`;
+      document.body.appendChild(modal);
+    }
+
+    docModalElements = {
+      overlay,
+      modal,
+      closeBtn: modal.querySelector('#doc-request-close'),
+      cancelBtn: modal.querySelector('#doc-request-cancel'),
+      submitBtn: modal.querySelector('#doc-request-submit'),
+      form: modal.querySelector('#doc-request-form'),
+      projectLabel: modal.querySelector('#doc-request-project'),
+      firstname: modal.querySelector('#doc-firstname'),
+      lastname: modal.querySelector('#doc-lastname'),
+      email: modal.querySelector('#doc-email'),
+      status: modal.querySelector('#doc-request-status')
+    };
+
+    const fermer = () => {
+      if (docModalElements.overlay) docModalElements.overlay.style.display = 'none';
+      if (docModalElements.modal) docModalElements.modal.style.display = 'none';
+      projetDocCourant = null;
+    };
+
+    const fermerEtReset = () => {
+      fermer();
+      if (docModalElements.form) docModalElements.form.reset();
+      if (docModalElements.status) {
+        docModalElements.status.textContent = '';
+        docModalElements.status.style.color = 'var(--muted)';
+      }
+    };
+
+    const ouvrir = () => {
+      if (docModalElements.overlay) docModalElements.overlay.style.display = 'block';
+      if (docModalElements.modal) docModalElements.modal.style.display = 'flex';
+    };
+
+    window.openDocRequest = function(titreEncode) {
+      const titre = decodeURIComponent(titreEncode || '');
+      projetDocCourant = titre;
+      if (docModalElements.projectLabel) docModalElements.projectLabel.textContent = titre ? `Projet : ${titre}` : '';
+      if (docModalElements.status) {
+        docModalElements.status.textContent = '';
+        docModalElements.status.style.color = 'var(--muted)';
+      }
+      if (docModalElements.form) docModalElements.form.reset();
+      ouvrir();
+    };
+
+    const validerEmail = (email) => /\S+@\S+\.\S+/.test(email);
+
+    if (docModalElements.form) {
+      docModalElements.form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!projetDocCourant) return;
+        const firstName = docModalElements.firstname?.value.trim() || '';
+        const lastName = docModalElements.lastname?.value.trim() || '';
+        const email = docModalElements.email?.value.trim() || '';
+        if (!email || !validerEmail(email)) {
+          if (docModalElements.status) docModalElements.status.textContent = 'Email invalide';
+          return;
+        }
+        if (docModalElements.submitBtn) {
+          docModalElements.submitBtn.disabled = true;
+          docModalElements.submitBtn.textContent = 'Envoi...';
+        }
+        if (docModalElements.status) docModalElements.status.textContent = '';
+        try {
+          const reponse = await fetch(`${MON_SERVEUR}/portfolio/projects/${encodeURIComponent(projetDocCourant)}/request-doc`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ firstName, lastName, email })
+          });
+          const resultat = await reponse.json().catch(() => ({}));
+          if (reponse.ok) {
+            if (docModalElements.status) {
+              docModalElements.status.textContent = 'Lien envoyé par email. Vérifiez aussi vos spams.';
+              docModalElements.status.style.color = 'var(--accent)';
+            }
+            setTimeout(fermerEtReset, 1200);
+          } else {
+            const msg = resultat.error || 'Envoi impossible pour le moment.';
+            if (docModalElements.status) {
+              docModalElements.status.textContent = msg;
+              docModalElements.status.style.color = 'var(--danger, #f87171)';
+            }
+          }
+        } catch (err) {
+          logError('Erreur envoi demande doc (public):', err);
+          if (docModalElements.status) {
+            docModalElements.status.textContent = 'Erreur réseau, réessayez.';
+            docModalElements.status.style.color = 'var(--danger, #f87171)';
+          }
+        } finally {
+          if (docModalElements.submitBtn) {
+            docModalElements.submitBtn.disabled = false;
+            docModalElements.submitBtn.textContent = 'Envoyer le lien';
+          }
+        }
+      });
+    }
+
+    if (docModalElements.closeBtn) docModalElements.closeBtn.addEventListener('click', fermerEtReset);
+    if (docModalElements.cancelBtn) docModalElements.cancelBtn.addEventListener('click', fermerEtReset);
+    if (docModalElements.overlay) docModalElements.overlay.addEventListener('click', fermerEtReset);
+
+    return docModalElements;
+  }
+
  * - Chargement et affichage des données personnelles
  * - Navigation et animations
  * - Partage sur les réseaux sociaux
@@ -1191,6 +1338,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const typeColor = typeColors[type] || typeColors['Projet Personnel'];
       const projectTitle = projet.title || 'Projet';
       const encodedTitle = encodeURIComponent(projectTitle);
+      const docDisponible = projet.docAvailable === true;
       
       const article = document.createElement('article');
       article.className = 'project-card-modern';
@@ -1228,6 +1376,11 @@ document.addEventListener('DOMContentLoaded', function() {
               <a href="${projet.link || projet.liveUrl}" target="_blank" rel="noopener noreferrer" class="btn-project btn-live">
                 🌐 Voir le projet
               </a>
+            ` : ''}
+            ${docDisponible ? `
+              <button class="btn-project btn-secondary" type="button" onclick="window.openDocRequest('${encodedTitle}')">
+                📂 Demander le doc
+              </button>
             ` : ''}
           </div>
         </div>
@@ -3113,6 +3266,7 @@ document.addEventListener('DOMContentLoaded', function() {
   function initialiserPortfolio() {
     // FORCER la fermeture de l'overlay AVANT toute autre initialisation
     forcerFermetureOverlay();
+    creerModalDocSiAbsent();
     
     // Fonctions de base
     mettreAJourAnnee();
@@ -3163,8 +3317,8 @@ document.addEventListener('DOMContentLoaded', function() {
       // Ne toucher que les overlays qui ne sont pas le menu mobile overlay
       if (id !== 'mobile-menu-overlay' && !className.includes('menu-mobile-overlay')) {
         // Vérifier si c'est un overlay de maintenance ou autre
-        if (id === 'maintenance-overlay') {
-          // Ne pas supprimer le maintenance overlay, il est géré par verifierModeMaintenance
+        if (id === 'maintenance-overlay' || id === 'doc-request-overlay') {
+          // Ne pas supprimer les overlays gérés (maintenance ou demande doc)
           return;
         }
         // Supprimer tout autre overlay suspect

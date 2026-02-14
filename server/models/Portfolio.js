@@ -33,7 +33,11 @@ const portfolioSchema = new mongoose.Schema({
     demoLink: { type: String, trim: true, match: /^https?:\/\/.+/ },
     emailSubject: { type: String, trim: true, maxlength: 100 },
     featured: { type: Boolean, default: false },
-    public: { type: Boolean, default: true }
+    public: { type: Boolean, default: true },
+    docFile: { type: String }, // data:...;base64
+    docFileName: { type: String, trim: true, maxlength: 150 },
+    docFileSize: { type: Number, min: 0, max: 50 * 1024 * 1024 }, // bytes
+    docPasswordHash: { type: String, trim: true, maxlength: 200 }
   }],
   skills: [{
     icon: { type: String, trim: true, maxlength: 50 },

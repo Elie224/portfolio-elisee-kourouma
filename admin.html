@@ -1262,7 +1262,55 @@
                     </div>
                   </div>
 
-                  <!-- Section 5: Options d'affichage -->
+                  <!-- Section 5: Document protégé -->
+                  <div class="form-section" style="margin-bottom: 32px; padding: 20px; background: rgba(99, 102, 241, 0.08); border-radius: 12px; border: 1px solid rgba(99, 102, 241, 0.2);">
+                    <h4 style="margin: 0 0 16px; color: #818cf8 !important; font-size: 16px; display: flex; align-items: center; gap: 8px; font-weight: 600;">
+                      <span>📂</span> Document protégé
+                    </h4>
+
+                    <p style="margin-top: 0; color: #b4bcc8 !important; font-size: 13px; line-height: 1.6;">
+                      Ajoutez un document privé (PDF, DOCX, ZIP - 50 Mo max). Un lien temporaire sera envoyé par email aux personnes autorisées.
+                    </p>
+                    
+                    <div class="form-group">
+                      <label for="project-doc-file">
+                        Fichier à protéger
+                        <span style="color: var(--muted); font-weight: normal; font-size: 12px; margin-left: 8px;">(PDF, DOCX, ZIP, 50 Mo max)</span>
+                      </label>
+                      <input type="file" id="project-doc-file" accept=".pdf,.doc,.docx,.zip" />
+                      <div id="project-doc-file-info" style="margin-top: 8px; font-size: 13px; color: #b4bcc8 !important;">
+                        Aucun fichier sélectionné.
+                      </div>
+                      <div style="margin-top: 6px; font-size: 12px; color: #b4bcc8 !important;">
+                        🛡️ Le fichier est stocké encodé et le mot de passe est chiffré côté serveur.
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="project-doc-password">
+                        Mot de passe du document
+                        <span style="color: var(--muted); font-weight: normal; font-size: 12px; margin-left: 8px;">(minimum 4 caractères)</span>
+                      </label>
+                      <input type="password" id="project-doc-password" placeholder="Mot de passe nécessaire pour autoriser le partage" minlength="4" />
+                      <div style="margin-top: 6px; font-size: 12px; color: #b4bcc8 !important;">
+                        Ce mot de passe n'est jamais stocké en clair : il est hashé à l'enregistrement.
+                      </div>
+                    </div>
+
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                      <button type="button" class="btn secondary" id="project-doc-remove-btn" style="padding: 10px 16px; font-size: 14px;">
+                        🗑️ Supprimer le document
+                      </button>
+                      <span id="project-doc-remove-hint" style="font-size: 12px; color: #b4bcc8 !important;">Aucun document chargé</span>
+                    </div>
+
+                    <input type="hidden" id="project-doc-file-data" />
+                    <input type="hidden" id="project-doc-file-name" />
+                    <input type="hidden" id="project-doc-file-size" />
+                    <input type="hidden" id="project-doc-removed" value="false" />
+                  </div>
+
+                  <!-- Section 6: Options d'affichage -->
                   <div class="form-section" style="margin-bottom: 32px; padding: 20px; background: rgba(99, 102, 241, 0.03); border-radius: 12px; border: 1px solid rgba(99, 102, 241, 0.1);">
                     <h4 style="margin: 0 0 16px; color: var(--accent); font-size: 16px; display: flex; align-items: center; gap: 8px;">
                       <span>👁️</span> Options d'affichage

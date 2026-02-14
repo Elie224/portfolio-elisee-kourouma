@@ -14,6 +14,9 @@ const express = require('express');
 const router = express.Router();
 const Portfolio = require('../models/Portfolio');
 const { authenticateAdmin, ADMIN_EMAIL, ADMIN_PASSWORD_HASH } = require('../middleware/auth');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
 const { 
   validatePortfolioData, 
   validateLoginData, 
@@ -23,6 +26,62 @@ const {
 
 // Importer le système de logging centralisé
 const { log, logError, logWarn, logSecurity, logSuccess } = require('../utils/logger');
+
+// Transport mail (SMTP)
+let mailTransporter = null;
+function getMailTransporter() {
+  if (mailTransporter) return mailTransporter;
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    logWarn('✉️ SMTP non configuré : définir SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM');
+    return null;
+  }
+  mailTransporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT || 587),
+    secure: !!process.env.SMTP_SECURE && process.env.SMTP_SECURE === 'true',
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS
+    }
+  });
+  return mailTransporter;
+}
+
+function calculerTailleBase64(dataUrl = '') {
+  if (!dataUrl || typeof dataUrl !== 'string') return 0;
+  const base64 = dataUrl.split(',').pop() || '';
+  return Math.floor((base64.length * 3) / 4); // taille en octets
+}
+
+function nettoyerProjetPublic(projet) {
+  const clone = { ...projet._doc || projet };
+  delete clone.docFile;
+  delete clone.docPasswordHash;
+  clone.docAvailable = !!projet.docFile;
+  return clone;
+}
+
+function construireLienTelechargement(req, projectTitle, token) {
+  const base = process.env.BACKEND_PUBLIC_URL || `${req.protocol}://${req.get('host')}`;
+  return `${base}/api/portfolio/projects/${encodeURIComponent(projectTitle)}/download?token=${token}`;
+}
+
+async function envoyerMailMotDePasse({ to, projectTitle, downloadLink }) {
+  const transporter = getMailTransporter();
+  if (!transporter) {
+    logWarn('📧 Mail non envoyé (SMTP non configuré)', { to, projectTitle, downloadLink });
+    return;
+  }
+  await transporter.sendMail({
+    from: process.env.SMTP_FROM || process.env.SMTP_USER,
+    to,
+    subject: `Accès au document du projet "${projectTitle}"`,
+    html: `<p>Bonjour,</p>
+           <p>Voici le lien pour télécharger le document du projet <strong>${projectTitle}</strong> (valable 1h):</p>
+           <p><a href="${downloadLink}">${downloadLink}</a></p>
+           <p>Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet email.</p>`
+  });
+}
 
 /**
  * GET /api/portfolio - Récupérer les données du portfolio (public)
@@ -92,6 +151,11 @@ router.get('/', async (req, res) => {
       delete publicPortfolio.links.cvFile;
       delete publicPortfolio.links.cvFileName;
       delete publicPortfolio.links.cvFileSize;
+    }
+
+    // Nettoyer les projets publics (pas de doc, pas de hash)
+    if (Array.isArray(publicPortfolio.projects)) {
+      publicPortfolio.projects = publicPortfolio.projects.map(nettoyerProjetPublic);
     }
 
     // Ne renvoyer au public que les recherches marquées comme visibles
@@ -247,6 +311,33 @@ router.post('/',
       };
     }
     
+    // Gestion des documents protégés sur les projets
+    try {
+      if (Array.isArray(updateData.projects)) {
+        updateData.projects = updateData.projects.map((projet, idx) => {
+          const copie = { ...projet };
+          if (copie.docFile) {
+            const taille = copie.docFileSize || calculerTailleBase64(copie.docFile);
+            if (taille > 50 * 1024 * 1024) {
+              throw new Error(`DOC_TOO_LARGE_${idx}`);
+            }
+            copie.docFileSize = taille;
+          }
+          if (copie.docPassword) {
+            copie.docPasswordHash = bcrypt.hashSync(copie.docPassword, 10);
+            delete copie.docPassword;
+          }
+          return copie;
+        });
+      }
+    } catch (err) {
+      if (err.message && err.message.startsWith('DOC_TOO_LARGE')) {
+        return res.status(400).json({ error: 'Le document dépasse la limite de 50 Mo', code: 'DOC_TOO_LARGE' });
+      }
+      logError('❌ Erreur traitement document projet:', err);
+      return res.status(400).json({ error: 'Erreur lors du traitement du document du projet' });
+    }
+
     // PROTECTION : Ne pas écraser un CV base64 existant avec 'assets/CV.pdf'
     // Si links.cv est 'assets/CV.pdf' mais qu'il existe un cvFile base64, garder le base64
     if (updateData.links) {
@@ -720,6 +811,93 @@ router.post('/contact',
     
     // Validation des champs obligatoires
     if (!name || !email || !message) {
+
+// Demande de document protégé d'un projet (envoi mail avec lien temporaire)
+router.post('/projects/:title/request-doc', limitDataSize, sanitizeData, async (req, res) => {
+  try {
+    const { title } = req.params;
+    const { firstName, lastName, email } = req.body;
+
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+      return res.status(400).json({ error: 'Email invalide', code: 'INVALID_EMAIL' });
+    }
+
+    const portfolio = await Portfolio.findOne();
+    if (!portfolio || !Array.isArray(portfolio.projects)) {
+      return res.status(404).json({ error: 'Aucun projet', code: 'NO_PROJECT' });
+    }
+
+    const projet = portfolio.projects.find(p => (p.title || '').toLowerCase() === decodeURIComponent(title).toLowerCase());
+    if (!projet || !projet.docFile || !projet.docPasswordHash) {
+      return res.status(404).json({ error: 'Document introuvable pour ce projet', code: 'DOC_NOT_FOUND' });
+    }
+
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({ error: 'Configuration JWT manquante', code: 'MISSING_JWT' });
+    }
+
+    const token = jwt.sign({ projectTitle: projet.title }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const downloadLink = construireLienTelechargement(req, projet.title, token);
+
+    await envoyerMailMotDePasse({
+      to: email,
+      projectTitle: projet.title,
+      downloadLink
+    });
+
+    res.json({ success: true, message: 'Lien envoyé par email', downloadLink });
+  } catch (error) {
+    logError('❌ Erreur demande doc projet:', error);
+    res.status(500).json({ error: 'Erreur serveur', code: 'DOC_REQUEST_ERROR' });
+  }
+});
+
+// Téléchargement du document protégé via token temporaire
+router.get('/projects/:title/download', async (req, res) => {
+  try {
+    const { title } = req.params;
+    const { token } = req.query;
+    if (!token) return res.status(401).json({ error: 'Token manquant' });
+    if (!process.env.JWT_SECRET) return res.status(500).json({ error: 'Configuration JWT manquante' });
+
+    let payload;
+    try {
+      payload = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (e) {
+      return res.status(401).json({ error: 'Token invalide ou expiré' });
+    }
+
+    const portfolio = await Portfolio.findOne();
+    if (!portfolio || !Array.isArray(portfolio.projects)) {
+      return res.status(404).json({ error: 'Aucun projet', code: 'NO_PROJECT' });
+    }
+    const projet = portfolio.projects.find(p => (p.title || '').toLowerCase() === decodeURIComponent(title).toLowerCase());
+    if (!projet || !projet.docFile) {
+      return res.status(404).json({ error: 'Document introuvable', code: 'DOC_NOT_FOUND' });
+    }
+
+    if (payload.projectTitle !== projet.title) {
+      return res.status(403).json({ error: 'Token non valide pour ce projet', code: 'TOKEN_PROJECT_MISMATCH' });
+    }
+
+    const dataUrl = projet.docFile;
+    const base64 = dataUrl.split(',').pop();
+    const buffer = Buffer.from(base64, 'base64');
+    const fileName = projet.docFileName || 'document';
+    let contentType = 'application/octet-stream';
+    if (fileName.toLowerCase().endsWith('.pdf')) contentType = 'application/pdf';
+    if (fileName.toLowerCase().endsWith('.doc')) contentType = 'application/msword';
+    if (fileName.toLowerCase().endsWith('.docx')) contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    if (fileName.toLowerCase().endsWith('.zip')) contentType = 'application/zip';
+
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.send(buffer);
+  } catch (error) {
+    logError('❌ Erreur téléchargement doc projet:', error);
+    res.status(500).json({ error: 'Erreur serveur', code: 'DOC_DOWNLOAD_ERROR' });
+  }
+});
       return res.status(400).json({ 
         error: 'Champs obligatoires manquants',
         message: 'Le nom, l\'email et le message sont requis'

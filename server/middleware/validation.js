@@ -56,6 +56,26 @@ const validatePortfolioData = [
     .isString()
     .isLength({ max: 2000 })
     .withMessage('La description du projet ne peut pas dépasser 2000 caractères'),
+
+  // Document protégé
+  body('projects.*.docFile')
+    .optional()
+    .isString()
+    .withMessage('Le document doit être encodé en base64'),
+  body('projects.*.docFileName')
+    .optional()
+    .isString()
+    .isLength({ max: 150 })
+    .withMessage('Le nom du document est trop long (150 caractères max)'),
+  body('projects.*.docFileSize')
+    .optional()
+    .isInt({ min: 0, max: 50 * 1024 * 1024 })
+    .withMessage('La taille du document est limitée à 50 Mo'),
+  body('projects.*.docPassword')
+    .optional()
+    .isString()
+    .isLength({ min: 4, max: 200 })
+    .withMessage('Le mot de passe du document doit contenir au moins 4 caractères'),
   
   body('skills')
     .optional()

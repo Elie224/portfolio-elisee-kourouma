@@ -199,6 +199,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const typeColor = typeColors[type] || typeColors['Projet Personnel'];
     const projectTitle = projet.title || 'Projet sans titre';
     const projectUrl = `project-details.html?project=${encodeURIComponent(projectTitle)}`;
+    const docDisponible = projet.docAvailable === true;
     
     return `
       <article class="project-card-modern" data-project-index="${index}" style="animation-delay: ${index * 0.1}s">
@@ -243,6 +244,11 @@ document.addEventListener('DOMContentLoaded', function() {
             <a href="${projectUrl}" class="btn-project btn-details">
               📖 Détails
             </a>
+            ${docDisponible ? `
+              <button class="btn-project btn-secondary" type="button" onclick="window.openDocRequest('${encodeURIComponent(projectTitle)}')">
+                📂 Demander le doc
+              </button>
+            ` : ''}
           </div>
         </div>
       </article>
@@ -445,6 +451,120 @@ document.addEventListener('DOMContentLoaded', function() {
       setTimeout(() => animerApparitionProjets(), 100);
     });
   }
+
+  /* ===== DEMANDE DE DOCUMENT PROTÉGÉ ===== */
+
+  let docModalElements = null;
+  let projetDocCourant = null;
+
+  function initialiserModalDoc() {
+    docModalElements = {
+      overlay: document.getElementById('doc-request-overlay'),
+      modal: document.getElementById('doc-request-modal'),
+      closeBtn: document.getElementById('doc-request-close'),
+      cancelBtn: document.getElementById('doc-request-cancel'),
+      submitBtn: document.getElementById('doc-request-submit'),
+      form: document.getElementById('doc-request-form'),
+      projectLabel: document.getElementById('doc-request-project'),
+      firstname: document.getElementById('doc-firstname'),
+      lastname: document.getElementById('doc-lastname'),
+      email: document.getElementById('doc-email'),
+      status: document.getElementById('doc-request-status')
+    };
+
+    if (!docModalElements.form || !docModalElements.overlay || !docModalElements.modal) {
+      logWarn('Modal de demande de document introuvable dans le DOM');
+      return;
+    }
+
+    const fermer = () => {
+      if (docModalElements.overlay) docModalElements.overlay.style.display = 'none';
+      if (docModalElements.modal) docModalElements.modal.style.display = 'none';
+      projetDocCourant = null;
+    };
+
+    const ouvrir = () => {
+      if (docModalElements.overlay) docModalElements.overlay.style.display = 'block';
+      if (docModalElements.modal) docModalElements.modal.style.display = 'flex';
+    };
+
+    window.openDocRequest = function(titreEncode) {
+      const titre = decodeURIComponent(titreEncode || '');
+      projetDocCourant = titre;
+      if (docModalElements.projectLabel) {
+        docModalElements.projectLabel.textContent = titre ? `Projet : ${titre}` : '';
+      }
+      if (docModalElements.status) docModalElements.status.textContent = '';
+      if (docModalElements.form) docModalElements.form.reset();
+      ouvrir();
+    };
+
+    const validerEmail = (email) => /\S+@\S+\.\S+/.test(email);
+
+    docModalElements.form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!projetDocCourant) return;
+      const firstName = docModalElements.firstname?.value.trim() || '';
+      const lastName = docModalElements.lastname?.value.trim() || '';
+      const email = docModalElements.email?.value.trim() || '';
+      if (!email || !validerEmail(email)) {
+        if (docModalElements.status) docModalElements.status.textContent = 'Email invalide';
+        return;
+      }
+
+      if (docModalElements.submitBtn) {
+        docModalElements.submitBtn.disabled = true;
+        docModalElements.submitBtn.textContent = 'Envoi...';
+      }
+      if (docModalElements.status) docModalElements.status.textContent = '';
+
+      try {
+        const reponse = await fetch(`${MON_SERVEUR}/portfolio/projects/${encodeURIComponent(projetDocCourant)}/request-doc`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ firstName, lastName, email })
+        });
+        const resultat = await reponse.json().catch(() => ({}));
+        if (reponse.ok) {
+          if (docModalElements.status) {
+            docModalElements.status.textContent = 'Lien envoyé par email. Pensez à vérifier vos spams.';
+            docModalElements.status.style.color = 'var(--accent)';
+          }
+          setTimeout(fermer, 1200);
+        } else {
+          const msg = resultat.error || 'Envoi impossible pour le moment.';
+          if (docModalElements.status) {
+            docModalElements.status.textContent = msg;
+            docModalElements.status.style.color = 'var(--danger, #f87171)';
+          }
+        }
+      } catch (err) {
+        logError('Erreur envoi demande doc:', err);
+        if (docModalElements.status) {
+          docModalElements.status.textContent = 'Erreur réseau, réessayez.';
+          docModalElements.status.style.color = 'var(--danger, #f87171)';
+        }
+      } finally {
+        if (docModalElements.submitBtn) {
+          docModalElements.submitBtn.disabled = false;
+          docModalElements.submitBtn.textContent = 'Envoyer le lien';
+        }
+      }
+    });
+
+    const fermerEtReset = () => {
+      fermer();
+      if (docModalElements.form) docModalElements.form.reset();
+      if (docModalElements.status) {
+        docModalElements.status.textContent = '';
+        docModalElements.status.style.color = 'var(--muted)';
+      }
+    };
+
+    if (docModalElements.closeBtn) docModalElements.closeBtn.addEventListener('click', fermerEtReset);
+    if (docModalElements.cancelBtn) docModalElements.cancelBtn.addEventListener('click', fermerEtReset);
+    if (docModalElements.overlay) docModalElements.overlay.addEventListener('click', fermerEtReset);
+  }
   
   /* ===== INITIALISATION ===== */
   
@@ -454,6 +574,7 @@ document.addEventListener('DOMContentLoaded', function() {
     chargerProjets();
     configurerFiltres();
     configurerToggleVue();
+    initialiserModalDoc();
     // Si après 5s rien ne s'affiche, forcer le fallback
     setTimeout(forcerAffichageFallback, 5000);
   }
