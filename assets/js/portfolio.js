@@ -94,6 +94,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const aProjets = donnees.projects && donnees.projects.length > 0;
     const aCompetences = donnees.skills && donnees.skills.length > 0;
     const aParcours = donnees.timeline && donnees.timeline.length > 0;
+    const aRecherchesActives = donnees.activeSearches && donnees.activeSearches.length > 0;
     const aSettings = !!donnees.settings; // Conserver les données si des réglages sont présents (ex: maintenance)
     
     // Vérifier si le portfolio contient un CV base64
@@ -104,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function() {
     );
     
     // Ne pas considérer comme vide si un CV base64 est présent ou si des réglages existent
-    return !aProjets && !aCompetences && !aParcours && !aCvBase64 && !aSettings;
+    return !aProjets && !aCompetences && !aParcours && !aRecherchesActives && !aCvBase64 && !aSettings;
   }
   
   // Données actuelles affichées (pour comparaison)
@@ -275,6 +276,7 @@ document.addEventListener('DOMContentLoaded', function() {
       projects: donnees.projects?.length || 0,
       skills: donnees.skills?.length || 0,
       timeline: donnees.timeline?.length || 0,
+      activeSearches: donnees.activeSearches?.length || 0,
       certifications: donnees.certifications?.length || 0,
       stages: donnees.stages?.length || 0,
       alternances: donnees.alternances?.length || 0,
@@ -799,6 +801,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // S'assurer que projects est toujours un tableau
     const projets = Array.isArray(donnees?.projects) ? donnees.projects : (donnees?.projects ? [donnees.projects] : []);
     afficherMesProjets(projets);
+    afficherRecherchesActives(donnees.activeSearches || []);
     
     // Log pour debug
     log('📊 Affichage timeline et compétences:', {
@@ -1171,10 +1174,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const fragment = document.createDocumentFragment();
     const typeColors = {
       'Projet Majeur': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      'PFE Master 1': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+      'Projet de cours': 'linear-gradient(135deg, #36d1dc 0%, #5b86e5 100%)',
+      'PFE Master': 'linear-gradient(135deg, #c471ed 0%, #f64f59 100%)',
       'PFE Licence': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
       'PFA': 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-      'Projet Personnel': 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+      'Projet Personnel': 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+      'Contrat': 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)',
+      'Apprentissage': 'linear-gradient(135deg, #34d399 0%, #10b981 100%)'
     };
     
     // Créer toutes les cartes de manière optimisée
@@ -1244,6 +1250,41 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
+  // Affiche les recherches actives publiques
+  function afficherRecherchesActives(recherches) {
+    const section = document.getElementById('active-search-section');
+    const container = document.getElementById('active-search-cards');
+    if (!section || !container) return;
+
+    const visibles = Array.isArray(recherches) ? recherches.filter(item => item && item.visible !== false) : [];
+
+    if (visibles.length === 0) {
+      section.style.display = 'none';
+      container.innerHTML = '';
+      return;
+    }
+
+    section.style.display = '';
+    container.innerHTML = visibles.map(item => {
+      const statusClass = item.status === 'paused' ? 'paused' : 'active';
+      const statusLabel = item.status === 'paused' ? '⏸️ En pause' : '🟢 Active';
+      const location = item.location ? `<p class="active-search-meta">📍 ${item.location}</p>` : '';
+      const notes = item.notes ? `<p class="muted">${item.notes}</p>` : '';
+      const link = item.link ? `<a class="active-search-link" href="${item.link}" target="_blank" rel="noopener">🔗 Voir le lien</a>` : '';
+
+      return `
+      <article class="active-search-card">
+        <div class="active-search-top">
+          <div class="status-pill ${statusClass}">${statusLabel}</div>
+          <h3>${item.title || 'Recherche'}</h3>
+        </div>
+        ${location}
+        ${notes}
+        ${link}
+      </article>`;
+    }).join('');
+  }
+
   // Carousel/Slider moderne - Un projet à la fois avec défilement horizontal
   function initialiserCarrousel(nombreProjets) {
     const track = document.getElementById('homepage-projects');

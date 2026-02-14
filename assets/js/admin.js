@@ -453,6 +453,7 @@ document.addEventListener('DOMContentLoaded', function() {
     afficherListeAlternances();
     afficherListeTechEvents();
     afficherListeTimeline();
+    afficherListeTestimonials();
     afficherListeActiveSearches();
     afficherListeServices();
     afficherListeFAQ();
@@ -2099,6 +2100,7 @@ document.addEventListener('DOMContentLoaded', function() {
           stages: [],
           alternances: [],
           techEvents: [],
+          testimonials: [],
           services: [],
           faq: [],
           links: {},
@@ -2520,12 +2522,140 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   };
   
-  // Témoignages (placeholder)
-  window.showTestimonialForm = function() {
-    afficherErreur(null, 'Fonctionnalité des témoignages à venir');
+  /* ===== GESTION DES TÉMOIGNAGES ===== */
+
+  function afficherListeTestimonials() {
+    const container = document.getElementById('testimonials-list');
+    if (!container) return;
+
+    const items = mesDonneesActuelles.testimonials || [];
+
+    if (items.length === 0) {
+      container.innerHTML = '<p class="muted">Aucun témoignage pour le moment.</p>';
+      return;
+    }
+
+    container.innerHTML = items.map((item, index) => {
+      const stars = item.rating ? '★'.repeat(item.rating) + '☆'.repeat(5 - item.rating) : '';
+      return `
+        <div class="item-card">
+          <h4>${item.author || 'Auteur inconnu'}</h4>
+          <p class="item-meta">${item.role || ''} ${stars ? '· ' + stars : ''}</p>
+          <p class="muted">${item.text || ''}</p>
+          ${item.photo ? `<div class="muted">Photo: <a href="${item.photo}" target="_blank" rel="noopener">voir</a></div>` : ''}
+          <div class="item-actions">
+            <button class="btn-small" onclick="editTestimonial(${index})">Modifier</button>
+            <button class="btn-small btn-secondary" onclick="deleteTestimonial(${index})">Supprimer</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function lireFichierImageBase64(input) {
+    return new Promise((resolve, reject) => {
+      const file = input?.files?.[0];
+      if (!file) return resolve(null);
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target.result);
+      reader.onerror = () => reject(new Error('Lecture du fichier image échouée'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  window.showTestimonialForm = function(editIndex = null) {
+    const modal = document.getElementById('testimonial-form-modal');
+    const form = document.getElementById('testimonial-form');
+    const title = document.getElementById('testimonial-form-title');
+    const preview = document.getElementById('testimonial-photo-preview');
+
+    if (!modal || !form) return;
+
+    currentEditingId = editIndex;
+
+    if (title) {
+      title.textContent = editIndex !== null ? 'Modifier un témoignage' : 'Ajouter un témoignage';
+    }
+
+    if (editIndex !== null) {
+      const item = mesDonneesActuelles.testimonials?.[editIndex] || {};
+      document.getElementById('testimonial-id').value = editIndex;
+      document.getElementById('testimonial-text').value = item.text || '';
+      document.getElementById('testimonial-author').value = item.author || '';
+      document.getElementById('testimonial-role').value = item.role || '';
+      document.getElementById('testimonial-rating').value = item.rating || 5;
+      document.getElementById('testimonial-photo-url').value = item.photo || '';
+      if (preview) {
+        preview.innerHTML = item.photo ? `<img src="${item.photo}" alt="Preview" style="max-width:120px;border-radius:8px;" />` : '';
+      }
+    } else {
+      form.reset();
+      document.getElementById('testimonial-id').value = '';
+      if (preview) preview.innerHTML = '';
+    }
+
+    modal.style.display = 'block';
   };
   
-  window.hideTestimonialForm = function() {};
+  window.hideTestimonialForm = function() {
+    const modal = document.getElementById('testimonial-form-modal');
+    const preview = document.getElementById('testimonial-photo-preview');
+    if (modal) modal.style.display = 'none';
+    if (preview) preview.innerHTML = '';
+    currentEditingId = null;
+  };
+
+  async function sauvegarderTestimonial(e) {
+    e.preventDefault();
+
+    const text = document.getElementById('testimonial-text').value.trim();
+    const author = document.getElementById('testimonial-author').value.trim();
+    const role = document.getElementById('testimonial-role').value.trim();
+    const rating = Math.min(5, Math.max(1, parseInt(document.getElementById('testimonial-rating').value || '5', 10)));
+    const photoUrl = document.getElementById('testimonial-photo-url').value.trim();
+    const photoFileInput = document.getElementById('testimonial-photo-file');
+
+    if (!text || !author) {
+      afficherErreur(null, 'Le texte et l\'auteur sont obligatoires');
+      return;
+    }
+
+    let photo = photoUrl || '';
+    try {
+      const base64 = await lireFichierImageBase64(photoFileInput);
+      if (base64) photo = base64;
+    } catch (err) {
+      logError('Erreur lecture image témoignage:', err);
+      afficherErreur(null, 'Impossible de lire l\'image du témoignage');
+      return;
+    }
+
+    const item = { text, author, role, rating, photo };
+    const editIndex = currentEditingId;
+    if (editIndex !== null) {
+      mesDonneesActuelles.testimonials[editIndex] = item;
+    } else {
+      if (!mesDonneesActuelles.testimonials) mesDonneesActuelles.testimonials = [];
+      mesDonneesActuelles.testimonials.push(item);
+    }
+
+    await sauvegarderSurServeur();
+    afficherListeTestimonials();
+    window.hideTestimonialForm();
+    afficherSucces('Témoignage enregistré');
+  }
+
+  window.editTestimonial = function(index) {
+    window.showTestimonialForm(index);
+  };
+
+  window.deleteTestimonial = function(index) {
+    if (confirm('Supprimer ce témoignage ?')) {
+      mesDonneesActuelles.testimonials.splice(index, 1);
+      sauvegarderSurServeur();
+      afficherListeTestimonials();
+    }
+  };
   
   
   /* ===== INTERFACE ET ÉVÉNEMENTS ===== */
@@ -2631,6 +2761,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Formulaire événement technologique
     const techEventForm = document.getElementById('tech-event-form');
     if (techEventForm) techEventForm.addEventListener('submit', sauvegarderTechEvent);
+
+    // Formulaire témoignage
+    const testimonialForm = document.getElementById('testimonial-form');
+    if (testimonialForm) testimonialForm.addEventListener('submit', sauvegarderTestimonial);
     
     // Formulaires Paramètres
     const accountInfoForm = document.getElementById('account-info-form');

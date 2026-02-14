@@ -71,6 +71,83 @@ const validatePortfolioData = [
     .optional()
     .isArray()
     .withMessage('Timeline doit être un tableau'),
+
+  body('activeSearches')
+    .optional()
+    .isArray()
+    .withMessage('ActiveSearches doit être un tableau'),
+
+  body('activeSearches.*')
+    .optional()
+    .isObject()
+    .withMessage('Chaque recherche active doit être un objet'),
+
+  body('activeSearches.*.title')
+    .optional()
+    .isString()
+    .isLength({ min: 1, max: 150 })
+    .withMessage('Le titre de la recherche est requis (max 150 caractères)'),
+
+  body('activeSearches.*.status')
+    .optional()
+    .isIn(['active', 'paused'])
+    .withMessage('Le statut de la recherche doit être "active" ou "paused"'),
+
+  body('activeSearches.*.location')
+    .optional()
+    .isString()
+    .isLength({ max: 150 })
+    .withMessage('La localisation est trop longue (max 150 caractères)'),
+
+  body('activeSearches.*.link')
+    .optional()
+    .isString()
+    .isLength({ max: 500 })
+    .withMessage('Le lien de recherche est trop long (max 500 caractères)'),
+
+  body('activeSearches.*.notes')
+    .optional()
+    .isString()
+    .isLength({ max: 800 })
+    .withMessage('Les notes de recherche sont trop longues (max 800 caractères)'),
+
+  body('activeSearches.*.visible')
+    .optional()
+    .isBoolean()
+    .withMessage('Le champ visible doit être un booléen'),
+
+  body('testimonials')
+    .optional()
+    .isArray()
+    .withMessage('Testimonials doit être un tableau'),
+
+  body('testimonials.*')
+    .optional()
+    .isObject()
+    .withMessage('Chaque témoignage doit être un objet'),
+
+  body('testimonials.*.text')
+    .optional()
+    .isString()
+    .isLength({ min: 1, max: 1000 })
+    .withMessage('Le texte du témoignage est requis (max 1000 caractères)'),
+
+  body('testimonials.*.author')
+    .optional()
+    .isString()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('L\'auteur du témoignage est requis'),
+
+  body('testimonials.*.role')
+    .optional()
+    .isString()
+    .isLength({ max: 100 })
+    .withMessage('Le rôle du témoignage est trop long'),
+
+  body('testimonials.*.rating')
+    .optional()
+    .isInt({ min: 1, max: 5 })
+    .withMessage('La note doit être comprise entre 1 et 5'),
   
   body('services')
     .optional()

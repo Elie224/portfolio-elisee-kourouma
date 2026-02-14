@@ -42,3 +42,6 @@ build/
 server/node_modules/
 server/.env
 server/.env.local
+
+# Local Netlify folder
+.netlify

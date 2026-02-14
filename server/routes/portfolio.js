@@ -94,6 +94,11 @@ router.get('/', async (req, res) => {
       delete publicPortfolio.links.cvFileSize;
     }
 
+    // Ne renvoyer au public que les recherches marquées comme visibles
+    if (Array.isArray(publicPortfolio.activeSearches)) {
+      publicPortfolio.activeSearches = publicPortfolio.activeSearches.filter(item => item && item.visible !== false);
+    }
+
     res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=60');
     res.json(publicPortfolio);
   } catch (error) {
@@ -122,6 +127,7 @@ router.get('/', async (req, res) => {
         links: {},
         about: {},
         timeline: [],
+        activeSearches: [],
         services: [],
         certifications: [],
         faq: [],
@@ -143,6 +149,7 @@ router.get('/', async (req, res) => {
       links: {},
       about: {},
       timeline: [],
+      activeSearches: [],
       services: [],
       certifications: [],
       faq: [],
@@ -217,8 +224,10 @@ router.post('/',
       links: req.body.links || {},
       about: req.body.about || {},
       timeline: Array.isArray(req.body.timeline) ? req.body.timeline : [],
+      activeSearches: Array.isArray(req.body.activeSearches) ? req.body.activeSearches : [],
       services: Array.isArray(req.body.services) ? req.body.services : [],
       certifications: Array.isArray(req.body.certifications) ? req.body.certifications : [],
+      testimonials: Array.isArray(req.body.testimonials) ? req.body.testimonials : [],
       stages: Array.isArray(req.body.stages) ? req.body.stages : [],
       alternances: Array.isArray(req.body.alternances) ? req.body.alternances : [],
       techEvents: Array.isArray(req.body.techEvents) ? req.body.techEvents : [],

@@ -187,10 +187,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Badge de type avec couleur
     const typeColors = {
       'Projet Majeur': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      'PFE Master 1': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+      'Projet de cours': 'linear-gradient(135deg, #36d1dc 0%, #5b86e5 100%)',
+      'PFE Master': 'linear-gradient(135deg, #c471ed 0%, #f64f59 100%)',
       'PFE Licence': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
       'PFA': 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-      'Projet Personnel': 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+      'Projet Personnel': 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+      'Contrat': 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)',
+      'Apprentissage': 'linear-gradient(135deg, #34d399 0%, #10b981 100%)'
     };
     
     const typeColor = typeColors[type] || typeColors['Projet Personnel'];

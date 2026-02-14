@@ -65,6 +65,14 @@ const portfolioSchema = new mongoose.Schema({
     subtitle: String,
     description: String
   }],
+  activeSearches: [{
+    title: { type: String, trim: true, maxlength: 150 },
+    status: { type: String, enum: ['active', 'paused'], default: 'active' },
+    location: { type: String, trim: true, maxlength: 150 },
+    link: { type: String, trim: true, maxlength: 500 },
+    notes: { type: String, trim: true, maxlength: 800 },
+    visible: { type: Boolean, default: true }
+  }],
   services: [{
     icon: String,
     title: String,
@@ -98,6 +106,13 @@ const portfolioSchema = new mongoose.Schema({
     description: String,
     link: String,
     photo: { type: String, trim: true, maxlength: 300 } // URL ou base64
+  }],
+  testimonials: [{
+    text: { type: String, required: true, trim: true, maxlength: 1000 },
+    author: { type: String, required: true, trim: true, maxlength: 100 },
+    role: { type: String, trim: true, maxlength: 100 },
+    rating: { type: Number, min: 1, max: 5, default: 5 },
+    photo: { type: String, trim: true, maxlength: 1000 }
   }],
   contactMessages: [{
     id: Number,
@@ -147,10 +162,12 @@ const MINIMAL_PORTFOLIO_DATA = {
   links: { cv: "", cvFile: "", cvFileName: "", cvFileSize: 0, social: [] },
   about: { heroDescription: "Master IA", stats: { projects: 0, experience: 2, technologies: 10 } },
   timeline: [],
+  activeSearches: [],
   services: [],
   certifications: [],
   internships: [],
   techEvents: [],
+  testimonials: [],
   contactMessages: [],
   faq: [],
   settings: {

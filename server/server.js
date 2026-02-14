@@ -20,7 +20,7 @@ const compression = require('compression');
 require('dotenv').config();
 
 // Importer le système de logging centralisé
-const { log, logError, logWarn, logRequest, logSecurity, estEnDeveloppement } = require('./utils/logger');
+const { log, logError, logWarn, logRequest, logSecurity, logSuccess, estEnDeveloppement } = require('./utils/logger');
 
 // Vérification des variables d'environnement critiques (uniquement en développement)
 // Cette vérification aide à détecter les problèmes de configuration tôt
