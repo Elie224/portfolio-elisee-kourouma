@@ -801,17 +801,6 @@ router.post('/auth/change-password',
   }
 );
 
-// POST /api/portfolio/contact - Envoyer un message de contact
-router.post('/contact', 
-  limitDataSize,
-  sanitizeData,
-  async (req, res) => {
-  try {
-    const { name, email, subject, message } = req.body;
-    
-    // Validation des champs obligatoires
-    if (!name || !email || !message) {
-
 // Demande de document protégé d'un projet (envoi mail avec lien temporaire)
 router.post('/projects/:title/request-doc', limitDataSize, sanitizeData, async (req, res) => {
   try {
@@ -898,6 +887,17 @@ router.get('/projects/:title/download', async (req, res) => {
     res.status(500).json({ error: 'Erreur serveur', code: 'DOC_DOWNLOAD_ERROR' });
   }
 });
+
+// POST /api/portfolio/contact - Envoyer un message de contact
+router.post('/contact', 
+  limitDataSize,
+  sanitizeData,
+  async (req, res) => {
+  try {
+    const { name, email, subject, message } = req.body;
+    
+    // Validation des champs obligatoires
+    if (!name || !email || !message) {
       return res.status(400).json({ 
         error: 'Champs obligatoires manquants',
         message: 'Le nom, l\'email et le message sont requis'
