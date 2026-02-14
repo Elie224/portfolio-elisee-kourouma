@@ -1190,6 +1190,53 @@ header.scrolled {
   transition: all 0.1s ease;
 }
 
+/* Bouton de retour / navigation secondaire */
+.back-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0 28px;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid var(--couleur-bordure);
+  background: var(--couleur-fond-secondaire);
+  color: var(--couleur-texte);
+  text-decoration: none;
+  border-radius: var(--rayon-full);
+  font-weight: var(--font-weight-medium);
+  box-shadow: var(--ombre-sm);
+  transition: var(--transition-base);
+  cursor: pointer;
+}
+
+.back-button:hover {
+  border-color: var(--couleur-accent);
+  color: var(--couleur-accent);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.2);
+  transform: translateY(-2px);
+}
+
+.back-button:active {
+  transform: translateY(0);
+  box-shadow: var(--ombre-sm);
+}
+
+@media (max-width: 640px) {
+  .back-bar {
+    margin: 8px 0 20px;
+  }
+
+  .back-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 
 .btn-secondary {
   background: var(--couleur-glass);

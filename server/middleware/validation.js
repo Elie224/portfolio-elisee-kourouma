@@ -8,7 +8,7 @@
  * @date 2026
  */
 
-const { body, validationResult } = require('express-validator');
+const { body, param, validationResult } = require('express-validator');
 const { logSecurity, logError, logWarn } = require('../utils/logger');
 
 // Validation pour les données portfolio
@@ -341,9 +341,55 @@ const limitDataSize = (req, res, next) => {
   }
 };
 
+// Middleware générique pour renvoyer les erreurs de validation
+const handleValidationErrors = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    const details = errors.array({ onlyFirstError: true });
+    logSecurity('❌ Erreurs de validation', details);
+    return res.status(400).json({
+      error: 'Données invalides',
+      code: 'VALIDATION_ERROR',
+      details
+    });
+  }
+  next();
+};
+
+// Validation message de contact public
+const validateContactMessage = [
+  body('name').trim().isLength({ min: 2, max: 120 }).withMessage('Nom requis (2-120)'),
+  body('email').trim().isEmail().withMessage('Email invalide').isLength({ max: 180 }).normalizeEmail({ gmail_remove_dots: false }),
+  body('subject').optional().trim().isLength({ max: 180 }).withMessage('Sujet trop long'),
+  body('message').trim().isLength({ min: 10, max: 2000 }).withMessage('Message requis (10-2000)'),
+  handleValidationErrors
+];
+
+// Validation demande de doc protégé
+const validateRequestDoc = [
+  param('title').trim().isLength({ min: 1, max: 200 }).withMessage('Projet invalide'),
+  body('firstName').optional().trim().isLength({ max: 120 }).withMessage('Prénom trop long'),
+  body('lastName').optional().trim().isLength({ max: 120 }).withMessage('Nom trop long'),
+  body('email').trim().isEmail().withMessage('Email invalide').isLength({ max: 180 }).normalizeEmail({ gmail_remove_dots: false }),
+  body('subject').optional().trim().isLength({ max: 180 }).withMessage('Sujet trop long'),
+  body('message').optional().trim().isLength({ max: 2000 }).withMessage('Message trop long (2000 max)'),
+  handleValidationErrors
+];
+
+// Validation mot de passe doc
+const validateDocPassword = [
+  param('title').trim().isLength({ min: 1, max: 200 }).withMessage('Projet invalide'),
+  body('password').isLength({ min: 4, max: 200 }).withMessage('Mot de passe requis (4-200)'),
+  handleValidationErrors
+];
+
 module.exports = {
   validatePortfolioData,
   validateLoginData,
   sanitizeData,
-  limitDataSize
+  limitDataSize,
+  handleValidationErrors,
+  validateContactMessage,
+  validateRequestDoc,
+  validateDocPassword
 };

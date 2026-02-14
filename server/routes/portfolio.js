@@ -17,15 +17,33 @@ const { authenticateAdmin, ADMIN_EMAIL, ADMIN_PASSWORD_HASH } = require('../midd
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
+const rateLimit = require('express-rate-limit');
 const { 
   validatePortfolioData, 
   validateLoginData, 
   sanitizeData, 
-  limitDataSize 
+  limitDataSize,
+  validateContactMessage,
+  validateRequestDoc,
+  validateDocPassword,
+  handleValidationErrors
 } = require('../middleware/validation');
 
 // Importer le système de logging centralisé
 const { log, logError, logWarn, logSecurity, logSuccess } = require('../utils/logger');
+
+// Limiteur strict pour endpoints publics sensibles
+const strictLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: process.env.NODE_ENV === 'development' ? 1000 : 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => process.env.NODE_ENV === 'development',
+  handler: (req, res) => {
+    logSecurity('🚫 Rate limit strict', { path: req.path, ip: req.ip });
+    return res.status(429).json({ error: 'Trop de requêtes', code: 'RATE_LIMIT' });
+  }
+});
 
 // Transport mail (SMTP)
 let mailTransporter = null;
@@ -802,14 +820,17 @@ router.post('/auth/change-password',
 );
 
 // Demande d'accès : enregistre la demande et notifie l'admin, sans envoyer le document
-router.post('/projects/:title/request-doc', limitDataSize, sanitizeData, async (req, res) => {
+router.post(
+  '/projects/:title/request-doc',
+  strictLimiter,
+  limitDataSize,
+  sanitizeData,
+  validateRequestDoc,
+  handleValidationErrors,
+  async (req, res) => {
   try {
     const { title } = req.params;
     const { firstName, lastName, email, message, subject } = req.body;
-
-    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
-      return res.status(400).json({ error: 'Email invalide', code: 'INVALID_EMAIL' });
-    }
 
     const portfolio = await Portfolio.findOne();
     if (!portfolio || !Array.isArray(portfolio.projects)) {
@@ -826,8 +847,8 @@ router.post('/projects/:title/request-doc', limitDataSize, sanitizeData, async (
       id: Date.now(),
       name: `${firstName || ''} ${lastName || ''}`.trim() || 'Demandeur',
       email: email.trim().toLowerCase(),
-      subject: subject || `Demande mot de passe - ${projet.title}`,
-      message: message || 'Demande de mot de passe pour document protégé',
+      subject: subject?.trim() || `Demande mot de passe - ${projet.title}`,
+      message: message?.trim() || 'Demande de mot de passe pour document protégé',
       date: new Date().toISOString(),
       read: false
     };
@@ -853,14 +874,17 @@ router.post('/projects/:title/request-doc', limitDataSize, sanitizeData, async (
 });
 
 // Validation du mot de passe pour obtenir un lien de téléchargement temporaire
-router.post('/projects/:title/validate-password', limitDataSize, sanitizeData, async (req, res) => {
+router.post(
+  '/projects/:title/validate-password',
+  strictLimiter,
+  limitDataSize,
+  sanitizeData,
+  validateDocPassword,
+  handleValidationErrors,
+  async (req, res) => {
   try {
     const { title } = req.params;
     const { password } = req.body;
-
-    if (!password || password.length < 4) {
-      return res.status(400).json({ error: 'Mot de passe requis', code: 'PASSWORD_REQUIRED' });
-    }
 
     const portfolio = await Portfolio.findOne();
     if (!portfolio || !Array.isArray(portfolio.projects)) {
@@ -938,28 +962,16 @@ router.get('/projects/:title/download', async (req, res) => {
 });
 
 // POST /api/portfolio/contact - Envoyer un message de contact
-router.post('/contact', 
+router.post(
+  '/contact',
+  strictLimiter,
   limitDataSize,
   sanitizeData,
+  validateContactMessage,
+  handleValidationErrors,
   async (req, res) => {
   try {
     const { name, email, subject, message } = req.body;
-    
-    // Validation des champs obligatoires
-    if (!name || !email || !message) {
-      return res.status(400).json({ 
-        error: 'Champs obligatoires manquants',
-        message: 'Le nom, l\'email et le message sont requis'
-      });
-    }
-    
-    // Validation de l'email
-    const emailRegex = /^\S+@\S+\.\S+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ 
-        error: 'Email invalide'
-      });
-    }
     
     // Récupérer le portfolio et ajouter le message
     const portfolio = await Portfolio.findOne();

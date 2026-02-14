@@ -50,8 +50,10 @@
       </nav>
     </header>
     <main class="container" role="main" id="main-content">
-      <div style="margin-bottom: 24px;">
-        <a href="projects.html" class="btn secondary">← Retour aux projets</a>
+      <div class="back-bar">
+        <button class="back-button" type="button" onclick="window.history.length > 1 ? window.history.back() : window.location.href='projects.html';">
+          ← Retour
+        </button>
       </div>
       
       <div id="project-details-container">

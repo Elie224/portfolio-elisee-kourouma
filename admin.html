@@ -875,6 +875,11 @@
     </header>
 
     <div class="admin-container">
+      <div class="back-bar">
+        <button class="back-button" type="button" onclick="window.history.length > 1 ? window.history.back() : window.location.href='index.html';">
+          ← Retour
+        </button>
+      </div>
       <div id="global-toast" class="success-message" style="display: none;"></div>
       <!-- Login Form -->
       <div id="login-container" class="login-container">

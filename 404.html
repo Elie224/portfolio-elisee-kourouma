@@ -36,6 +36,11 @@
       </nav>
     </header>
     <main class="container" role="main" id="main-content" style="min-height: 60vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 60px 16px;">
+      <div class="back-bar" style="justify-content: center;">
+        <button class="back-button" type="button" onclick="window.history.length > 1 ? window.history.back() : window.location.href='index.html';">
+          ← Retour
+        </button>
+      </div>
       <div>
         <h1 style="font-size: 120px; margin: 0; background: linear-gradient(135deg, var(--couleur-accent), #93a5ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">404</h1>
         <h2 style="margin-top: 20px;">Page non trouvée</h2>
