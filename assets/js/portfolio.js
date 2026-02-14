@@ -1378,7 +1378,7 @@ document.addEventListener('DOMContentLoaded', function() {
               </a>
             ` : ''}
             ${docDisponible ? `
-              <button class="btn-project btn-secondary" type="button" onclick="window.openDocRequest('${encodedTitle}')">
+              <button class="btn-project btn-secondary" type="button" data-doc-request="${encodedTitle}">
                 📂 Demander le doc
               </button>
             ` : ''}
@@ -3267,6 +3267,23 @@ document.addEventListener('DOMContentLoaded', function() {
     // FORCER la fermeture de l'overlay AVANT toute autre initialisation
     forcerFermetureOverlay();
     creerModalDocSiAbsent();
+
+    // Délégation clic pour boutons Demander le doc (toutes pages)
+    document.addEventListener('click', (event) => {
+      const btn = event.target.closest('[data-doc-request]');
+      if (!btn) return;
+      event.preventDefault();
+      const titre = btn.dataset.docRequest || '';
+      if (typeof window.openDocRequest === 'function') {
+        window.openDocRequest(titre);
+      } else {
+        // fallback : recréer la modal si besoin
+        creerModalDocSiAbsent();
+        if (typeof window.openDocRequest === 'function') {
+          window.openDocRequest(titre);
+        }
+      }
+    });
     
     // Fonctions de base
     mettreAJourAnnee();

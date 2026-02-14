@@ -245,7 +245,7 @@ document.addEventListener('DOMContentLoaded', function() {
               📖 Détails
             </a>
             ${docDisponible ? `
-              <button class="btn-project btn-secondary" type="button" onclick="window.openDocRequest('${encodeURIComponent(projectTitle)}')">
+              <button class="btn-project btn-secondary" type="button" data-doc-request="${encodeURIComponent(projectTitle)}">
                 📂 Demander le doc
               </button>
             ` : ''}
