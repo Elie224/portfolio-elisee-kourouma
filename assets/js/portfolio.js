@@ -3,7 +3,9 @@
  * Script principal - Code écrit pour être compris par un humain
  * 
  * Ce fichier gère toute l'interactivité du portfolio :
-  /* ===== DOCUMENT PROTÉGÉ (PUBLIC) ===== */
+ */
+
+/* ===== DOCUMENT PROTÉGÉ (PUBLIC) ===== */
   let docModalElements = null;
   let projetDocCourant = null;
 
@@ -150,11 +152,12 @@
     return docModalElements;
   }
 
- * - Chargement et affichage des données personnelles
- * - Navigation et animations
- * - Partage sur les réseaux sociaux
- * - Contact et interactions
- */
+  /*
+   * - Chargement et affichage des données personnelles
+   * - Navigation et animations
+   * - Partage sur les réseaux sociaux
+   * - Contact et interactions
+   */
 
 // On attend que la page soit complètement chargée
 document.addEventListener('DOMContentLoaded', function() {
