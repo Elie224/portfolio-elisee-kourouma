@@ -4397,6 +4397,32 @@ header.scrolled {
   max-width: 900px;
 }
 
+@media (max-width: 768px) {
+  .projects-hero {
+    padding: 40px 0;
+    background-size: 104% 104%;
+    animation-duration: 16s;
+  }
+  .projects-hero__title {
+    font-size: clamp(28px, 6vw, 36px);
+  }
+  .projects-hero__lede {
+    font-size: 18px;
+    line-height: 1.6;
+  }
+}
+
+@media (max-width: 480px) {
+  .projects-hero {
+    padding: 32px 0;
+    background-size: 102% 102%;
+    animation-duration: 18s;
+  }
+  .projects-hero__lede {
+    font-size: 17px;
+  }
+}
+
 /* ===== Page À propos ===== */
 .about-hero {
   display: flex;
@@ -4442,6 +4468,33 @@ header.scrolled {
   font-size: 19px;
   line-height: 1.65;
   color: #e6ecff;
+}
+
+@media (max-width: 768px) {
+  .about-hero {
+    padding: 40px 0;
+    background-size: 104% 104%;
+    animation-duration: 16s;
+  }
+  .about-hero__lede {
+    font-size: 18px;
+  }
+  .pill {
+    font-size: 0.95rem;
+    padding: 9px 12px;
+    gap: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .about-hero {
+    padding: 32px 0;
+    background-size: 102% 102%;
+    animation-duration: 18s;
+  }
+  .about-hero__lede {
+    font-size: 17px;
+  }
 }
 
 .about-hero__eyebrow {
