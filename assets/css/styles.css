@@ -4355,9 +4355,10 @@ header.scrolled {
   text-align: center;
   border-radius: 24px;
   overflow: hidden;
-  background: linear-gradient(135deg, rgba(5, 9, 17, 0.8), rgba(7, 10, 19, 0.82)),
-              linear-gradient(120deg, rgba(124, 147, 255, 0.2), transparent 45%),
+  background: linear-gradient(135deg, rgba(5, 9, 17, 0.58), rgba(7, 10, 19, 0.62)),
+              linear-gradient(120deg, rgba(124, 147, 255, 0.18), transparent 45%),
               url('../img/projet.png');
+  background-blend-mode: soft-light, normal, normal;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -4398,9 +4399,10 @@ header.scrolled {
   position: relative;
   overflow: hidden;
   border-radius: 24px;
-  background: linear-gradient(135deg, rgba(5, 9, 17, 0.75), rgba(7, 10, 19, 0.8)),
-              linear-gradient(120deg, rgba(124, 147, 255, 0.22), transparent 45%),
+  background: linear-gradient(135deg, rgba(5, 9, 17, 0.58), rgba(7, 10, 19, 0.62)),
+              linear-gradient(120deg, rgba(124, 147, 255, 0.18), transparent 45%),
               url('../img/ia.png');
+  background-blend-mode: soft-light, normal, normal;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
