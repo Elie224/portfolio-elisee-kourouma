@@ -1007,6 +1007,17 @@ document.addEventListener('DOMContentLoaded', function() {
   
   
   /* ===== GESTION DES STAGES ===== */
+
+  async function lireFichierDocBase64(input) {
+    return new Promise((resolve, reject) => {
+      const file = input?.files?.[0];
+      if (!file) return resolve(null);
+      const reader = new FileReader();
+      reader.onload = e => resolve({ base64: e.target.result, name: file.name, size: file.size });
+      reader.onerror = () => reject(new Error('Lecture du fichier rapport échouée'));
+      reader.readAsDataURL(file);
+    });
+  }
   
   // Affiche la liste des stages
   function afficherListeStages() {
@@ -1058,9 +1069,15 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('stage-description').value = item.description || '';
       document.getElementById('stage-technologies').value = (item.technologies || []).join(', ');
       document.getElementById('stage-link').value = item.link || '';
+      const info = document.getElementById('stage-report-info');
+      if (info) info.textContent = item.docFileName ? `Rapport chargé: ${item.docFileName}` : 'Aucun rapport chargé';
+      const passInput = document.getElementById('stage-report-password');
+      if (passInput) passInput.value = '';
     } else {
       form.reset();
       document.getElementById('stage-id').value = '';
+      const info = document.getElementById('stage-report-info');
+      if (info) info.textContent = 'Aucun rapport chargé';
     }
     
     modal.style.display = 'block';
@@ -1077,6 +1094,10 @@ document.addEventListener('DOMContentLoaded', function() {
   async function sauvegarderStage(e) {
     e.preventDefault();
     
+    const docInfoEl = document.getElementById('stage-report-info');
+    const docInput = document.getElementById('stage-report-file');
+    const docPassword = document.getElementById('stage-report-password')?.value.trim();
+
     const item = {
       title: document.getElementById('stage-title').value.trim(),
       company: document.getElementById('stage-company').value.trim(),
@@ -1093,6 +1114,28 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     
+    // Charger le rapport de stage si fourni
+    try {
+      const fichier = await lireFichierDocBase64(docInput);
+      if (fichier) {
+        if (fichier.size > 50 * 1024 * 1024) {
+          afficherErreur(null, 'Rapport trop volumineux (max 50 Mo)');
+          return;
+        }
+        item.docFile = fichier.base64;
+        item.docFileName = fichier.name;
+        item.docFileSize = fichier.size;
+        if (docInfoEl) docInfoEl.textContent = `Rapport chargé: ${fichier.name}`;
+      }
+    } catch (err) {
+      afficherErreur(null, 'Impossible de lire le rapport de stage');
+      return;
+    }
+
+    if (docPassword) {
+      item.docPassword = docPassword;
+    }
+
     const editIndex = currentEditingId;
     if (editIndex !== null) {
       mesDonneesActuelles.stages[editIndex] = item;
@@ -2890,6 +2933,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Formulaire stage
     const stageForm = document.getElementById('stage-form');
     if (stageForm) stageForm.addEventListener('submit', sauvegarderStage);
+    const stageReportInput = document.getElementById('stage-report-file');
+    if (stageReportInput) {
+      stageReportInput.addEventListener('change', () => {
+        const info = document.getElementById('stage-report-info');
+        const file = stageReportInput.files?.[0];
+        if (info) info.textContent = file ? `Rapport sélectionné: ${file.name}` : 'Aucun rapport chargé';
+      });
+    }
     
     // Formulaire alternance
     const alternanceForm = document.getElementById('alternance-form');

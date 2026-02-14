@@ -176,6 +176,17 @@ router.get('/', async (req, res) => {
       publicPortfolio.projects = publicPortfolio.projects.map(nettoyerProjetPublic);
     }
 
+    // Nettoyer les stages publics (pas de rapport, pas de hash)
+    if (Array.isArray(publicPortfolio.stages)) {
+      publicPortfolio.stages = publicPortfolio.stages.map(stage => {
+        const clone = { ...stage };
+        delete clone.docFile;
+        delete clone.docPasswordHash;
+        clone.docAvailable = !!stage.docFile;
+        return clone;
+      });
+    }
+
     // Ne renvoyer au public que les recherches marquées comme visibles
     if (Array.isArray(publicPortfolio.activeSearches)) {
       publicPortfolio.activeSearches = publicPortfolio.activeSearches.filter(item => item && item.visible !== false);
@@ -348,9 +359,31 @@ router.post('/',
           return copie;
         });
       }
+
+      // Gestion des rapports protégés sur les stages
+      if (Array.isArray(updateData.stages)) {
+        updateData.stages = updateData.stages.map((stage, idx) => {
+          const copie = { ...stage };
+          if (copie.docFile) {
+            const taille = copie.docFileSize || calculerTailleBase64(copie.docFile);
+            if (taille > 50 * 1024 * 1024) {
+              throw new Error(`STAGE_DOC_TOO_LARGE_${idx}`);
+            }
+            copie.docFileSize = taille;
+          }
+          if (copie.docPassword) {
+            copie.docPasswordHash = bcrypt.hashSync(copie.docPassword, 10);
+            delete copie.docPassword;
+          }
+          return copie;
+        });
+      }
     } catch (err) {
       if (err.message && err.message.startsWith('DOC_TOO_LARGE')) {
         return res.status(400).json({ error: 'Le document dépasse la limite de 50 Mo', code: 'DOC_TOO_LARGE' });
+      }
+      if (err.message && err.message.startsWith('STAGE_DOC_TOO_LARGE')) {
+        return res.status(400).json({ error: 'Le rapport de stage dépasse la limite de 50 Mo', code: 'STAGE_DOC_TOO_LARGE' });
       }
       logError('❌ Erreur traitement document projet:', err);
       return res.status(400).json({ error: 'Erreur lors du traitement du document du projet' });
@@ -834,6 +867,151 @@ router.post(
 
     const portfolio = await Portfolio.findOne();
     if (!portfolio || !Array.isArray(portfolio.projects)) {
+// Demande d'accès au rapport de stage (code requis)
+router.post(
+  '/stages/:title/request-report',
+  strictLimiter,
+  limitDataSize,
+  sanitizeData,
+  validateRequestDoc,
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      const { title } = req.params;
+      const { firstName, lastName, email, message, subject } = req.body;
+
+      const portfolio = await Portfolio.findOne();
+      if (!portfolio || !Array.isArray(portfolio.stages)) {
+        return res.status(404).json({ error: 'Aucun stage', code: 'NO_STAGE' });
+      }
+
+      const stage = portfolio.stages.find(s => (s.title || '').toLowerCase() === decodeURIComponent(title).toLowerCase());
+      if (!stage || !stage.docFile || !stage.docPasswordHash) {
+        return res.status(404).json({ error: 'Rapport introuvable pour ce stage', code: 'STAGE_REPORT_NOT_FOUND' });
+      }
+
+      const demande = {
+        id: Date.now(),
+        name: `${firstName || ''} ${lastName || ''}`.trim() || 'Demandeur',
+        email: email.trim().toLowerCase(),
+        subject: subject?.trim() || `Demande code rapport - ${stage.title}`,
+        message: message?.trim() || 'Demande de code pour rapport de stage',
+        date: new Date().toISOString(),
+        read: false
+      };
+      await Portfolio.findOneAndUpdate({}, { $push: { contactMessages: demande } }, { upsert: true });
+
+      const transporter = getMailTransporter();
+      if (transporter && ADMIN_EMAIL) {
+        await transporter.sendMail({
+          from: process.env.SMTP_FROM || process.env.SMTP_USER,
+          to: ADMIN_EMAIL,
+          replyTo: email,
+          subject: subject?.trim() || `Demande code rapport - ${stage.title}`,
+          text: `Demande de code pour le rapport de stage "${stage.title}"
+Nom: ${firstName || ''} ${lastName || ''}
+Email: ${email}
+Message: ${message || ''}`
+        }).catch(err => logWarn('⚠️ Notification admin non envoyée (rapport stage)', err));
+      }
+
+      res.json({ success: true, message: 'Demande envoyée. Vous recevrez un code si votre demande est acceptée.' });
+    } catch (error) {
+      logError('❌ Erreur demande rapport stage:', error);
+      res.status(500).json({ error: 'Erreur serveur', code: 'STAGE_REPORT_REQUEST_ERROR' });
+    }
+  }
+);
+
+// Validation du code de rapport de stage pour obtenir un lien temporaire
+router.post(
+  '/stages/:title/validate-report',
+  strictLimiter,
+  limitDataSize,
+  sanitizeData,
+  validateDocPassword,
+  handleValidationErrors,
+  async (req, res) => {
+    try {
+      const { title } = req.params;
+      const { password } = req.body;
+
+      const portfolio = await Portfolio.findOne();
+      if (!portfolio || !Array.isArray(portfolio.stages)) {
+        return res.status(404).json({ error: 'Aucun stage', code: 'NO_STAGE' });
+      }
+
+      const stage = portfolio.stages.find(s => (s.title || '').toLowerCase() === decodeURIComponent(title).toLowerCase());
+      if (!stage || !stage.docFile || !stage.docPasswordHash) {
+        return res.status(404).json({ error: 'Rapport introuvable pour ce stage', code: 'STAGE_REPORT_NOT_FOUND' });
+      }
+
+      const ok = await bcrypt.compare(password, stage.docPasswordHash);
+      if (!ok) {
+        return res.status(401).json({ error: 'Code incorrect', code: 'INVALID_STAGE_CODE' });
+      }
+
+      if (!process.env.JWT_SECRET) {
+        return res.status(500).json({ error: 'Configuration JWT manquante', code: 'MISSING_JWT' });
+      }
+
+      const token = jwt.sign({ stageTitle: stage.title }, process.env.JWT_SECRET, { expiresIn: '1h' });
+      const base = process.env.BACKEND_PUBLIC_URL || `${req.protocol}://${req.get('host')}`;
+      const downloadLink = `${base}/api/portfolio/stages/${encodeURIComponent(stage.title)}/download-report?token=${token}`;
+      res.json({ success: true, downloadLink });
+    } catch (error) {
+      logError('❌ Erreur validation code rapport stage:', error);
+      res.status(500).json({ error: 'Erreur serveur', code: 'STAGE_REPORT_CODE_ERROR' });
+    }
+  }
+);
+
+// Téléchargement du rapport de stage via token
+router.get('/stages/:title/download-report', async (req, res) => {
+  try {
+    const { title } = req.params;
+    const { token } = req.query;
+    if (!token) return res.status(401).json({ error: 'Token manquant' });
+    if (!process.env.JWT_SECRET) return res.status(500).json({ error: 'Configuration JWT manquante' });
+
+    let payload;
+    try {
+      payload = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (e) {
+      return res.status(401).json({ error: 'Token invalide ou expiré' });
+    }
+
+    const portfolio = await Portfolio.findOne();
+    if (!portfolio || !Array.isArray(portfolio.stages)) {
+      return res.status(404).json({ error: 'Aucun stage', code: 'NO_STAGE' });
+    }
+    const stage = portfolio.stages.find(s => (s.title || '').toLowerCase() === decodeURIComponent(title).toLowerCase());
+    if (!stage || !stage.docFile) {
+      return res.status(404).json({ error: 'Rapport introuvable', code: 'STAGE_REPORT_NOT_FOUND' });
+    }
+
+    if (payload.stageTitle !== stage.title) {
+      return res.status(403).json({ error: 'Token non valide pour ce stage', code: 'TOKEN_STAGE_MISMATCH' });
+    }
+
+    const dataUrl = stage.docFile;
+    const base64 = dataUrl.split(',').pop();
+    const buffer = Buffer.from(base64, 'base64');
+    const fileName = stage.docFileName || 'rapport-stage';
+    let contentType = 'application/pdf';
+    if (fileName.toLowerCase().endsWith('.doc')) contentType = 'application/msword';
+    if (fileName.toLowerCase().endsWith('.docx')) contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    if (fileName.toLowerCase().endsWith('.zip')) contentType = 'application/zip';
+
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.send(buffer);
+  } catch (error) {
+    logError('❌ Erreur téléchargement rapport stage:', error);
+    res.status(500).json({ error: 'Erreur serveur', code: 'STAGE_REPORT_DOWNLOAD_ERROR' });
+  }
+});
+
       return res.status(404).json({ error: 'Aucun projet', code: 'NO_PROJECT' });
     }
 

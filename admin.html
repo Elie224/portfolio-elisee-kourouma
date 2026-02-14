@@ -1902,6 +1902,16 @@
                     <textarea id="stage-description" placeholder="Décrivez vos missions et responsabilités..." required></textarea>
                   </div>
                   <div class="form-group">
+                    <label for="stage-report-file">Rapport de stage (PDF/Doc/Zip) - protégé</label>
+                    <input type="file" id="stage-report-file" accept=".pdf,.doc,.docx,.zip" />
+                    <div class="muted" id="stage-report-info" style="margin-top:8px; font-size: 13px;">Aucun rapport chargé</div>
+                  </div>
+                  <div class="form-group">
+                    <label for="stage-report-password">Code d'accès au rapport</label>
+                    <input type="password" id="stage-report-password" placeholder="Code requis pour lire le rapport" />
+                    <p class="muted" style="font-size: 13px; margin-top: 6px;">Partagez ce code seulement aux personnes autorisées. Il sera nécessaire pour télécharger le rapport.</p>
+                  </div>
+                  <div class="form-group">
                     <label for="stage-technologies">Technologies utilisées (séparées par des virgules)</label>
                     <input type="text" id="stage-technologies" placeholder="React, Node.js, MongoDB" />
                   </div>

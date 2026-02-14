@@ -3131,10 +3131,76 @@ document.addEventListener('DOMContentLoaded', function() {
               En savoir plus
             </a>
           ` : ''}
+          ${stage.docAvailable ? `
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top: var(--espacement-sm);">
+              <button class="btn" data-stage-request="${encodeURIComponent(stage.title || stage.company || 'stage')}" style="padding:10px 14px; font-size:0.9rem;">
+                Demander le code du rapport
+              </button>
+              <button class="btn secondary" data-stage-validate="${encodeURIComponent(stage.title || stage.company || 'stage')}" style="padding:10px 14px; font-size:0.9rem;">
+                J'ai un code
+              </button>
+            </div>
+          ` : ''}
         </div>
       `;
     }).join('');
+
+    attacherActionsRapportStage();
     
+
+  async function attacherActionsRapportStage() {
+    const requestButtons = document.querySelectorAll('[data-stage-request]');
+    const validateButtons = document.querySelectorAll('[data-stage-validate]');
+
+    requestButtons.forEach(btn => {
+      btn.onclick = async () => {
+        const title = decodeURIComponent(btn.getAttribute('data-stage-request'));
+        const email = prompt('Votre email pour recevoir le code :');
+        if (!email) return;
+        const message = prompt('Message (optionnel) :') || '';
+        try {
+          const res = await fetch(`${MON_SERVEUR}/portfolio/stages/${encodeURIComponent(title)}/request-report`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, message })
+          });
+          if (res.ok) {
+            alert('Demande envoyée. Vous recevrez un code si elle est acceptée.');
+          } else {
+            const data = await res.json().catch(() => ({}));
+            alert(data.error || 'Erreur lors de la demande.');
+          }
+        } catch (err) {
+          console.error(err);
+          alert('Impossible d’envoyer la demande pour le moment.');
+        }
+      };
+    });
+
+    validateButtons.forEach(btn => {
+      btn.onclick = async () => {
+        const title = decodeURIComponent(btn.getAttribute('data-stage-validate'));
+        const password = prompt('Entrez le code du rapport :');
+        if (!password) return;
+        try {
+          const res = await fetch(`${MON_SERVEUR}/portfolio/stages/${encodeURIComponent(title)}/validate-report`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password })
+          });
+          const data = await res.json();
+          if (res.ok && data.downloadLink) {
+            window.open(data.downloadLink, '_blank');
+          } else {
+            alert(data.error || 'Code incorrect ou indisponible.');
+          }
+        } catch (err) {
+          console.error(err);
+          alert('Impossible de valider le code pour le moment.');
+        }
+      };
+    });
+  }
     // Animer l'apparition
     setTimeout(() => {
       const cards = container.querySelectorAll('.experience-card');

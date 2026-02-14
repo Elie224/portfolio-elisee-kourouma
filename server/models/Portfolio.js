@@ -98,7 +98,11 @@ const portfolioSchema = new mongoose.Schema({
     date: String,
     description: String,
     technologies: [String],
-    link: String
+    link: String,
+    docFile: { type: String },
+    docFileName: { type: String, trim: true, maxlength: 150 },
+    docFileSize: { type: Number, min: 0, max: 50 * 1024 * 1024 },
+    docPasswordHash: { type: String, trim: true, maxlength: 200 }
   }],
   techEvents: [{
     name: String,
