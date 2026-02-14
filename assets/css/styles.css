@@ -4348,6 +4348,45 @@ header.scrolled {
   animation: progress 1.5s ease-out;
 }
 
+/* ===== Page Projets ===== */
+.projects-hero {
+  position: relative;
+  padding: clamp(48px, 6vw, 80px) 0;
+  text-align: center;
+  border-radius: 24px;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(5, 9, 17, 0.8), rgba(7, 10, 19, 0.82)),
+              linear-gradient(120deg, rgba(124, 147, 255, 0.2), transparent 45%),
+              url('../img/projet.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  box-shadow: 0 22px 45px rgba(0, 0, 0, 0.3);
+}
+
+.projects-hero__inner {
+  max-width: 880px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.projects-hero__title {
+  font-size: clamp(34px, 5vw, 46px);
+  font-weight: 750;
+}
+
+.projects-hero__lede {
+  font-size: 17px;
+  color: var(--muted);
+  line-height: 1.6;
+  max-width: 900px;
+}
+
 /* ===== Page À propos ===== */
 .about-hero {
   display: flex;
@@ -4361,7 +4400,7 @@ header.scrolled {
   border-radius: 24px;
   background: linear-gradient(135deg, rgba(5, 9, 17, 0.75), rgba(7, 10, 19, 0.8)),
               linear-gradient(120deg, rgba(124, 147, 255, 0.22), transparent 45%),
-              url('../img/ai-bg.svg');
+              url('../img/ia.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
