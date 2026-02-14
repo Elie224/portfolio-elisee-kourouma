@@ -110,6 +110,45 @@
   font-size: 1rem;
 }
 
+/* Responsive Contact */
+@media (max-width: 768px) {
+  .contact-hero {
+    padding: var(--espacement-xl) 0 var(--espacement-lg);
+  }
+  .contact-card {
+    padding: var(--espacement-lg);
+  }
+  .contact-form-container {
+    padding: var(--espacement-xl);
+    border-radius: var(--rayon-md);
+  }
+  .contact-form-title {
+    font-size: 1.6rem;
+  }
+  .contact-form-subtitle {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .contact-hero-title {
+    font-size: clamp(2rem, 8vw, 2.6rem);
+  }
+  .contact-card {
+    padding: var(--espacement-md);
+  }
+  .contact-form-container {
+    padding: var(--espacement-lg);
+  }
+  .form-group label {
+    font-size: 0.9rem;
+  }
+  .form-group input,
+  .form-group textarea {
+    padding: 12px 14px;
+  }
+}
+
 /* Form Group */
 .form-group {
   margin-bottom: var(--espacement-lg);
