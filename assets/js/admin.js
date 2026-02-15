@@ -359,6 +359,26 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
 
+      // Dernier recours: si l'endpoint admin ne répond pas, forcer une lecture publique en production
+      if ((!reponse || !reponse.ok) && token) {
+        try {
+          const endpointPublicProduction = `${API_PRODUCTION}/portfolio`;
+          const tentativeFinale = await fetchAvecRetry(endpointPublicProduction, {
+            cache: 'no-store'
+          }, 3);
+
+          statutReponse = tentativeFinale.status;
+          if (tentativeFinale.ok) {
+            reponse = tentativeFinale;
+            localStorage.setItem('portfolioApiBase', API_PRODUCTION);
+          } else if (tentativeFinale.status >= 500 || tentativeFinale.status === 429) {
+            erreurReseau = true;
+          }
+        } catch (e) {
+          erreurReseau = true;
+        }
+      }
+
       if (reponse && reponse.ok) {
         const donnees = await reponse.json();
         mesDonneesActuelles = {
