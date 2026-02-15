@@ -42,6 +42,22 @@ if (estEnDeveloppement) {
 
 const app = express();
 
+const NETLIFY_SITE_HOST = 'dapper-hotteok-569259.netlify.app';
+
+function estOrigineNetlifyPortfolio(origin) {
+  if (!origin || typeof origin !== 'string') return false;
+  try {
+    const parsed = new URL(origin);
+    if (parsed.protocol !== 'https:') return false;
+    const host = parsed.hostname.toLowerCase();
+    if (host === NETLIFY_SITE_HOST) return true;
+    const previewSuffix = `--${NETLIFY_SITE_HOST}`;
+    return host.endsWith(previewSuffix);
+  } catch (e) {
+    return false;
+  }
+}
+
 // Masquer la signature Express et réduire quelques octets
 app.disable('x-powered-by');
 
@@ -212,7 +228,7 @@ const corsOptions = {
       }
     }
     
-    if (allowedOrigins.includes(origin)) {
+    if (allowedOrigins.includes(origin) || estOrigineNetlifyPortfolio(origin)) {
       callback(null, true);
     } else {
       // Logger uniquement si c'est une vraie tentative d'accès (avec origin)
