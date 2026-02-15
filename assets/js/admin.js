@@ -106,6 +106,7 @@ document.addEventListener('DOMContentLoaded', function() {
   let isRefreshingProjects = false;
   let cvBase64Dirty = false;
   let currentEditingId = null;
+  let projetsStables = [];
   let selectedItems = {
     projects: new Set(),
     skills: new Set(),
@@ -988,14 +989,25 @@ document.addEventListener('DOMContentLoaded', function() {
     const container = document.getElementById('projects-list');
     if (!container) return;
 
-    const projets = Array.isArray(mesDonneesActuelles.projects)
+    const projetsCourants = Array.isArray(mesDonneesActuelles.projects)
       ? mesDonneesActuelles.projects
       : (mesDonneesActuelles.projects && typeof mesDonneesActuelles.projects === 'object'
           ? Object.values(mesDonneesActuelles.projects)
           : []);
 
     if (!Array.isArray(mesDonneesActuelles.projects)) {
-      mesDonneesActuelles.projects = projets;
+      mesDonneesActuelles.projects = projetsCourants;
+    }
+
+    if (projetsCourants.length > 0) {
+      projetsStables = [...projetsCourants];
+    }
+
+    const utiliserProjetsStables = projetsCourants.length === 0 && (isLoading || isRefreshingProjects) && projetsStables.length > 0;
+    const projets = utiliserProjetsStables ? projetsStables : projetsCourants;
+
+    if (utiliserProjetsStables) {
+      mesDonneesActuelles.projects = [...projetsStables];
     }
     
     if (projets.length === 0) {
