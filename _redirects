@@ -1,2 +1,7 @@
-# Redirects for Render
-/*    /index.html   200
+# Static assets should NOT be redirected to index
+/assets/*    /assets/:splat   200
+/static/*    /static/:splat   200
+/app/*       /app/:splat      200
+
+# Catch-all to index for SPA-like navigation
+/*           /index.html      200
