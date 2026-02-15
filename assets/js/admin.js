@@ -343,11 +343,17 @@ document.addEventListener('DOMContentLoaded', function() {
       return [];
     };
 
+    const normaliserProjets = (value) => {
+      return normaliserCollection(value)
+        .filter(item => item && typeof item === 'object')
+        .map(item => ({ ...item }));
+    };
+
     const resoudreProjets = (sourceProjects) => {
-      const projetsSource = normaliserCollection(sourceProjects);
+      const projetsSource = normaliserProjets(sourceProjects);
       if (projetsSource.length > 0) return projetsSource;
 
-      const projetsCourants = normaliserCollection(mesDonneesActuelles?.projects);
+      const projetsCourants = normaliserProjets(mesDonneesActuelles?.projects);
       if (projetsCourants.length > 0) return projetsCourants;
 
       if (Array.isArray(projetsStables) && projetsStables.length > 0) {
@@ -1029,25 +1035,26 @@ document.addEventListener('DOMContentLoaded', function() {
     const container = document.getElementById('projects-list');
     if (!container) return;
 
-    const projetsCourants = Array.isArray(mesDonneesActuelles.projects)
+    const projetsCourants = (Array.isArray(mesDonneesActuelles.projects)
       ? mesDonneesActuelles.projects
       : (mesDonneesActuelles.projects && typeof mesDonneesActuelles.projects === 'object'
           ? Object.values(mesDonneesActuelles.projects)
-          : []);
+          : []))
+      .filter(item => item && typeof item === 'object');
 
     if (!Array.isArray(mesDonneesActuelles.projects)) {
       mesDonneesActuelles.projects = projetsCourants;
     }
 
     if (projetsCourants.length > 0) {
-      projetsStables = [...projetsCourants];
+      projetsStables = projetsCourants.map(item => ({ ...item }));
     }
 
     const utiliserProjetsStables = projetsCourants.length === 0 && (isLoading || isRefreshingProjects) && projetsStables.length > 0;
     const projets = utiliserProjetsStables ? projetsStables : projetsCourants;
 
     if (utiliserProjetsStables) {
-      mesDonneesActuelles.projects = [...projetsStables];
+      mesDonneesActuelles.projects = projetsStables.map(item => ({ ...item }));
     }
     
     if (projets.length === 0) {
