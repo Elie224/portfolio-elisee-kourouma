@@ -343,9 +343,23 @@ document.addEventListener('DOMContentLoaded', function() {
       return [];
     };
 
+    const resoudreProjets = (sourceProjects) => {
+      const projetsSource = normaliserCollection(sourceProjects);
+      if (projetsSource.length > 0) return projetsSource;
+
+      const projetsCourants = normaliserCollection(mesDonneesActuelles?.projects);
+      if (projetsCourants.length > 0) return projetsCourants;
+
+      if (Array.isArray(projetsStables) && projetsStables.length > 0) {
+        return [...projetsStables];
+      }
+
+      return projetsSource;
+    };
+
     const normaliserDonneesChargees = (donnees) => ({
       personal: donnees.personal || {},
-      projects: normaliserCollection(donnees.projects),
+      projects: resoudreProjets(donnees.projects),
       skills: normaliserCollection(donnees.skills),
       timeline: normaliserCollection(donnees.timeline),
       activeSearches: normaliserCollection(donnees.activeSearches),
