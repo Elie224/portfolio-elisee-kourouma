@@ -107,6 +107,7 @@ document.addEventListener('DOMContentLoaded', function() {
   let currentEditingId = null;
   let modeDegradeActif = false;
   let timerResynchronisation = null;
+  let echecsConsecutifsChargement = 0;
   let selectedItems = {
     projects: new Set(),
     skills: new Set(),
@@ -247,8 +248,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (isLoading) return;
     isLoading = true;
 
-    const activerModeDegrade = (message) => {
-      if (!modeDegradeActif) {
+    const activerModeDegrade = (message, afficherToast = true) => {
+      if (afficherToast && !modeDegradeActif) {
         afficherErreur(null, message);
       }
       modeDegradeActif = true;
@@ -441,6 +442,7 @@ document.addEventListener('DOMContentLoaded', function() {
         cvBase64Dirty = false;
 
         const etaitEnModeDegrade = modeDegradeActif;
+        echecsConsecutifsChargement = 0;
         modeDegradeActif = false;
         if (timerResynchronisation) {
           clearTimeout(timerResynchronisation);
@@ -473,16 +475,21 @@ document.addEventListener('DOMContentLoaded', function() {
           
           afficherToutesMesDonnees();
           if (statutReponse === 304) {
+            echecsConsecutifsChargement = 0;
             afficherSucces('Données serveur synchronisées (cache validé)');
           } else if (erreurReseau || !statutReponse) {
+            echecsConsecutifsChargement += 1;
+            const notifierModeDegrade = echecsConsecutifsChargement >= 2;
             const serveurJoignable = await verifierServeurJoignable();
             if (serveurJoignable) {
-              activerModeDegrade('Mode dégradé : API indisponible, données locales affichées');
+              activerModeDegrade('Mode dégradé : API indisponible, données locales affichées', notifierModeDegrade);
             } else {
-              activerModeDegrade('Mode dégradé : serveur indisponible, données locales affichées');
+              activerModeDegrade('Mode dégradé : serveur indisponible, données locales affichées', notifierModeDegrade);
             }
           } else {
-            activerModeDegrade('Mode dégradé : données locales affichées');
+            echecsConsecutifsChargement += 1;
+            const notifierModeDegrade = echecsConsecutifsChargement >= 2;
+            activerModeDegrade('Mode dégradé : données locales affichées', notifierModeDegrade);
           }
         }
       }
@@ -491,13 +498,15 @@ document.addEventListener('DOMContentLoaded', function() {
       // Utiliser localStorage en fallback
       const donneesLocales = localStorage.getItem('portfolioData');
       if (donneesLocales) {
+        echecsConsecutifsChargement += 1;
+        const notifierModeDegrade = echecsConsecutifsChargement >= 2;
         mesDonneesActuelles = JSON.parse(donneesLocales);
         afficherToutesMesDonnees();
         const serveurJoignable = await verifierServeurJoignable();
         if (serveurJoignable) {
-          activerModeDegrade('Mode dégradé : API indisponible, données locales affichées');
+          activerModeDegrade('Mode dégradé : API indisponible, données locales affichées', notifierModeDegrade);
         } else {
-          activerModeDegrade('Mode dégradé : serveur indisponible, données locales affichées');
+          activerModeDegrade('Mode dégradé : serveur indisponible, données locales affichées', notifierModeDegrade);
         }
       }
     } finally {
