@@ -3659,9 +3659,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Chargement des données avec gestion d'erreur améliorée
-    chargerEtAfficherDonnees().then(() => {
+    chargerEtAfficherDonnees().then(async (donneesChargees) => {
       // Initialiser le hash après le premier chargement
-      const donnees = obtenirMesDonnees();
+      const donnees = donneesChargees || await obtenirMesDonnees();
       donneesActuelles = donnees;
       hashDonneesActuelles = calculerHash(donnees);
       
@@ -3699,7 +3699,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Démarrer la vérification automatique
       demarrerVerificationAutomatique();
-    }).catch((erreur) => {
+    }).catch(async (erreur) => {
       // Gestion d'erreur pour éviter l'écran noir
       logError('❌ Erreur lors du chargement des données:', erreur);
       
@@ -3717,7 +3717,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       
       // Charger les données par défaut en cas d'erreur
-      const donnees = obtenirMesDonnees();
+      const donnees = await obtenirMesDonnees();
       afficherMesDonnees(donnees);
     });
     
@@ -3843,8 +3843,8 @@ document.addEventListener('DOMContentLoaded', function() {
       });
       
       // Mettre à jour les liens CV après que le DOM soit complètement prêt
-      setTimeout(() => {
-        const donnees = obtenirMesDonnees();
+      setTimeout(async () => {
+        const donnees = await obtenirMesDonnees();
         mettreAJourLiensCV(donnees?.links);
       }, 300);
     }, 150);
@@ -3870,8 +3870,8 @@ document.addEventListener('DOMContentLoaded', function() {
     obtenir: obtenirMesDonnees,
     actualiser: function() {
       // Recharger les données et vérifier le mode maintenance
-      chargerEtAfficherDonnees().then(() => {
-        const donnees = obtenirMesDonnees();
+      chargerEtAfficherDonnees().then(async (donneesChargees) => {
+        const donnees = donneesChargees || await obtenirMesDonnees();
         verifierModeMaintenance(donnees);
       });
       chargerDonneesServeur().then(function(donnees) {
@@ -4013,8 +4013,8 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     }
     
-    setTimeout(() => {
-      const donnees = obtenirMesDonnees();
+    setTimeout(async () => {
+      const donnees = await obtenirMesDonnees();
       if (estEnDeveloppement) {
         log('📊 Données chargées pour CV:', {
           links: donnees?.links,
@@ -4037,7 +4037,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!estEnDeveloppement && !verbose) return;
     
     const links = document.querySelectorAll('[data-cv-link="true"]');
-    const donnees = obtenirMesDonnees();
+    const donnees = donneesActuelles || {};
     
     // Ne logger que si verbose=true (appel explicite depuis la console)
     if (verbose) {
