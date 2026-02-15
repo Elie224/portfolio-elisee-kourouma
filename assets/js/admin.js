@@ -249,6 +249,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       let reponse = null;
       let statutReponse = null;
+      let erreurReseau = false;
 
       for (const base of bases) {
         const endpoint = token ? `${base}/portfolio/admin` : `${base}/portfolio`;
@@ -271,8 +272,11 @@ document.addEventListener('DOMContentLoaded', function() {
               localStorage.setItem('portfolioApiBase', API_PRODUCTION);
             }
             break;
+          } else if (tentative.status >= 500 || tentative.status === 429) {
+            erreurReseau = true;
           }
         } catch (e) {
+          erreurReseau = true;
           // essayer la base suivante
         }
       }
@@ -342,6 +346,8 @@ document.addEventListener('DOMContentLoaded', function() {
           afficherToutesMesDonnees();
           if (statutReponse === 304) {
             afficherSucces('Données locales à jour');
+          } else if (erreurReseau || !statutReponse) {
+            afficherErreur(null, 'Connexion serveur instable, affichage des données locales');
           } else {
             afficherSucces('Données locales chargées');
           }
@@ -354,7 +360,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (donneesLocales) {
         mesDonneesActuelles = JSON.parse(donneesLocales);
         afficherToutesMesDonnees();
-        afficherSucces('Données locales chargées');
+        afficherErreur(null, 'Connexion serveur impossible, affichage des données locales');
       }
     } finally {
       isLoading = false;
