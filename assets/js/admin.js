@@ -668,10 +668,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Trace rapide pour savoir si le clic déclenche bien le fetch
     const debugSave = estEnDeveloppement || localStorage.getItem('debugSauvegarde') === 'true';
-    const endpoint = `${MON_SERVEUR}/portfolio`;
+    const endpoints = [`${MON_SERVEUR}/portfolio`];
+    if (MON_SERVEUR !== API_PRODUCTION) {
+      endpoints.push(`${API_PRODUCTION}/portfolio`);
+    }
     if (debugSave) {
       console.log('🚀 Sauvegarde déclenchée', {
-        endpoint,
+        endpoint: endpoints[0],
         tokenPresent: !!token,
         stages: mesDonneesActuelles.stages?.length || 0,
         alternances: mesDonneesActuelles.alternances?.length || 0,
@@ -734,92 +737,115 @@ document.addEventListener('DOMContentLoaded', function() {
         maintenanceMessage: donneesAEnvoyer.settings?.maintenance?.message,
         settingsComplete: JSON.stringify(donneesAEnvoyer.settings)
       });
-      
-      const reponse = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(donneesAEnvoyer)
-      });
+      let dernierStatut = null;
+      let dernierMessage = '';
+      let derniereErreur = null;
 
-      clearTimeout(watchdog);
-
-      if (debugSave) {
-        console.log('✅ POST /portfolio envoyé', {
-          status: reponse.status,
-          ok: reponse.ok,
-          endpoint,
-          contentLength: JSON.stringify(donneesAEnvoyer).length
-        });
-      }
-      
-      const resultat = await reponse.json();
-      
-      if (reponse.ok) {
-        // Vérifier que le CV a bien été sauvegardé
-        if (resultat.portfolio && resultat.portfolio.links) {
-          const cvSauvegarde = resultat.portfolio.links;
-          log('📥 CV retourné par le serveur après sauvegarde:', {
-            hasCv: !!cvSauvegarde.cv,
-            hasCvFile: !!cvSauvegarde.cvFile,
-            cvType: cvSauvegarde.cv ? (cvSauvegarde.cv.startsWith('data:') ? 'base64' : 'path') : 'none',
-            cvFileType: cvSauvegarde.cvFile ? (cvSauvegarde.cvFile.startsWith('data:') ? 'base64' : 'path') : 'none',
-            cvFileName: cvSauvegarde.cvFileName,
-            cvSize: cvSauvegarde.cvFile ? cvSauvegarde.cvFile.length : 0
+      for (const endpoint of endpoints) {
+        try {
+          const reponse = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(donneesAEnvoyer)
           });
-          
-          // Vérifier que le CV base64 a bien été sauvegardé
-          if (mesDonneesActuelles.links && mesDonneesActuelles.links.cvFile && mesDonneesActuelles.links.cvFile.startsWith('data:')) {
-            if (!cvSauvegarde.cvFile || !cvSauvegarde.cvFile.startsWith('data:')) {
-              logError('❌ ERREUR: Le CV base64 n\'a pas été sauvegardé correctement sur le serveur !');
-              logError('CV envoyé:', mesDonneesActuelles.links.cvFile.substring(0, 50) + '...');
-              logError('CV reçu:', cvSauvegarde.cvFile ? cvSauvegarde.cvFile.substring(0, 50) + '...' : 'undefined');
-            } else {
-              log('✅ CV base64 confirmé sauvegardé sur le serveur');
-            }
-          }
-          
-          // Mettre à jour mesDonneesActuelles avec les données retournées par le serveur
-          if (resultat.portfolio.links) {
-            mesDonneesActuelles.links = { ...mesDonneesActuelles.links, ...resultat.portfolio.links };
-          }
-          cvBase64Dirty = false;
-          
-          // Mettre à jour les settings aussi
-          if (resultat.portfolio.settings) {
-            mesDonneesActuelles.settings = resultat.portfolio.settings;
-            log('✅ Settings mis à jour depuis le serveur:', {
-              maintenanceEnabled: mesDonneesActuelles.settings?.maintenance?.enabled,
-              maintenanceMessage: mesDonneesActuelles.settings?.maintenance?.message
+
+          const resultat = await reponse.json().catch(() => ({}));
+
+          if (debugSave) {
+            console.log('✅ POST /portfolio envoyé', {
+              status: reponse.status,
+              ok: reponse.ok,
+              endpoint,
+              contentLength: JSON.stringify(donneesAEnvoyer).length
             });
           }
+
+          if (reponse.ok) {
+        // Vérifier que le CV a bien été sauvegardé
+            if (resultat.portfolio && resultat.portfolio.links) {
+              const cvSauvegarde = resultat.portfolio.links;
+              log('📥 CV retourné par le serveur après sauvegarde:', {
+                hasCv: !!cvSauvegarde.cv,
+                hasCvFile: !!cvSauvegarde.cvFile,
+                cvType: cvSauvegarde.cv ? (cvSauvegarde.cv.startsWith('data:') ? 'base64' : 'path') : 'none',
+                cvFileType: cvSauvegarde.cvFile ? (cvSauvegarde.cvFile.startsWith('data:') ? 'base64' : 'path') : 'none',
+                cvFileName: cvSauvegarde.cvFileName,
+                cvSize: cvSauvegarde.cvFile ? cvSauvegarde.cvFile.length : 0
+              });
+          
+              // Vérifier que le CV base64 a bien été sauvegardé
+              if (mesDonneesActuelles.links && mesDonneesActuelles.links.cvFile && mesDonneesActuelles.links.cvFile.startsWith('data:')) {
+                if (!cvSauvegarde.cvFile || !cvSauvegarde.cvFile.startsWith('data:')) {
+                  logError('❌ ERREUR: Le CV base64 n\'a pas été sauvegardé correctement sur le serveur !');
+                  logError('CV envoyé:', mesDonneesActuelles.links.cvFile.substring(0, 50) + '...');
+                  logError('CV reçu:', cvSauvegarde.cvFile ? cvSauvegarde.cvFile.substring(0, 50) + '...' : 'undefined');
+                } else {
+                  log('✅ CV base64 confirmé sauvegardé sur le serveur');
+                }
+              }
+          
+              // Mettre à jour mesDonneesActuelles avec les données retournées par le serveur
+              if (resultat.portfolio.links) {
+                mesDonneesActuelles.links = { ...mesDonneesActuelles.links, ...resultat.portfolio.links };
+              }
+              cvBase64Dirty = false;
+          
+              // Mettre à jour les settings aussi
+              if (resultat.portfolio.settings) {
+                mesDonneesActuelles.settings = resultat.portfolio.settings;
+                log('✅ Settings mis à jour depuis le serveur:', {
+                  maintenanceEnabled: mesDonneesActuelles.settings?.maintenance?.enabled,
+                  maintenanceMessage: mesDonneesActuelles.settings?.maintenance?.message
+                });
+              }
+            }
+        
+            // Sauvegarder aussi dans localStorage avec les données mises à jour
+            localStorage.setItem('portfolioData', JSON.stringify(mesDonneesActuelles));
+            afficherSucces(messageSucces || 'Action sauvegardée avec succès');
+        
+            // Forcer le rechargement des données sur toutes les pages ouvertes
+            if (window.portfolioAPI && window.portfolioAPI.actualiser) {
+              // Attendre un peu pour que le serveur ait fini de sauvegarder
+              setTimeout(() => {
+                log('🔄 Actualisation des pages publiques après sauvegarde...');
+                window.portfolioAPI.actualiser();
+              }, 500);
+            }
+        
+            clearTimeout(watchdog);
+            return true;
+          }
+
+          if (reponse.status === 401 || reponse.status === 403) {
+            clearTimeout(watchdog);
+            seDeconnecter();
+            afficherErreur(null, 'Session expirée. Reconnectez-vous pour enregistrer.');
+            return false;
+          }
+
+          dernierStatut = reponse.status;
+          dernierMessage = resultat.error || resultat.message || '';
+        } catch (erreurTentative) {
+          derniereErreur = erreurTentative;
         }
-        
-        // Sauvegarder aussi dans localStorage avec les données mises à jour
-        localStorage.setItem('portfolioData', JSON.stringify(mesDonneesActuelles));
-        afficherSucces(messageSucces || 'Action sauvegardée avec succès');
-        
-        // Forcer le rechargement des données sur toutes les pages ouvertes
-        if (window.portfolioAPI && window.portfolioAPI.actualiser) {
-          // Attendre un peu pour que le serveur ait fini de sauvegarder
-          setTimeout(() => {
-            log('🔄 Actualisation des pages publiques après sauvegarde...');
-            window.portfolioAPI.actualiser();
-          }, 500);
-        }
-        
-        return true;
-      } else {
-        afficherErreur(null, resultat.error || resultat.message || 'Erreur lors de la sauvegarde');
-        return false;
       }
+
+      clearTimeout(watchdog);
+      if (dernierStatut) {
+        afficherErreur(null, `Erreur sauvegarde (HTTP ${dernierStatut})${dernierMessage ? ` : ${dernierMessage}` : ''}`);
+      } else if (derniereErreur) {
+        afficherErreur(null, 'Impossible de sauvegarder sur le serveur');
+      }
+      return false;
     } catch (erreur) {
       clearTimeout(watchdog);
       logError('Erreur sauvegarde:', erreur);
       if (debugSave) {
-        console.error('❌ Sauvegarde non envoyée ou échouée', { endpoint, erreur });
+        console.error('❌ Sauvegarde non envoyée ou échouée', { endpoint: endpoints[0], erreur });
         alert('Sauvegarde bloquée avant POST: ' + (erreur?.message || erreur));
       }
       afficherErreur(null, 'Impossible de sauvegarder sur le serveur');
