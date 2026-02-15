@@ -16,6 +16,41 @@
     <link rel="stylesheet" href="assets/css/styles.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preload" href="assets/css/styles.css" as="style" />
+    <script>
+      (function() {
+        try {
+          const raw = localStorage.getItem('portfolioData');
+          if (!raw) return;
+          const data = JSON.parse(raw);
+          if (data?.settings?.maintenance?.enabled !== true) return;
+          const message = data?.settings?.maintenance?.message || 'Le site est actuellement en maintenance. Nous serons bientôt de retour !';
+
+          // Masquer immédiatement l'UI principale
+          const style = document.createElement('style');
+          style.id = 'maintenance-guard-style-inline';
+          style.textContent = 'main,header,footer{display:none!important;}body{overflow:hidden!important;}';
+          document.head.appendChild(style);
+
+          // Overlay minimal instantané
+          const overlay = document.createElement('div');
+          overlay.id = 'maintenance-overlay';
+          overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;z-index:999999;padding:24px;';
+          overlay.innerHTML = '<div class="card" style="max-width:520px;width:100%;text-align:center;gap:12px;display:flex;flex-direction:column;align-items:center;"><div style="font-size:32px;">🛠️</div><h2 style="margin:0;">Site en maintenance</h2><p id="maintenance-message-text" class="muted" style="margin:0;">'+ message +'</p></div>';
+          const attach = () => {
+            if (!document.getElementById('maintenance-overlay')) {
+              document.body.prepend(overlay);
+            }
+          };
+          if (document.body) {
+            attach();
+          } else {
+            document.addEventListener('DOMContentLoaded', attach, { once: true });
+          }
+        } catch (e) {
+          console.error('Maintenance guard inline error:', e);
+        }
+      })();
+    </script>
   </head>
   <body id="top" class="dark">
     <header class="container">
