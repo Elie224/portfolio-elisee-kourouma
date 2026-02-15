@@ -498,17 +498,15 @@ document.addEventListener('DOMContentLoaded', function() {
           if (statutReponse === 304) {
             afficherSucces('Données serveur synchronisées (cache validé)');
           } else if (erreurReseau || !statutReponse) {
-            const serveurJoignable = await verifierServeurJoignable();
-            if (!aDesDonneesAffichables()) {
-              if (serveurJoignable) {
-                afficherErreur(null, 'Synchronisation serveur temporairement indisponible. Réessayez dans quelques secondes.');
-              } else {
-                afficherErreur(null, 'Connexion serveur indisponible. Réessayez dans quelques secondes.');
-              }
+            // Fallback silencieux: garder l'affichage local sans spam de toast
+            if (estEnDeveloppement) {
+              const serveurJoignable = await verifierServeurJoignable();
+              logWarn('⚠️ Sync serveur indisponible, fallback local conservé', { serveurJoignable });
             }
           } else {
-            if (!aDesDonneesAffichables()) {
-              afficherErreur(null, 'Réponse API incomplète. Réessayez dans quelques secondes.');
+            // Réponse partielle: conserver l'état actuel sans alerte utilisateur
+            if (estEnDeveloppement) {
+              logWarn('⚠️ Réponse API incomplète, fallback local conservé');
             }
           }
         }
@@ -538,13 +536,9 @@ document.addEventListener('DOMContentLoaded', function() {
         mesDonneesActuelles = normaliserDonneesChargees(donneesLocalesParsees);
 
         afficherToutesMesDonnees();
-        const serveurJoignable = await verifierServeurJoignable();
-        if (!aDesDonneesAffichables()) {
-          if (serveurJoignable) {
-            afficherErreur(null, 'Synchronisation serveur temporairement indisponible. Réessayez dans quelques secondes.');
-          } else {
-            afficherErreur(null, 'Connexion serveur indisponible. Réessayez dans quelques secondes.');
-          }
+        if (estEnDeveloppement) {
+          const serveurJoignable = await verifierServeurJoignable();
+          logWarn('⚠️ Exception chargement, fallback local conservé', { serveurJoignable });
         }
       }
     } finally {
