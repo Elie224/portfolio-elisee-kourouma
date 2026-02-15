@@ -335,7 +335,7 @@ document.addEventListener('DOMContentLoaded', function() {
           if (statutReponse === 304) {
             afficherSucces('Données locales à jour');
           } else {
-            afficherErreur(null, 'Serveur indisponible, utilisation des données locales');
+            afficherSucces('Données locales chargées');
           }
         }
       }
@@ -346,7 +346,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (donneesLocales) {
         mesDonneesActuelles = JSON.parse(donneesLocales);
         afficherToutesMesDonnees();
-        afficherErreur(null, 'Serveur indisponible, utilisation des données locales');
+        afficherSucces('Données locales chargées');
       }
     } finally {
       isLoading = false;
