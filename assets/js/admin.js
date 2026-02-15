@@ -323,9 +323,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const cacheLocalEstValide = (donnees) => (
       !!donnees &&
-      Array.isArray(donnees.projects) &&
-      Array.isArray(donnees.skills) &&
-      Array.isArray(donnees.services)
+      Array.isArray(donnees.projects)
     );
 
     const tenterRecuperationAdminProduction = async (token) => {
@@ -469,7 +467,12 @@ document.addEventListener('DOMContentLoaded', function() {
           }
 
           if (!cacheLocalEstValide(donneesLocalesParsees)) {
-            afficherErreur(null, 'Cache local incomplet et serveur indisponible. Réessayez dans quelques secondes.');
+            if (cacheLocalEstValide(mesDonneesActuelles) && mesDonneesActuelles.projects.length > 0) {
+              afficherToutesMesDonnees();
+              afficherErreur(null, 'Synchronisation serveur indisponible. Les dernières données chargées sont conservées.');
+            } else {
+              afficherErreur(null, 'Synchronisation serveur indisponible. Réessayez dans quelques secondes.');
+            }
             return;
           }
 
@@ -515,7 +518,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         if (!cacheLocalEstValide(donneesLocalesParsees)) {
-          afficherErreur(null, 'Cache local incomplet et serveur indisponible. Réessayez dans quelques secondes.');
+          if (cacheLocalEstValide(mesDonneesActuelles) && mesDonneesActuelles.projects.length > 0) {
+            afficherToutesMesDonnees();
+            afficherErreur(null, 'Synchronisation serveur indisponible. Les dernières données chargées sont conservées.');
+          } else {
+            afficherErreur(null, 'Synchronisation serveur indisponible. Réessayez dans quelques secondes.');
+          }
           return;
         }
 
