@@ -104,6 +104,8 @@ document.addEventListener('DOMContentLoaded', function() {
   let isLoading = false;
   let cvBase64Dirty = false;
   let currentEditingId = null;
+  let modeDegradeActif = false;
+  let timerResynchronisation = null;
   let selectedItems = {
     projects: new Set(),
     skills: new Set(),
@@ -243,6 +245,22 @@ document.addEventListener('DOMContentLoaded', function() {
   async function chargerToutesMesDonnees() {
     if (isLoading) return;
     isLoading = true;
+
+    const activerModeDegrade = (message) => {
+      if (!modeDegradeActif) {
+        afficherErreur(null, message);
+      }
+      modeDegradeActif = true;
+
+      if (!timerResynchronisation) {
+        timerResynchronisation = setTimeout(() => {
+          timerResynchronisation = null;
+          if (!isLoading) {
+            chargerToutesMesDonnees();
+          }
+        }, 8000);
+      }
+    };
 
     const attendre = (ms) => new Promise(resolve => setTimeout(resolve, ms));
     const fetchAvecRetry = async (endpoint, options = {}, maxTentatives = 2) => {
@@ -420,9 +438,20 @@ document.addEventListener('DOMContentLoaded', function() {
         // Sauvegarder aussi dans localStorage comme backup
         localStorage.setItem('portfolioData', JSON.stringify(mesDonneesActuelles));
         cvBase64Dirty = false;
+
+        const etaitEnModeDegrade = modeDegradeActif;
+        modeDegradeActif = false;
+        if (timerResynchronisation) {
+          clearTimeout(timerResynchronisation);
+          timerResynchronisation = null;
+        }
         
         afficherToutesMesDonnees();
-        afficherSucces('Données chargées depuis le serveur');
+        if (etaitEnModeDegrade) {
+          afficherSucces('Connexion serveur rétablie, données synchronisées');
+        } else {
+          afficherSucces('Données chargées depuis le serveur');
+        }
       } else {
         // Si erreur serveur ou réponse conditionnelle (304), utiliser localStorage
         const donneesLocales = localStorage.getItem('portfolioData');
@@ -447,12 +476,12 @@ document.addEventListener('DOMContentLoaded', function() {
           } else if (erreurReseau || !statutReponse) {
             const serveurJoignable = await verifierServeurJoignable();
             if (serveurJoignable) {
-              afficherSucces('Données locales chargées');
+              activerModeDegrade('Mode dégradé : API indisponible, données locales affichées');
             } else {
-              afficherErreur(null, 'Connexion serveur impossible, affichage des données locales');
+              activerModeDegrade('Mode dégradé : serveur indisponible, données locales affichées');
             }
           } else {
-            afficherSucces('Données locales chargées');
+            activerModeDegrade('Mode dégradé : données locales affichées');
           }
         }
       }
@@ -465,9 +494,9 @@ document.addEventListener('DOMContentLoaded', function() {
         afficherToutesMesDonnees();
         const serveurJoignable = await verifierServeurJoignable();
         if (serveurJoignable) {
-          afficherSucces('Données locales chargées');
+          activerModeDegrade('Mode dégradé : API indisponible, données locales affichées');
         } else {
-          afficherErreur(null, 'Connexion serveur impossible, affichage des données locales');
+          activerModeDegrade('Mode dégradé : serveur indisponible, données locales affichées');
         }
       }
     } finally {
