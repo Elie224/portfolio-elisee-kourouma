@@ -1890,11 +1890,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function demarrerAutoScroll() {
       // Auto-scroll désactivé pour améliorer les performances
       return;
-      if (isPaused || autoScrollInterval) return;
-      
-      autoScrollInterval = setInterval(() => {
-        slideSuivant();
-      }, 5000); // Augmenté à 5 secondes si réactivé
     }
     
     function arreterAutoScroll() {
@@ -3763,7 +3758,7 @@ document.addEventListener('DOMContentLoaded', function() {
       // Utiliser le viewport RÉEL (clientWidth) pour détecter mobile, même en mode responsive DevTools
       const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
       const isMobile = viewportWidth <= 1024;
-      console.log('🔧 forcerStylesMobile appelé, isMobile:', isMobile, 'viewport:', viewportWidth, 'window:', window.innerWidth);
+      log('🔧 forcerStylesMobile appelé, isMobile:', isMobile, 'viewport:', viewportWidth, 'window:', window.innerWidth);
       
       if (isMobile) {
         // SOLUTION RADICALE 1 : Ajouter une classe pour désactiver body::before

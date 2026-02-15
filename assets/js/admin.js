@@ -31,6 +31,11 @@ document.addEventListener('DOMContentLoaded', function() {
     return propre;
   }
 
+  function normaliserGoogleAnalyticsId(value) {
+    if (typeof value !== 'string') return '';
+    return value.trim().toUpperCase();
+  }
+
   // Adresse de mon serveur backend (avec fallback local / réseau / override)
   function determinerServeur() {
     const params = new URLSearchParams(window.location.search);
@@ -2758,8 +2763,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Afficher le statut Google Analytics
     if (statVisitors) {
-      const hasAnalytics = mesDonneesActuelles.settings?.analytics?.googleAnalytics;
-      if (hasAnalytics && hasAnalytics.trim() !== '') {
+      const hasAnalytics = normaliserGoogleAnalyticsId(mesDonneesActuelles.settings?.analytics?.googleAnalytics || '');
+      if (hasAnalytics) {
         // Google Analytics est configuré - afficher un indicateur actif
         statVisitors.innerHTML = '<span style="color: var(--success);">✓</span> Actif';
         statVisitors.title = `Google Analytics configuré (ID: ${hasAnalytics}). Voir les données sur analytics.google.com`;
@@ -3033,6 +3038,14 @@ document.addEventListener('DOMContentLoaded', function() {
       // Si le message est vide, utiliser le message par défaut
       const finalMessage = maintenanceMessage || 'Le site est actuellement en maintenance. Nous serons bientôt de retour !';
       
+      const googleAnalyticsBrut = document.getElementById('google-analytics')?.value || '';
+      const googleAnalyticsId = normaliserGoogleAnalyticsId(googleAnalyticsBrut);
+
+      if (googleAnalyticsId && !/^G-[A-Z0-9]+$/i.test(googleAnalyticsId)) {
+        afficherErreur(null, 'ID Google Analytics invalide. Format attendu: G-XXXXXXXXXX');
+        return;
+      }
+
       const settings = {
         maintenance: {
           enabled: document.getElementById('maintenance-mode')?.checked || false,
@@ -3044,7 +3057,7 @@ document.addEventListener('DOMContentLoaded', function() {
           keywords: document.getElementById('meta-keywords')?.value || ''
         },
         analytics: {
-          googleAnalytics: document.getElementById('google-analytics')?.value || ''
+          googleAnalytics: googleAnalyticsId
         }
       };
       
@@ -3322,30 +3335,34 @@ document.addEventListener('DOMContentLoaded', function() {
     if (googleAnalyticsInput) {
       // Récupérer l'ID depuis settings.analytics.googleAnalytics
       const gaId = (settings.analytics && settings.analytics.googleAnalytics) 
-        ? settings.analytics.googleAnalytics 
+        ? normaliserGoogleAnalyticsId(settings.analytics.googleAnalytics) 
         : '';
       
       googleAnalyticsInput.value = gaId;
       
-      // Log pour debug (toujours logger en production pour diagnostic)
-      console.log('📊 Google Analytics ID chargé:', {
-        found: !!googleAnalyticsInput,
-        value: gaId || '(vide)',
-        hasSettings: !!settings,
-        hasAnalytics: !!settings.analytics,
-        fullSettings: settings
-      });
+      if (estEnDeveloppement) {
+        log('📊 Google Analytics ID chargé:', {
+          found: !!googleAnalyticsInput,
+          value: gaId || '(vide)',
+          hasSettings: !!settings,
+          hasAnalytics: !!settings.analytics,
+          fullSettings: settings
+        });
+      }
     } else {
-      // Log si le champ n'existe pas
-      console.error('❌ Champ google-analytics introuvable dans le DOM');
-      console.error('💡 Vérifiez que l\'onglet Paramètres est chargé et que le champ existe dans admin.html');
+      if (estEnDeveloppement) {
+        logError('❌ Champ google-analytics introuvable dans le DOM');
+        logError('💡 Vérifiez que l\'onglet Paramètres est chargé et que le champ existe dans admin.html');
+      }
       
       // Essayer de trouver le champ après un court délai (au cas où l'onglet n'est pas encore chargé)
       setTimeout(() => {
         const retryInput = document.getElementById('google-analytics');
         if (retryInput && settings.analytics) {
-          retryInput.value = settings.analytics.googleAnalytics || '';
-          console.log('✅ Google Analytics ID chargé après délai');
+          retryInput.value = normaliserGoogleAnalyticsId(settings.analytics.googleAnalytics || '');
+          if (estEnDeveloppement) {
+            log('✅ Google Analytics ID chargé après délai');
+          }
         }
       }, 500);
     }
