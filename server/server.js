@@ -220,6 +220,11 @@ const corsOptions = {
     }
     
     // Vérification stricte des origines
+    // Autoriser explicitement Origin "null" (pages ouvertes en file://)
+    if (origin === 'null') {
+      return callback(null, true);
+    }
+
     if (!origin) {
       if (process.env.NODE_ENV === 'production') {
         return callback(null, false);
