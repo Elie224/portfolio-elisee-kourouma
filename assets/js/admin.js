@@ -326,6 +326,25 @@ document.addEventListener('DOMContentLoaded', function() {
               localStorage.setItem('portfolioApiBase', API_PRODUCTION);
             }
             break;
+          }
+
+          // Si l'endpoint admin échoue mais que le serveur répond, tenter l'endpoint public
+          if (token && tentative.status !== 401 && tentative.status !== 403) {
+            try {
+              const tentativePublique = await fetchAvecRetry(`${base}/portfolio`, {
+                cache: 'no-store'
+              });
+
+              if (tentativePublique.ok) {
+                reponse = tentativePublique;
+                if (base !== MON_SERVEUR) {
+                  localStorage.setItem('portfolioApiBase', API_PRODUCTION);
+                }
+                break;
+              }
+            } catch (e) {
+              erreurReseau = true;
+            }
           } else if (tentative.status >= 500 || tentative.status === 429) {
             erreurReseau = true;
           }
