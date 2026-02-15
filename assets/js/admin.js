@@ -317,6 +317,54 @@ document.addEventListener('DOMContentLoaded', function() {
 
       return false;
     };
+
+    const normaliserDonneesChargees = (donnees) => ({
+      personal: donnees.personal || {},
+      projects: donnees.projects || [],
+      skills: donnees.skills || [],
+      timeline: donnees.timeline || [],
+      activeSearches: donnees.activeSearches || [],
+      certifications: donnees.certifications || [],
+      stages: donnees.stages || [],
+      alternances: donnees.alternances || [],
+      techEvents: donnees.techEvents || [],
+      services: donnees.services || [],
+      faq: donnees.faq || [],
+      contactMessages: donnees.contactMessages || [],
+      links: donnees.links || {},
+      about: donnees.about || {},
+      settings: donnees.settings || {
+        maintenance: { enabled: false, message: 'Le site est actuellement en maintenance. Nous serons bientôt de retour !' },
+        seo: { title: '', description: '', keywords: '' },
+        analytics: { googleAnalytics: '' }
+      }
+    });
+
+    const tenterRecuperationAdminProduction = async (token) => {
+      if (!token) return false;
+      try {
+        const reponseAdmin = await fetch(`${API_PRODUCTION}/portfolio/admin`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+          cache: 'no-store'
+        });
+
+        if (!reponseAdmin.ok) return false;
+
+        const donneesAdmin = await reponseAdmin.json();
+        mesDonneesActuelles = normaliserDonneesChargees(donneesAdmin);
+        if (!mesDonneesActuelles.settings.analytics) {
+          mesDonneesActuelles.settings.analytics = { googleAnalytics: '' };
+        }
+        localStorage.setItem('portfolioData', JSON.stringify(mesDonneesActuelles));
+        afficherToutesMesDonnees();
+        afficherSucces('Données serveur récupérées');
+        echecsConsecutifsChargement = 0;
+        modeDegradeActif = false;
+        return true;
+      } catch (e) {
+        return false;
+      }
+    };
     
     try {
       const token = obtenirToken();
@@ -401,27 +449,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       if (reponse && reponse.ok) {
         const donnees = await reponse.json();
-        mesDonneesActuelles = {
-          personal: donnees.personal || {},
-          projects: donnees.projects || [],
-          skills: donnees.skills || [],
-          timeline: donnees.timeline || [],
-          activeSearches: donnees.activeSearches || [],
-          certifications: donnees.certifications || [],
-          stages: donnees.stages || [],
-          alternances: donnees.alternances || [],
-          techEvents: donnees.techEvents || [],
-          services: donnees.services || [],
-          faq: donnees.faq || [],
-          contactMessages: donnees.contactMessages || [],
-          links: donnees.links || {},
-          about: donnees.about || {},
-          settings: donnees.settings || {
-            maintenance: { enabled: false, message: 'Le site est actuellement en maintenance. Nous serons bientôt de retour !' },
-            seo: { title: '', description: '', keywords: '' },
-            analytics: { googleAnalytics: '' }
-          }
-        };
+        mesDonneesActuelles = normaliserDonneesChargees(donnees);
         
         // S'assurer que les settings ont bien la structure analytics
         if (!mesDonneesActuelles.settings.analytics) {
@@ -460,6 +488,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const donneesLocales = localStorage.getItem('portfolioData');
         if (donneesLocales) {
           mesDonneesActuelles = JSON.parse(donneesLocales);
+
+          // Si le cache local est incomplet (ex: projets absents), tenter une récupération directe admin
+          if ((!Array.isArray(mesDonneesActuelles.projects) || mesDonneesActuelles.projects.length === 0) && await tenterRecuperationAdminProduction(token)) {
+            return;
+          }
           
           // S'assurer que les settings ont bien la structure analytics
           if (!mesDonneesActuelles.settings) {
@@ -501,6 +534,12 @@ document.addEventListener('DOMContentLoaded', function() {
         echecsConsecutifsChargement += 1;
         const notifierModeDegrade = echecsConsecutifsChargement >= 2;
         mesDonneesActuelles = JSON.parse(donneesLocales);
+
+        // Même en cas d'exception, tenter une récupération admin directe pour éviter une liste de projets vide
+        if ((!Array.isArray(mesDonneesActuelles.projects) || mesDonneesActuelles.projects.length === 0) && await tenterRecuperationAdminProduction(obtenirToken())) {
+          return;
+        }
+
         afficherToutesMesDonnees();
         const serveurJoignable = await verifierServeurJoignable();
         if (serveurJoignable) {
