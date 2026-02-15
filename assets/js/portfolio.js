@@ -2393,6 +2393,21 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
+
+  // S'assure que le lien Mes rapports existe dans le menu (utile si page HTML plus ancienne est servie)
+  function assurerLienRapports() {
+    const navigation = document.getElementById('nav-links');
+    if (!navigation) return;
+    const lienRapports = navigation.querySelector('a[href="reports.html"]');
+    if (!lienRapports) {
+      const nouveauLien = document.createElement('a');
+      nouveauLien.href = 'reports.html';
+      nouveauLien.textContent = 'Mes rapports';
+      // Insérer avant Contact si présent, sinon à la fin
+      const lienContact = navigation.querySelector('a[href="contact.html"]');
+      navigation.insertBefore(nouveauLien, lienContact || navigation.lastElementChild);
+    }
+  }
   
   // Fonction pour forcer la fermeture de l'overlay au chargement (appelée immédiatement)
   function forcerFermetureOverlay() {
@@ -3602,6 +3617,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Configuration de l'interface
     configurerContact();
+    assurerLienRapports();
     configurerMenuMobile();
     
     // Gérer le redimensionnement de la fenêtre pour réappliquer les styles correctement
