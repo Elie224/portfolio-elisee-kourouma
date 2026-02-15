@@ -517,6 +517,11 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
           }
 
+          // Si les projets sont vides en local, tenter explicitement la récupération publique
+          if (Array.isArray(donneesLocalesParsees.projects) && donneesLocalesParsees.projects.length === 0 && await tenterRecuperationPublique()) {
+            return;
+          }
+
           if ((!cacheLocalEstValide(donneesLocalesParsees) || donneesLocalesParsees.projects.length === 0) && await tenterRecuperationPublique()) {
             return;
           }
@@ -571,6 +576,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Même en cas d'exception, tenter une récupération admin directe pour éviter une liste de projets vide
         if ((!cacheLocalEstValide(donneesLocalesParsees) || donneesLocalesParsees.projects.length === 0) && await tenterRecuperationAdminProduction(obtenirToken())) {
+          return;
+        }
+
+        // Même en cas d'exception, tenter aussi une récupération publique si les projets locaux sont vides
+        if (Array.isArray(donneesLocalesParsees.projects) && donneesLocalesParsees.projects.length === 0 && await tenterRecuperationPublique()) {
           return;
         }
 
