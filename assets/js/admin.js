@@ -447,7 +447,7 @@ document.addEventListener('DOMContentLoaded', function() {
           } else if (erreurReseau || !statutReponse) {
             const serveurJoignable = await verifierServeurJoignable();
             if (serveurJoignable) {
-              afficherErreur(null, 'Serveur joignable, mais API temporairement indisponible. Données locales affichées');
+              afficherSucces('Données locales chargées');
             } else {
               afficherErreur(null, 'Connexion serveur impossible, affichage des données locales');
             }
@@ -465,7 +465,7 @@ document.addEventListener('DOMContentLoaded', function() {
         afficherToutesMesDonnees();
         const serveurJoignable = await verifierServeurJoignable();
         if (serveurJoignable) {
-          afficherErreur(null, 'Serveur joignable, mais API temporairement indisponible. Données locales affichées');
+          afficherSucces('Données locales chargées');
         } else {
           afficherErreur(null, 'Connexion serveur impossible, affichage des données locales');
         }
