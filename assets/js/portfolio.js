@@ -1430,7 +1430,13 @@ document.addEventListener('DOMContentLoaded', function() {
       const statusClass = item.status === 'paused' ? 'paused' : 'active';
       const statusLabel = item.status === 'paused' ? '⏸️ En pause' : '🟢 Active';
       const location = item.location ? `<p class="active-search-meta">📍 ${item.location}</p>` : '';
-      const notes = item.notes ? `<p class="muted">${item.notes}</p>` : '';
+
+      // Masquer le message par défaut « Mises à jour en direct depuis l'admin, visibles par tout le monde. »
+      const defaultNote = "Mises à jour en direct depuis l'admin, visibles par tout le monde.";
+      const rawNotes = (item.notes || '').trim();
+      const shouldShowNotes = rawNotes && rawNotes.toLowerCase() !== defaultNote.toLowerCase();
+      const notes = shouldShowNotes ? `<p class="muted">${rawNotes}</p>` : '';
+
       const link = item.link ? `<a class="active-search-link" href="${item.link}" target="_blank" rel="noopener">🔗 Voir le lien</a>` : '';
 
       return `
