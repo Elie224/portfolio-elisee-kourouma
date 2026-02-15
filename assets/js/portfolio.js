@@ -10,6 +10,51 @@
   let projetDocCourant = null;
   let docContext = { type: 'project', showPassword: false };
 
+  /* ===== GARDE MAINTENANCE INSTANTANÉ ===== */
+  (function appliquerGardeMaintenanceInitiale() {
+    try {
+      const raw = localStorage.getItem('portfolioData');
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      const maintenanceOn = data?.settings?.maintenance?.enabled === true;
+      const maintenanceMessage = data?.settings?.maintenance?.message || 'Le site est actuellement en maintenance. Nous serons bientôt de retour !';
+      if (!maintenanceOn) return;
+
+      // Style de garde pour masquer immédiatement le contenu
+      const guardId = 'maintenance-guard-style';
+      let guardStyle = document.getElementById(guardId);
+      if (!guardStyle) {
+        guardStyle = document.createElement('style');
+        guardStyle.id = guardId;
+        guardStyle.textContent = `main,header,footer{display:none !important;}body{overflow:hidden !important;}`;
+        document.head && document.head.prepend(guardStyle);
+      }
+
+      // Overlay minimal instantané si inexistant
+      let overlay = document.getElementById('maintenance-overlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'maintenance-overlay';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;z-index:999999;padding:24px;';
+        overlay.innerHTML = `
+          <div class="card" style="max-width:520px;width:100%;text-align:center;gap:12px;display:flex;flex-direction:column;align-items:center;">
+            <div style="font-size:32px;">🛠️</div>
+            <h2 style="margin:0;">Site en maintenance</h2>
+            <p id="maintenance-message-text" class="muted" style="margin:0;">${maintenanceMessage}</p>
+          </div>
+        `;
+        document.body && document.body.prepend(overlay);
+      } else {
+        const msg = overlay.querySelector('#maintenance-message-text');
+        if (msg) msg.textContent = maintenanceMessage;
+        overlay.style.display = 'flex';
+        overlay.style.zIndex = '999999';
+      }
+    } catch (e) {
+      console.error('Erreur garde maintenance initiale:', e);
+    }
+  })();
+
   function creerModalDocSiAbsent() {
     if (docModalElements) return docModalElements;
 
@@ -217,6 +262,13 @@ document.addEventListener('DOMContentLoaded', function() {
   const MON_SERVEUR = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:3000/api'
     : 'https://portfolio-backend-elisee.fly.dev/api';
+
+  // Appliquer immédiatement le mode maintenance à partir du localStorage pour éviter tout flash de contenu
+  try {
+    verifierModeMaintenance();
+  } catch (e) {
+    logError('Erreur initiale maintenance:', e);
+  }
   
   
   /* ===== FONCTIONS UTILITAIRES ===== */
@@ -320,6 +372,16 @@ document.addEventListener('DOMContentLoaded', function() {
     let maintenanceOverlay = document.getElementById('maintenance-overlay');
 
     if (maintenanceEnabled) {
+      // Renforcer la garde visuelle pour éviter tout flash de contenu
+      const guardId = 'maintenance-guard-style';
+      let guardStyle = document.getElementById(guardId);
+      if (!guardStyle) {
+        guardStyle = document.createElement('style');
+        guardStyle.id = guardId;
+        guardStyle.textContent = `main,header,footer{display:none !important;}body{overflow:hidden !important;}`;
+        document.head && document.head.prepend(guardStyle);
+      }
+
       if (!maintenanceOverlay) {
         maintenanceOverlay = document.createElement('div');
         maintenanceOverlay.id = 'maintenance-overlay';
@@ -359,6 +421,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (header) header.style.setProperty('display', 'none', 'important');
       const footer = document.querySelector('footer');
       if (footer) footer.style.setProperty('display', 'none', 'important');
+      document.body && document.body.style.setProperty('overflow', 'hidden', 'important');
 
       if (estEnDeveloppement && !window.maintenanceActivatedLogged) {
         window.maintenanceActivatedLogged = true;
@@ -367,6 +430,15 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
       if (maintenanceOverlay) {
         maintenanceOverlay.style.display = 'none';
+      }
+
+      // Retirer la garde visuelle quand la maintenance est désactivée
+      const guardStyle = document.getElementById('maintenance-guard-style');
+      if (guardStyle && guardStyle.parentNode) {
+        guardStyle.parentNode.removeChild(guardStyle);
+      }
+      if (document.body) {
+        document.body.style.removeProperty('overflow');
       }
 
       const mainContent = document.querySelector('main');
@@ -768,7 +840,7 @@ document.addEventListener('DOMContentLoaded', function() {
         mesDonnees = donneesServeur;
       } else {
         // Sinon utilise les données locales
-        mesDonnees = obtenirMesDonnees();
+        mesDonnees = await obtenirMesDonnees();
       }
       
       // S'assurer que les settings existent dans les données
@@ -795,6 +867,9 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Vérifier le mode maintenance IMMÉDIATEMENT (avant d'afficher le contenu)
       // Utiliser requestAnimationFrame pour s'assurer que le DOM est prêt
+      requestAnimationFrame(() => {
+        verifierModeMaintenance(mesDonnees);
+      });
       requestButtons.forEach(btn => {
         btn.onclick = () => {
           const title = decodeURIComponent(btn.getAttribute('data-stage-request'));
@@ -2270,8 +2345,18 @@ document.addEventListener('DOMContentLoaded', function() {
   function assurerLienRapports() {
     const navigation = document.getElementById('nav-links');
     if (!navigation) return;
-    const lienRapports = navigation.querySelector('a[href="reports.html"]');
-    if (!lienRapports) {
+    // Nettoyer d'éventuels doublons (href ou texte contenant "Mes rapports")
+    const liensRapports = Array.from(navigation.querySelectorAll('a')).filter(a => {
+      const href = (a.getAttribute('href') || '').toLowerCase();
+      const texte = (a.textContent || '').toLowerCase();
+      return href.includes('reports') || texte.includes('mes rapports');
+    });
+
+    if (liensRapports.length > 1) {
+      liensRapports.slice(1).forEach(lien => lien.remove());
+    }
+
+    if (liensRapports.length === 0) {
       const nouveauLien = document.createElement('a');
       nouveauLien.href = 'reports.html';
       nouveauLien.textContent = 'Mes rapports';
