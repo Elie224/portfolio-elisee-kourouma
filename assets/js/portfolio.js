@@ -306,148 +306,38 @@ document.addEventListener('DOMContentLoaded', function() {
           donnees = JSON.parse(donneesLocales);
         } catch (e) {
           logError('Erreur parsing localStorage pour maintenance:', e);
-          return; // Si erreur, ne rien faire
+          return;
         }
       } else {
-        // Pas de données disponibles, ne rien faire
         return;
       }
     }
-    
+
     const settings = donnees?.settings || {};
-    const maintenanceEnabled = settings.maintenance?.enabled === true; // Utiliser === pour être strict
+    const maintenanceEnabled = settings.maintenance?.enabled === true;
     const maintenanceMessage = settings.maintenance?.message || 'Le site est actuellement en maintenance. Nous serons bientôt de retour !';
-    
-    // Log pour debug (uniquement en développement) - Réduire la verbosité
-    // Ne logger que si le mode maintenance change ou si c'est la première vérification
-    const resolveRequestUrl = (type, titre) => {
-      if (type === 'stage') return `${MON_SERVEUR}/portfolio/stages/${encodeURIComponent(titre)}/request-report`;
-      if (type === 'alternance') return `${MON_SERVEUR}/portfolio/alternances/${encodeURIComponent(titre)}/request-report`;
-      return `${MON_SERVEUR}/portfolio/projects/${encodeURIComponent(titre)}/request-doc`;
-    };
 
-    const resolveValidateUrl = (type, titre) => {
-      if (type === 'stage') return `${MON_SERVEUR}/portfolio/stages/${encodeURIComponent(titre)}/validate-report`;
-      if (type === 'alternance') return `${MON_SERVEUR}/portfolio/alternances/${encodeURIComponent(titre)}/validate-report`;
-      return `${MON_SERVEUR}/portfolio/projects/${encodeURIComponent(titre)}/validate-doc`;
-    };
+    let maintenanceOverlay = document.getElementById('maintenance-overlay');
 
-    if (docModalElements.passwordToggle) {
-      docModalElements.passwordToggle.addEventListener('click', () => {
-        afficherBlocPassword(!(docContext.showPassword));
-      });
-    }
-
-    if (docModalElements.form) {
-      docModalElements.form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        if (!projetDocCourant) return;
-        const firstName = docModalElements.firstname?.value.trim() || '';
-        const lastName = docModalElements.lastname?.value.trim() || '';
-        const email = docModalElements.email?.value.trim() || '';
-        const message = docModalElements.message?.value.trim() || '';
-        if (!email || !validerEmail(email)) {
-          if (docModalElements.status) docModalElements.status.textContent = 'Email invalide';
-          return;
-        }
-        if (docModalElements.submitBtn) {
-          docModalElements.submitBtn.disabled = true;
-          docModalElements.submitBtn.textContent = 'Envoi...';
-        }
-        if (docModalElements.status) docModalElements.status.textContent = '';
-        try {
-          const url = resolveRequestUrl(docContext.type, projetDocCourant);
-          const reponse = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ firstName, lastName, email, message })
-          });
-          const resultat = await reponse.json().catch(() => ({}));
-          if (reponse.ok) {
-            if (docModalElements.status) {
-              docModalElements.status.textContent = resultat.message || 'Demande envoyée. Vous recevrez un code si elle est acceptée.';
-              docModalElements.status.style.color = 'var(--accent)';
-            }
-            setTimeout(() => {
-              if (docModalElements.submitBtn) {
-                docModalElements.submitBtn.disabled = false;
-                docModalElements.submitBtn.textContent = 'Envoyer la demande';
-              }
-              fermer();
-            }, 1200);
-          } else {
-            if (docModalElements.status) {
-              docModalElements.status.textContent = resultat.error || 'Erreur lors de la demande';
-              docModalElements.status.style.color = 'var(--accent)';
-            }
-          }
-        } catch (err) {
-          if (docModalElements.status) {
-            docModalElements.status.textContent = 'Erreur réseau';
-            docModalElements.status.style.color = 'var(--accent)';
-          }
-        } finally {
-          if (docModalElements.submitBtn) {
-            docModalElements.submitBtn.disabled = false;
-            docModalElements.submitBtn.textContent = 'Envoyer la demande';
-          }
-        }
-      });
-    }
-
-    if (docModalElements.passwordSubmit) {
-      docModalElements.passwordSubmit.addEventListener('click', async () => {
-        if (!projetDocCourant) return;
-        const password = docModalElements.passwordInput?.value.trim();
-        if (!password) {
-          if (docModalElements.passwordStatus) docModalElements.passwordStatus.textContent = 'Code requis';
-          return;
-        }
-        if (docModalElements.passwordStatus) docModalElements.passwordStatus.textContent = '';
-        docModalElements.passwordSubmit.disabled = true;
-        docModalElements.passwordSubmit.textContent = 'Vérification...';
-        try {
-          const url = resolveValidateUrl(docContext.type, projetDocCourant);
-          const reponse = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password })
-          });
-          const data = await reponse.json().catch(() => ({}));
-          if (reponse.ok && data.downloadLink) {
-            window.open(data.downloadLink, '_blank');
-            fermer();
-          } else {
-            if (docModalElements.passwordStatus) {
-              docModalElements.passwordStatus.textContent = data.error || 'Code incorrect ou erreur.';
-              docModalElements.passwordStatus.style.color = 'var(--accent)';
-            }
-          }
-        } catch (err) {
-          if (docModalElements.passwordStatus) {
-            docModalElements.passwordStatus.textContent = 'Erreur réseau';
-            docModalElements.passwordStatus.style.color = 'var(--accent)';
-          }
-        } finally {
-          docModalElements.passwordSubmit.disabled = false;
-          docModalElements.passwordSubmit.textContent = 'Valider le code';
-        }
-      });
-    }
+    if (maintenanceEnabled) {
+      if (!maintenanceOverlay) {
+        maintenanceOverlay = document.createElement('div');
+        maintenanceOverlay.id = 'maintenance-overlay';
+        maintenanceOverlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;z-index:999999;padding:24px;';
+        maintenanceOverlay.innerHTML = `
+          <div class="card" style="max-width:520px;width:100%;text-align:center;gap:12px;display:flex;flex-direction:column;align-items:center;">
+            <div style="font-size:32px;">🛠️</div>
+            <h2 style="margin:0;">Site en maintenance</h2>
+            <p id="maintenance-message-text" class="muted" style="margin:0;">${maintenanceMessage}</p>
           </div>
         `;
-        
-        // Définir le message avec textContent pour éviter XSS
-        const messageElement = document.getElementById('maintenance-message-text');
-        if (messageElement) {
-          messageElement.textContent = maintenanceMessage;
-        }
-        
-        // S'assurer que le body existe avant d'ajouter l'overlay
+
+        const messageElement = maintenanceOverlay.querySelector('#maintenance-message-text');
+        if (messageElement) messageElement.textContent = maintenanceMessage;
+
         if (document.body) {
           document.body.appendChild(maintenanceOverlay);
         } else {
-          // Si le body n'existe pas encore, attendre qu'il soit prêt
           document.addEventListener('DOMContentLoaded', () => {
             if (!document.getElementById('maintenance-overlay')) {
               document.body.appendChild(maintenanceOverlay);
@@ -455,58 +345,40 @@ document.addEventListener('DOMContentLoaded', function() {
           });
         }
       } else {
-        // Mettre à jour le message
-        const messageText = document.getElementById('maintenance-message-text');
+        const messageText = maintenanceOverlay.querySelector('#maintenance-message-text');
         if (messageText) {
-          messageText.textContent = maintenanceMessage; // Utiliser textContent pour éviter XSS
+          messageText.textContent = maintenanceMessage;
         }
         maintenanceOverlay.style.display = 'flex';
         maintenanceOverlay.style.zIndex = '999999';
       }
-      
-      // Masquer le contenu principal avec !important pour forcer
+
       const mainContent = document.querySelector('main');
-      if (mainContent) {
-        mainContent.style.setProperty('display', 'none', 'important');
-      }
+      if (mainContent) mainContent.style.setProperty('display', 'none', 'important');
       const header = document.querySelector('header');
-      if (header) {
-        header.style.setProperty('display', 'none', 'important');
-      }
+      if (header) header.style.setProperty('display', 'none', 'important');
       const footer = document.querySelector('footer');
-      if (footer) {
-        footer.style.setProperty('display', 'none', 'important');
-      }
-      
-      // Ne logger qu'une seule fois
+      if (footer) footer.style.setProperty('display', 'none', 'important');
+
       if (estEnDeveloppement && !window.maintenanceActivatedLogged) {
         window.maintenanceActivatedLogged = true;
         log('✅ Mode maintenance activé et affiché');
       }
     } else {
-      // Désactiver le mode maintenance
       if (maintenanceOverlay) {
         maintenanceOverlay.style.display = 'none';
       }
-      
-      // Réafficher le contenu principal
+
       const mainContent = document.querySelector('main');
-      if (mainContent) {
-        mainContent.style.removeProperty('display');
-      }
+      if (mainContent) mainContent.style.removeProperty('display');
       const header = document.querySelector('header');
-      if (header) {
-        header.style.removeProperty('display');
-      }
+      if (header) header.style.removeProperty('display');
       const footer = document.querySelector('footer');
-      if (footer) {
-        footer.style.removeProperty('display');
-      }
-      
-      // Ne logger qu'une seule fois
+      if (footer) footer.style.removeProperty('display');
+
       if (estEnDeveloppement && !window.maintenanceDeactivatedLogged) {
         window.maintenanceDeactivatedLogged = true;
-        window.maintenanceActivatedLogged = false; // Réinitialiser pour la prochaine activation
+        window.maintenanceActivatedLogged = false;
         log('✅ Mode maintenance désactivé');
       }
     }
