@@ -105,9 +105,6 @@ document.addEventListener('DOMContentLoaded', function() {
   let isLoading = false;
   let cvBase64Dirty = false;
   let currentEditingId = null;
-  let modeDegradeActif = false;
-  let timerResynchronisation = null;
-  let echecsConsecutifsChargement = 0;
   let selectedItems = {
     projects: new Set(),
     skills: new Set(),
@@ -248,22 +245,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (isLoading) return;
     isLoading = true;
 
-    const activerModeDegrade = (message, afficherToast = true) => {
-      if (afficherToast && !modeDegradeActif) {
-        afficherErreur(null, message);
-      }
-      modeDegradeActif = true;
-
-      if (!timerResynchronisation) {
-        timerResynchronisation = setTimeout(() => {
-          timerResynchronisation = null;
-          if (!isLoading) {
-            chargerToutesMesDonnees();
-          }
-        }, 8000);
-      }
-    };
-
     const attendre = (ms) => new Promise(resolve => setTimeout(resolve, ms));
     const fetchAvecRetry = async (endpoint, options = {}, maxTentatives = 2) => {
       let derniereErreur = null;
@@ -340,6 +321,13 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
 
+    const cacheLocalEstValide = (donnees) => (
+      !!donnees &&
+      Array.isArray(donnees.projects) &&
+      Array.isArray(donnees.skills) &&
+      Array.isArray(donnees.services)
+    );
+
     const tenterRecuperationAdminProduction = async (token) => {
       if (!token) return false;
       try {
@@ -358,8 +346,6 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.setItem('portfolioData', JSON.stringify(mesDonneesActuelles));
         afficherToutesMesDonnees();
         afficherSucces('Données serveur récupérées');
-        echecsConsecutifsChargement = 0;
-        modeDegradeActif = false;
         return true;
       } catch (e) {
         return false;
@@ -468,31 +454,26 @@ document.addEventListener('DOMContentLoaded', function() {
         // Sauvegarder aussi dans localStorage comme backup
         localStorage.setItem('portfolioData', JSON.stringify(mesDonneesActuelles));
         cvBase64Dirty = false;
-
-        const etaitEnModeDegrade = modeDegradeActif;
-        echecsConsecutifsChargement = 0;
-        modeDegradeActif = false;
-        if (timerResynchronisation) {
-          clearTimeout(timerResynchronisation);
-          timerResynchronisation = null;
-        }
         
         afficherToutesMesDonnees();
-        if (etaitEnModeDegrade) {
-          afficherSucces('Connexion serveur rétablie, données synchronisées');
-        } else {
-          afficherSucces('Données chargées depuis le serveur');
-        }
+        afficherSucces('Données chargées depuis le serveur');
       } else {
         // Si erreur serveur ou réponse conditionnelle (304), utiliser localStorage
         const donneesLocales = localStorage.getItem('portfolioData');
         if (donneesLocales) {
-          mesDonneesActuelles = JSON.parse(donneesLocales);
+          const donneesLocalesParsees = JSON.parse(donneesLocales);
 
           // Si le cache local est incomplet (ex: projets absents), tenter une récupération directe admin
-          if ((!Array.isArray(mesDonneesActuelles.projects) || mesDonneesActuelles.projects.length === 0) && await tenterRecuperationAdminProduction(token)) {
+          if ((!cacheLocalEstValide(donneesLocalesParsees) || donneesLocalesParsees.projects.length === 0) && await tenterRecuperationAdminProduction(token)) {
             return;
           }
+
+          if (!cacheLocalEstValide(donneesLocalesParsees)) {
+            afficherErreur(null, 'Cache local incomplet et serveur indisponible. Réessayez dans quelques secondes.');
+            return;
+          }
+
+          mesDonneesActuelles = normaliserDonneesChargees(donneesLocalesParsees);
           
           // S'assurer que les settings ont bien la structure analytics
           if (!mesDonneesActuelles.settings) {
@@ -508,21 +489,16 @@ document.addEventListener('DOMContentLoaded', function() {
           
           afficherToutesMesDonnees();
           if (statutReponse === 304) {
-            echecsConsecutifsChargement = 0;
             afficherSucces('Données serveur synchronisées (cache validé)');
           } else if (erreurReseau || !statutReponse) {
-            echecsConsecutifsChargement += 1;
-            const notifierModeDegrade = echecsConsecutifsChargement >= 2;
             const serveurJoignable = await verifierServeurJoignable();
             if (serveurJoignable) {
-              activerModeDegrade('Mode dégradé : API indisponible, données locales affichées', notifierModeDegrade);
+              afficherErreur(null, 'Synchronisation serveur temporairement indisponible. Cache local affiché.');
             } else {
-              activerModeDegrade('Mode dégradé : serveur indisponible, données locales affichées', notifierModeDegrade);
+              afficherErreur(null, 'Connexion serveur indisponible. Cache local affiché.');
             }
           } else {
-            echecsConsecutifsChargement += 1;
-            const notifierModeDegrade = echecsConsecutifsChargement >= 2;
-            activerModeDegrade('Mode dégradé : données locales affichées', notifierModeDegrade);
+            afficherErreur(null, 'Réponse API incomplète. Cache local affiché.');
           }
         }
       }
@@ -531,21 +507,26 @@ document.addEventListener('DOMContentLoaded', function() {
       // Utiliser localStorage en fallback
       const donneesLocales = localStorage.getItem('portfolioData');
       if (donneesLocales) {
-        echecsConsecutifsChargement += 1;
-        const notifierModeDegrade = echecsConsecutifsChargement >= 2;
-        mesDonneesActuelles = JSON.parse(donneesLocales);
+        const donneesLocalesParsees = JSON.parse(donneesLocales);
 
         // Même en cas d'exception, tenter une récupération admin directe pour éviter une liste de projets vide
-        if ((!Array.isArray(mesDonneesActuelles.projects) || mesDonneesActuelles.projects.length === 0) && await tenterRecuperationAdminProduction(obtenirToken())) {
+        if ((!cacheLocalEstValide(donneesLocalesParsees) || donneesLocalesParsees.projects.length === 0) && await tenterRecuperationAdminProduction(obtenirToken())) {
           return;
         }
+
+        if (!cacheLocalEstValide(donneesLocalesParsees)) {
+          afficherErreur(null, 'Cache local incomplet et serveur indisponible. Réessayez dans quelques secondes.');
+          return;
+        }
+
+        mesDonneesActuelles = normaliserDonneesChargees(donneesLocalesParsees);
 
         afficherToutesMesDonnees();
         const serveurJoignable = await verifierServeurJoignable();
         if (serveurJoignable) {
-          activerModeDegrade('Mode dégradé : API indisponible, données locales affichées', notifierModeDegrade);
+          afficherErreur(null, 'Synchronisation serveur temporairement indisponible. Cache local affiché.');
         } else {
-          activerModeDegrade('Mode dégradé : serveur indisponible, données locales affichées', notifierModeDegrade);
+          afficherErreur(null, 'Connexion serveur indisponible. Cache local affiché.');
         }
       }
     } finally {
@@ -3169,9 +3150,12 @@ document.addEventListener('DOMContentLoaded', function() {
         message: settings.maintenance.message
       });
       
-      // Sauvegarder dans localStorage
-      const currentData = JSON.parse(localStorage.getItem('portfolioData') || '{}');
-      currentData.settings = settings;
+      // Sauvegarder dans localStorage sans perdre les autres sections (projets, services, etc.)
+      const oldValue = localStorage.getItem('portfolioData');
+      const currentData = {
+        ...mesDonneesActuelles,
+        settings
+      };
       localStorage.setItem('portfolioData', JSON.stringify(currentData));
       
       // S'assurer que mesDonneesActuelles contient bien les settings avant la sauvegarde
@@ -3189,7 +3173,7 @@ document.addEventListener('DOMContentLoaded', function() {
       window.dispatchEvent(new StorageEvent('storage', {
         key: 'portfolioData',
         newValue: JSON.stringify(currentData),
-        oldValue: localStorage.getItem('portfolioData')
+        oldValue
       }));
       
       // Sauvegarder sur le serveur
