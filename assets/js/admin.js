@@ -36,15 +36,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const params = new URLSearchParams(window.location.search);
     const overrideParam = normaliserApiBase(params.get('api'));
     const overrideStorage = localStorage.getItem('portfolioApiBase');
+    const host = window.location.hostname;
+    const isLocalHost = host === 'localhost' || host === '127.0.0.1';
+    const isLocalLan = /^192\.168\.|^10\.|^172\.(1[6-9]|2\d|3[01])\./.test(host);
 
     if (overrideParam) {
       localStorage.setItem('portfolioApiBase', overrideParam);
       return overrideParam;
     }
 
-    const host = window.location.hostname;
-    const isLocalHost = host === 'localhost' || host === '127.0.0.1';
-    const isLocalLan = /^192\.168\.|^10\.|^172\.(1[6-9]|2\d|3[01])\./.test(host);
+    // En production web, toujours utiliser l'API officielle sauf override explicite via ?api=
+    if (!isLocalHost && !isLocalLan) {
+      if (overrideStorage) {
+        localStorage.removeItem('portfolioApiBase');
+      }
+      return API_PRODUCTION;
+    }
+
     const apiStorageNormalisee = normaliserApiBase(overrideStorage);
 
     if (apiStorageNormalisee) {
