@@ -699,8 +699,6 @@ document.addEventListener('DOMContentLoaded', function() {
         alert('Sauvegarde bloquée avant POST: ' + (erreur?.message || erreur));
       }
       afficherErreur(null, 'Impossible de sauvegarder sur le serveur');
-      // Sauvegarder quand même dans localStorage
-      localStorage.setItem('portfolioData', JSON.stringify(mesDonneesActuelles));
       return false;
     }
   }
@@ -1098,13 +1096,24 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     
+    const ancienneListeProjets = [...(mesDonneesActuelles.projects || [])];
     if (editIndex !== null) {
       mesDonneesActuelles.projects[editIndex] = projet;
     } else {
       mesDonneesActuelles.projects.push(projet);
     }
-    
-    await sauvegarderSurServeur();
+
+    const messageSucces = editIndex !== null
+      ? 'Projet modifié et enregistré avec succès'
+      : 'Projet ajouté et enregistré avec succès';
+
+    const success = await sauvegarderSurServeur(messageSucces);
+    if (!success) {
+      mesDonneesActuelles.projects = ancienneListeProjets;
+      afficherListeProjets();
+      return;
+    }
+
     afficherListeProjets();
     window.hideProjectForm();
   }
@@ -1115,10 +1124,14 @@ document.addEventListener('DOMContentLoaded', function() {
   };
   
   // Supprime un projet
-  window.deleteProject = function(index) {
+  window.deleteProject = async function(index) {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce projet ?')) {
+      const ancienneListeProjets = [...(mesDonneesActuelles.projects || [])];
       mesDonneesActuelles.projects.splice(index, 1);
-      sauvegarderSurServeur();
+      const success = await sauvegarderSurServeur('Projet supprimé avec succès');
+      if (!success) {
+        mesDonneesActuelles.projects = ancienneListeProjets;
+      }
       afficherListeProjets();
     }
   };
