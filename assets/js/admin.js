@@ -238,6 +238,37 @@ document.addEventListener('DOMContentLoaded', function() {
   async function chargerToutesMesDonnees() {
     if (isLoading) return;
     isLoading = true;
+
+    const attendre = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    const fetchAvecRetry = async (endpoint, options = {}, maxTentatives = 2) => {
+      let derniereErreur = null;
+      let derniereReponse = null;
+
+      for (let tentative = 1; tentative <= maxTentatives; tentative++) {
+        try {
+          const reponse = await fetch(endpoint, options);
+          derniereReponse = reponse;
+
+          const erreurServeurRetryable = reponse.status >= 500 || reponse.status === 429;
+          if (!erreurServeurRetryable || tentative === maxTentatives) {
+            return reponse;
+          }
+        } catch (erreur) {
+          derniereErreur = erreur;
+          if (tentative === maxTentatives) {
+            throw erreur;
+          }
+        }
+
+        await attendre(600 * tentative);
+      }
+
+      if (derniereReponse) {
+        return derniereReponse;
+      }
+
+      throw derniereErreur || new Error('Requête impossible');
+    };
     
     try {
       const token = obtenirToken();
@@ -254,7 +285,7 @@ document.addEventListener('DOMContentLoaded', function() {
       for (const base of bases) {
         const endpoint = token ? `${base}/portfolio/admin` : `${base}/portfolio`;
         try {
-          const tentative = await fetch(endpoint, {
+          const tentative = await fetchAvecRetry(endpoint, {
             headers,
             cache: 'no-store'
           });
