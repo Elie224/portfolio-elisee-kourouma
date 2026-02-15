@@ -103,6 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // État de chargement
   let isLoading = false;
+  let isRefreshingProjects = false;
   let cvBase64Dirty = false;
   let currentEditingId = null;
   let selectedItems = {
@@ -849,6 +850,10 @@ document.addEventListener('DOMContentLoaded', function() {
         onglet.classList.add('active');
         const contenu = document.getElementById(`tab-${tabName}`);
         if (contenu) contenu.classList.add('active');
+
+        if (tabName === 'projects') {
+          chargerProjetsDepuisServeur(true);
+        }
       });
     });
   }
@@ -930,6 +935,47 @@ document.addEventListener('DOMContentLoaded', function() {
   
   
   /* ===== GESTION DES PROJETS ===== */
+
+  async function chargerProjetsDepuisServeur(force = false) {
+    if (isRefreshingProjects) return false;
+
+    const projetsLocaux = mesDonneesActuelles.projects || [];
+    if (!force && Array.isArray(projetsLocaux) && projetsLocaux.length > 0) {
+      return true;
+    }
+
+    isRefreshingProjects = true;
+    try {
+      const bases = [MON_SERVEUR];
+      if (MON_SERVEUR !== API_PRODUCTION) {
+        bases.push(API_PRODUCTION);
+      }
+
+      for (const base of bases) {
+        try {
+          const reponse = await fetch(`${base}/portfolio`, {
+            cache: 'no-store'
+          });
+          if (!reponse.ok) continue;
+
+          const donnees = await reponse.json();
+          const projetsServeur = Array.isArray(donnees.projects) ? donnees.projects : [];
+
+          mesDonneesActuelles.projects = projetsServeur;
+          localStorage.setItem('portfolioData', JSON.stringify(mesDonneesActuelles));
+          afficherListeProjets();
+          mettreAJourStatsDashboard();
+          return projetsServeur.length > 0;
+        } catch (e) {
+          // essayer la base suivante
+        }
+      }
+
+      return false;
+    } finally {
+      isRefreshingProjects = false;
+    }
+  }
   
   // Affiche la liste des projets
   function afficherListeProjets() {
@@ -940,6 +986,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (projets.length === 0) {
       container.innerHTML = '<p class="muted">Aucun projet pour le moment.</p>';
+      chargerProjetsDepuisServeur(true);
       return;
     }
     
