@@ -336,19 +336,25 @@ document.addEventListener('DOMContentLoaded', function() {
       return false;
     };
 
+    const normaliserCollection = (value) => {
+      if (Array.isArray(value)) return value;
+      if (value && typeof value === 'object') return Object.values(value);
+      return [];
+    };
+
     const normaliserDonneesChargees = (donnees) => ({
       personal: donnees.personal || {},
-      projects: donnees.projects || [],
-      skills: donnees.skills || [],
-      timeline: donnees.timeline || [],
-      activeSearches: donnees.activeSearches || [],
-      certifications: donnees.certifications || [],
-      stages: donnees.stages || [],
-      alternances: donnees.alternances || [],
-      techEvents: donnees.techEvents || [],
-      services: donnees.services || [],
-      faq: donnees.faq || [],
-      contactMessages: donnees.contactMessages || [],
+      projects: normaliserCollection(donnees.projects),
+      skills: normaliserCollection(donnees.skills),
+      timeline: normaliserCollection(donnees.timeline),
+      activeSearches: normaliserCollection(donnees.activeSearches),
+      certifications: normaliserCollection(donnees.certifications),
+      stages: normaliserCollection(donnees.stages),
+      alternances: normaliserCollection(donnees.alternances),
+      techEvents: normaliserCollection(donnees.techEvents),
+      services: normaliserCollection(donnees.services),
+      faq: normaliserCollection(donnees.faq),
+      contactMessages: normaliserCollection(donnees.contactMessages),
       links: donnees.links || {},
       about: donnees.about || {},
       settings: donnees.settings || {
@@ -981,8 +987,16 @@ document.addEventListener('DOMContentLoaded', function() {
   function afficherListeProjets() {
     const container = document.getElementById('projects-list');
     if (!container) return;
-    
-    const projets = mesDonneesActuelles.projects || [];
+
+    const projets = Array.isArray(mesDonneesActuelles.projects)
+      ? mesDonneesActuelles.projects
+      : (mesDonneesActuelles.projects && typeof mesDonneesActuelles.projects === 'object'
+          ? Object.values(mesDonneesActuelles.projects)
+          : []);
+
+    if (!Array.isArray(mesDonneesActuelles.projects)) {
+      mesDonneesActuelles.projects = projets;
+    }
     
     if (projets.length === 0) {
       container.innerHTML = '<p class="muted">Aucun projet pour le moment.</p>';
