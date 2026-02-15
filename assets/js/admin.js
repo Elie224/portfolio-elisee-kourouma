@@ -21,10 +21,20 @@ document.addEventListener('DOMContentLoaded', function() {
   const logError = estEnDeveloppement ? console.error.bind(console) : () => {};
   const logWarn = estEnDeveloppement ? console.warn.bind(console) : () => {};
   
+  const API_PRODUCTION = 'https://portfolio-backend-elisee.fly.dev/api';
+
+  function normaliserApiBase(url) {
+    if (!url || typeof url !== 'string') return null;
+    const propre = url.trim().replace(/\/$/, '');
+    if (!/^https?:\/\//i.test(propre)) return null;
+    if (!propre.toLowerCase().endsWith('/api')) return null;
+    return propre;
+  }
+
   // Adresse de mon serveur backend (avec fallback local / réseau / override)
   function determinerServeur() {
     const params = new URLSearchParams(window.location.search);
-    const overrideParam = params.get('api');
+    const overrideParam = normaliserApiBase(params.get('api'));
     const overrideStorage = localStorage.getItem('portfolioApiBase');
 
     if (overrideParam) {
@@ -32,13 +42,21 @@ document.addEventListener('DOMContentLoaded', function() {
       return overrideParam;
     }
 
-    if (overrideStorage) {
-      return overrideStorage;
-    }
-
     const host = window.location.hostname;
     const isLocalHost = host === 'localhost' || host === '127.0.0.1';
     const isLocalLan = /^192\.168\.|^10\.|^172\.(1[6-9]|2\d|3[01])\./.test(host);
+    const apiStorageNormalisee = normaliserApiBase(overrideStorage);
+
+    if (apiStorageNormalisee) {
+      const estApiLocale = /https?:\/\/(localhost|127\.0\.0\.1|192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/i.test(apiStorageNormalisee);
+      if (!isLocalHost && !isLocalLan && estApiLocale) {
+        localStorage.removeItem('portfolioApiBase');
+      } else {
+        return apiStorageNormalisee;
+      }
+    } else if (overrideStorage) {
+      localStorage.removeItem('portfolioApiBase');
+    }
 
     if (isLocalHost || isLocalLan) {
       // Si on sert le front sur un autre port que 3000, on pointe quand même l'API sur 3000
@@ -46,7 +64,7 @@ document.addEventListener('DOMContentLoaded', function() {
       return `${proto}//${host}:3000/api`;
     }
 
-    return 'https://portfolio-backend-elisee.fly.dev/api';
+    return API_PRODUCTION;
   }
 
   const MON_SERVEUR = determinerServeur();
@@ -151,24 +169,47 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     try {
-      log('🔑 Tentative de connexion via', MON_SERVEUR);
-      const reponse = await fetch(`${MON_SERVEUR}/portfolio/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password: motDePasse })
-      });
-      
-      const resultat = await reponse.json();
-      
-      if (reponse.ok && resultat.token) {
-        localStorage.setItem('adminToken', resultat.token);
-        afficherDashboard();
-        afficherSucces('Connexion réussie !');
-      } else {
-        const msg = resultat.error || resultat.message || `Connexion refusée (code ${reponse.status})`;
-        afficherErreur(messageErreur, msg);
+      const bases = [MON_SERVEUR];
+      if (MON_SERVEUR !== API_PRODUCTION) {
+        bases.push(API_PRODUCTION);
       }
-      
+
+      let derniereErreur = null;
+
+      for (const base of bases) {
+        try {
+          log('🔑 Tentative de connexion via', base);
+          const reponse = await fetch(`${base}/portfolio/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password: motDePasse })
+          });
+
+          const resultat = await reponse.json().catch(() => ({}));
+
+          if (reponse.ok && resultat.token) {
+            localStorage.setItem('adminToken', resultat.token);
+            if (base !== MON_SERVEUR) {
+              localStorage.setItem('portfolioApiBase', API_PRODUCTION);
+            }
+            afficherDashboard();
+            afficherSucces('Connexion réussie !');
+            return;
+          }
+
+          if (reponse.status === 401 || reponse.status === 403 || reponse.status === 400) {
+            const msg = resultat.error || resultat.message || `Connexion refusée (code ${reponse.status})`;
+            afficherErreur(messageErreur, msg);
+            return;
+          }
+
+          derniereErreur = new Error(`HTTP ${reponse.status}`);
+        } catch (err) {
+          derniereErreur = err;
+        }
+      }
+
+      throw derniereErreur || new Error('Connexion impossible');
     } catch (erreur) {
       logError('❌ Erreur réseau login:', erreur);
       afficherErreur(messageErreur, `Impossible de se connecter au serveur (${MON_SERVEUR}). Vérifiez que le backend est démarré ou utilisez ?api=`);
@@ -191,19 +232,39 @@ document.addEventListener('DOMContentLoaded', function() {
     isLoading = true;
     
     try {
-      // Essayer de charger depuis le serveur
       const token = obtenirToken();
-      const endpoint = token ? `${MON_SERVEUR}/portfolio/admin` : `${MON_SERVEUR}/portfolio`;
       const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-      const reponse = await fetch(endpoint, { headers });
-      
-      if ((reponse.status === 401 || reponse.status === 403) && token) {
-        seDeconnecter();
-        isLoading = false;
-        return;
+      const bases = [MON_SERVEUR];
+      if (MON_SERVEUR !== API_PRODUCTION) {
+        bases.push(API_PRODUCTION);
       }
-      
-      if (reponse.ok) {
+
+      let reponse = null;
+
+      for (const base of bases) {
+        const endpoint = token ? `${base}/portfolio/admin` : `${base}/portfolio`;
+        try {
+          const tentative = await fetch(endpoint, { headers });
+
+          if ((tentative.status === 401 || tentative.status === 403) && token) {
+            seDeconnecter();
+            isLoading = false;
+            return;
+          }
+
+          if (tentative.ok) {
+            reponse = tentative;
+            if (base !== MON_SERVEUR) {
+              localStorage.setItem('portfolioApiBase', API_PRODUCTION);
+            }
+            break;
+          }
+        } catch (e) {
+          // essayer la base suivante
+        }
+      }
+
+      if (reponse && reponse.ok) {
         const donnees = await reponse.json();
         mesDonneesActuelles = {
           personal: donnees.personal || {},
