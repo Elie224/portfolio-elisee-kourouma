@@ -71,6 +71,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // État de chargement
   let isLoading = false;
+  let cvBase64Dirty = false;
   let currentEditingId = null;
   let selectedItems = {
     projects: new Set(),
@@ -242,6 +243,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Sauvegarder aussi dans localStorage comme backup
         localStorage.setItem('portfolioData', JSON.stringify(mesDonneesActuelles));
+        cvBase64Dirty = false;
         
         afficherToutesMesDonnees();
         afficherSucces('Données chargées depuis le serveur');
@@ -333,12 +335,22 @@ document.addEventListener('DOMContentLoaded', function() {
       
       const donneesAEnvoyer = {
         ...mesDonneesActuelles,
+        links: { ...(mesDonneesActuelles.links || {}) },
         settings: mesDonneesActuelles.settings || {
           maintenance: { enabled: false, message: 'Le site est actuellement en maintenance. Nous serons bientôt de retour !' },
           seo: { title: '', description: '', keywords: '' },
           analytics: { googleAnalytics: '' }
         }
       };
+
+      if (!cvBase64Dirty && donneesAEnvoyer.links && typeof donneesAEnvoyer.links.cvFile === 'string' && donneesAEnvoyer.links.cvFile.startsWith('data:')) {
+        delete donneesAEnvoyer.links.cvFile;
+        delete donneesAEnvoyer.links.cvFileName;
+        delete donneesAEnvoyer.links.cvFileSize;
+        if (typeof donneesAEnvoyer.links.cv === 'string' && donneesAEnvoyer.links.cv.startsWith('data:')) {
+          donneesAEnvoyer.links.cv = '/api/portfolio/cv';
+        }
+      }
       
       // Log pour debug
       log('📤 Données envoyées au serveur:', {
@@ -398,6 +410,7 @@ document.addEventListener('DOMContentLoaded', function() {
           if (resultat.portfolio.links) {
             mesDonneesActuelles.links = { ...mesDonneesActuelles.links, ...resultat.portfolio.links };
           }
+          cvBase64Dirty = false;
           
           // Mettre à jour les settings aussi
           if (resultat.portfolio.settings) {
@@ -952,6 +965,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <input type="checkbox" class="select-checkbox" data-type="certifications" data-index="${index}" onchange="toggleItemSelection('certifications', ${index}, this.checked)" />
         <h4>${cert.name || 'Certification'}</h4>
         <p class="item-meta">${cert.issuer || ''} ${cert.date ? '· ' + cert.date : ''}</p>
+        ${(cert.photo || cert.image) ? '<p class="muted" style="margin: 4px 0;">📷 Photo configurée</p>' : ''}
         <p class="muted">${cert.description || ''}</p>
         <div class="item-actions">
           <button class="btn-small" onclick="editCertification(${index})">Modifier</button>
@@ -979,12 +993,25 @@ document.addEventListener('DOMContentLoaded', function() {
       const cert = mesDonneesActuelles.certifications[editIndex];
       document.getElementById('certification-id').value = editIndex;
       document.getElementById('cert-name').value = cert.name || '';
+      const certPhotoUrl = document.getElementById('cert-photo-url');
+      if (certPhotoUrl) certPhotoUrl.value = cert.photo && !cert.photo.startsWith('data:') ? cert.photo : '';
+      const certPhotoPreview = document.getElementById('cert-photo-preview');
+      if (certPhotoPreview) {
+        const certPhoto = cert.photo || cert.image || '';
+        certPhotoPreview.innerHTML = certPhoto ? `<img src="${certPhoto}" alt="Visuel certification" style="max-width:100%; height:auto; border-radius: 8px;" />` : '';
+      }
+      const certPhotoFile = document.getElementById('cert-photo-file');
+      if (certPhotoFile) certPhotoFile.value = '';
       document.getElementById('cert-issuer').value = cert.issuer || '';
       document.getElementById('cert-date').value = cert.date || '';
       document.getElementById('cert-url').value = cert.link || '';
+      const certImage = document.getElementById('cert-image');
+      if (certImage) certImage.value = cert.image || cert.photo || '';
     } else {
       form.reset();
       document.getElementById('certification-id').value = '';
+      const certPhotoPreview = document.getElementById('cert-photo-preview');
+      if (certPhotoPreview) certPhotoPreview.innerHTML = '';
     }
     
     modal.style.display = 'block';
@@ -1000,21 +1027,60 @@ document.addEventListener('DOMContentLoaded', function() {
   // Sauvegarde une certification
   async function sauvegarderCertification(e) {
     e.preventDefault();
+
+    const photoUrlInput = document.getElementById('cert-photo-url');
+    const photoFileInput = document.getElementById('cert-photo-file');
+    const photoPreview = document.getElementById('cert-photo-preview');
+    const imageInput = document.getElementById('cert-image');
+
+    const editIndex = currentEditingId;
+    const ancien = editIndex !== null ? mesDonneesActuelles.certifications[editIndex] || {} : {};
     
     const cert = {
       name: document.getElementById('cert-name').value.trim(),
       issuer: document.getElementById('cert-issuer').value.trim(),
       date: document.getElementById('cert-date').value,
       description: '',
-      link: document.getElementById('cert-url').value.trim()
+      link: document.getElementById('cert-url').value.trim(),
+      photo: '',
+      image: ''
     };
+
+    try {
+      const nouvellePhotoBase64 = await lireImageBase64(photoFileInput);
+      const photoUrl = photoUrlInput?.value.trim();
+      const imageUrl = imageInput?.value.trim();
+
+      if (nouvellePhotoBase64) {
+        cert.photo = nouvellePhotoBase64;
+        cert.image = imageUrl || ancienneImageOuPhoto(ancien);
+        if (photoPreview) {
+          photoPreview.innerHTML = `<img src="${nouvellePhotoBase64}" alt="Visuel certification" style="max-width:100%; height:auto; border-radius: 8px;" />`;
+        }
+      } else if (photoUrl) {
+        cert.photo = photoUrl;
+        cert.image = imageUrl || photoUrl;
+        if (photoPreview) {
+          photoPreview.innerHTML = `<img src="${photoUrl}" alt="Visuel certification" style="max-width:100%; height:auto; border-radius: 8px;" />`;
+        }
+      } else {
+        cert.photo = ancien.photo || '';
+        cert.image = imageUrl || ancien.image || ancien.photo || '';
+      }
+    } catch (err) {
+      if (err.message === 'IMAGE_TOO_LARGE') {
+        afficherErreur(null, 'Image trop volumineuse (max 5 Mo)');
+        return;
+      }
+      afficherErreur(null, 'Impossible de lire l\'image de la certification');
+      return;
+    }
     
     if (!cert.name || !cert.issuer) {
       afficherErreur(null, 'Le nom et l\'organisme émetteur sont obligatoires');
       return;
     }
     
-    const editIndex = currentEditingId;
     if (editIndex !== null) {
       mesDonneesActuelles.certifications[editIndex] = cert;
     } else {
@@ -1024,6 +1090,11 @@ document.addEventListener('DOMContentLoaded', function() {
     await sauvegarderSurServeur();
     afficherListeCertifications();
     window.hideCertificationForm();
+  }
+
+  function ancienneImageOuPhoto(cert) {
+    if (!cert) return '';
+    return cert.image || cert.photo || '';
   }
   
   // Édite une certification
@@ -1774,6 +1845,148 @@ document.addEventListener('DOMContentLoaded', function() {
   
   
   /* ===== GESTION DES SERVICES ===== */
+
+  function normaliserEmojiService(valeur) {
+    const texte = (valeur || '').toString().trim();
+    if (!texte) return '🛠️';
+
+    const emojiMatch = texte.match(/(\p{Extended_Pictographic}(?:\uFE0F|\uFE0E)?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F|\uFE0E)?)*)/u);
+    if (emojiMatch && emojiMatch[1]) return emojiMatch[1];
+
+    const flagMatch = texte.match(/([\u{1F1E6}-\u{1F1FF}]{2})/u);
+    if (flagMatch && flagMatch[1]) return flagMatch[1];
+
+    return '🛠️';
+  }
+
+  function normaliserStatutService(valeur) {
+    const brut = (valeur || '').toString().trim().toLowerCase();
+    if (!brut) return 'propose';
+
+    if (brut === 'livre' || brut === 'livré' || brut.includes('livr')) {
+      return 'livre';
+    }
+
+    if (brut === 'en-cours' || brut === 'encours' || brut.includes('cours')) {
+      return 'en-cours';
+    }
+
+    return 'propose';
+  }
+
+  function libelleStatutService(statut) {
+    const s = normaliserStatutService(statut);
+    if (s === 'livre') return 'Service livré';
+    if (s === 'en-cours') return 'Service en cours';
+    return 'Services que je propose';
+  }
+
+  function assurerSelectStatutService() {
+    if (document.getElementById('service-status')) return;
+
+    const serviceTitleInput = document.getElementById('service-title');
+    if (!serviceTitleInput) return;
+
+    const formRow = serviceTitleInput.closest('.form-row');
+    if (!formRow) return;
+
+    const statutGroup = document.createElement('div');
+    statutGroup.className = 'form-group';
+    statutGroup.innerHTML = `
+      <label for="service-status">Type de service *</label>
+      <select id="service-status" required>
+        <option value="propose">Services que je propose</option>
+        <option value="livre">Service livré</option>
+        <option value="en-cours">Service en cours</option>
+      </select>
+    `;
+
+    formRow.appendChild(statutGroup);
+  }
+
+  function assurerSelectEmojiService() {
+    const serviceIconInput = document.getElementById('service-icon');
+    if (!serviceIconInput) return;
+
+    // Si le select existe déjà (HTML à jour), rien à faire
+    if (document.getElementById('service-emoji-selector')) return;
+
+    const wrapper = serviceIconInput.parentElement;
+    if (!wrapper) return;
+
+    wrapper.style.display = 'flex';
+    wrapper.style.gap = '8px';
+    wrapper.style.alignItems = 'center';
+    wrapper.style.flexWrap = 'wrap';
+
+    serviceIconInput.style.flex = '1';
+    serviceIconInput.style.minWidth = '100px';
+
+    const selector = document.createElement('select');
+    selector.id = 'service-emoji-selector';
+    selector.style.cssText = 'padding: 8px 12px; border: 2px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--text); cursor: pointer; font-size: 16px;';
+    selector.innerHTML = `
+      <option value="">Choisir un emoji...</option>
+      <option value="💻">💻 Développement web</option>
+      <option value="📱">📱 Mobile</option>
+      <option value="🖥️">🖥️ Desktop</option>
+      <option value="🌐">🌐 Internet</option>
+      <option value="🔧">🔧 Outils</option>
+      <option value="🧰">🧰 Toolbox</option>
+      <option value="🛠️">🛠️ Développement</option>
+      <option value="⚙️">⚙️ Configuration</option>
+      <option value="🔩">🔩 Technique</option>
+      <option value="🧪">🧪 Tests</option>
+      <option value="🔬">🔬 Recherche</option>
+      <option value="📡">📡 Réseau</option>
+      <option value="🔌">🔌 API</option>
+      <option value="🗄️">🗄️ Base de données</option>
+      <option value="💾">💾 Stockage</option>
+      <option value="📦">📦 Packaging</option>
+      <option value="🔄">🔄 Intégration</option>
+      <option value="🚀">🚀 Performance</option>
+      <option value="⚡">⚡ Vitesse</option>
+      <option value="☁️">☁️ Cloud</option>
+      <option value="🔐">🔐 Sécurité</option>
+      <option value="🔒">🔒 Protection</option>
+      <option value="🤖">🤖 IA</option>
+      <option value="🧠">🧠 Machine Learning</option>
+      <option value="📊">📊 Data</option>
+      <option value="📈">📈 Analytics</option>
+      <option value="📉">📉 Reporting</option>
+      <option value="🔍">🔍 Audit</option>
+      <option value="💡">💡 Conseil</option>
+      <option value="🎯">🎯 Stratégie</option>
+      <option value="📝">📝 Rédaction</option>
+      <option value="📚">📚 Formation</option>
+      <option value="🎓">🎓 Accompagnement</option>
+      <option value="🎨">🎨 Design</option>
+      <option value="🖼️">🖼️ UI</option>
+      <option value="🎬">🎬 Vidéo</option>
+      <option value="🎵">🎵 Audio</option>
+      <option value="🛒">🛒 E-commerce</option>
+      <option value="🏗️">🏗️ Architecture</option>
+      <option value="🧱">🧱 Structure</option>
+      <option value="📁">📁 Gestion de projet</option>
+      <option value="📋">📋 Planification</option>
+      <option value="🤝">🤝 Collaboration</option>
+      <option value="🌍">🌍 International</option>
+      <option value="📞">📞 Support</option>
+      <option value="✅">✅ Qualité</option>
+      <option value="⭐">⭐ Premium</option>
+      <option value="💎">💎 Haut de gamme</option>
+      <option value="🎁">🎁 Offre</option>
+      <option value="🔮">🔮 Innovation</option>
+    `;
+    selector.addEventListener('change', function() {
+      if (this.value) {
+        serviceIconInput.value = this.value;
+        this.value = '';
+      }
+    });
+
+    wrapper.appendChild(selector);
+  }
   
   // Affiche la liste des services
   function afficherListeServices() {
@@ -1790,7 +2003,9 @@ document.addEventListener('DOMContentLoaded', function() {
     container.innerHTML = services.map((service, index) => `
       <div class="item-card">
         <input type="checkbox" class="select-checkbox" data-type="services" data-index="${index}" onchange="toggleItemSelection('services', ${index}, this.checked)" />
-        <h4>${service.icon || '🛠️'} ${service.title || 'Service'}</h4>
+        <h4>${normaliserEmojiService(service.icon)} ${service.title || 'Service'}</h4>
+        ${(service.photo || service.image) ? '<p class="muted" style="margin: 4px 0;">📷 Photo configurée</p>' : ''}
+        <p class="muted" style="margin: 6px 0 8px;">${libelleStatutService(service.status)}</p>
         <p class="muted">${service.description || ''}</p>
         <div class="item-actions">
           <button class="btn-small" onclick="editService(${index})">Modifier</button>
@@ -1802,6 +2017,9 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Affiche le formulaire de service
   window.showServiceForm = function(editIndex = null) {
+    assurerSelectEmojiService();
+    assurerSelectStatutService();
+
     const modal = document.getElementById('service-form-modal');
     const form = document.getElementById('service-form');
     const title = document.getElementById('service-form-title');
@@ -1816,14 +2034,41 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (editIndex !== null) {
       const service = mesDonneesActuelles.services[editIndex];
+      const photoActuelle = service.photo || service.image || '';
       document.getElementById('service-id').value = editIndex;
-      document.getElementById('service-icon').value = service.icon || '';
+      document.getElementById('service-icon').value = normaliserEmojiService(service.icon);
       document.getElementById('service-title').value = service.title || '';
+      const servicePhotoUrlInput = document.getElementById('service-photo-url');
+      if (servicePhotoUrlInput) {
+        servicePhotoUrlInput.value = photoActuelle && !photoActuelle.startsWith('data:') ? photoActuelle : '';
+      }
+      const servicePhotoPreview = document.getElementById('service-photo-preview');
+      if (servicePhotoPreview) {
+        servicePhotoPreview.innerHTML = photoActuelle
+          ? `<img src="${photoActuelle}" alt="Visuel service" style="width: 180px; height: 110px; object-fit: cover; border-radius: 8px; display: block;" />`
+          : '';
+      }
+      const servicePhotoFileInput = document.getElementById('service-photo-file');
+      if (servicePhotoFileInput) {
+        servicePhotoFileInput.value = '';
+      }
+      const serviceStatusInput = document.getElementById('service-status');
+      if (serviceStatusInput) {
+        serviceStatusInput.value = normaliserStatutService(service.status);
+      }
       document.getElementById('service-description').value = service.description || '';
       document.getElementById('service-features').value = (service.features || []).join('\n');
     } else {
       form.reset();
       document.getElementById('service-id').value = '';
+      const servicePhotoPreview = document.getElementById('service-photo-preview');
+      if (servicePhotoPreview) {
+        servicePhotoPreview.innerHTML = '';
+      }
+      const serviceStatusInput = document.getElementById('service-status');
+      if (serviceStatusInput) {
+        serviceStatusInput.value = 'propose';
+      }
     }
     
     modal.style.display = 'block';
@@ -1839,20 +2084,57 @@ document.addEventListener('DOMContentLoaded', function() {
   // Sauvegarde un service
   async function sauvegarderService(e) {
     e.preventDefault();
+
+    const photoUrlInput = document.getElementById('service-photo-url');
+    const photoFileInput = document.getElementById('service-photo-file');
+    const photoPreview = document.getElementById('service-photo-preview');
+
+    const editIndex = currentEditingId;
+    const ancien = editIndex !== null ? mesDonneesActuelles.services[editIndex] || {} : {};
+    const anciennePhoto = ancien.photo || ancien.image || '';
     
     const service = {
-      icon: document.getElementById('service-icon').value.trim(),
+      icon: normaliserEmojiService(document.getElementById('service-icon').value),
       title: document.getElementById('service-title').value.trim(),
+      status: normaliserStatutService(document.getElementById('service-status')?.value || 'propose'),
       description: document.getElementById('service-description').value.trim(),
       features: document.getElementById('service-features').value.split('\n').filter(f => f.trim())
     };
-    
-    if (!service.icon || !service.title || !service.description) {
-      afficherErreur(null, 'L\'icône, le titre et la description sont obligatoires');
+
+    try {
+      const nouvellePhotoBase64 = await lireImageBase64(photoFileInput);
+      const photoUrl = photoUrlInput?.value.trim();
+
+      if (nouvellePhotoBase64) {
+        service.photo = nouvellePhotoBase64;
+        service.image = nouvellePhotoBase64;
+        if (photoPreview) {
+          photoPreview.innerHTML = `<img src="${nouvellePhotoBase64}" alt="Visuel service" style="width: 180px; height: 110px; object-fit: cover; border-radius: 8px; display: block;" />`;
+        }
+      } else if (photoUrl) {
+        service.photo = photoUrl;
+        service.image = photoUrl;
+        if (photoPreview) {
+          photoPreview.innerHTML = `<img src="${photoUrl}" alt="Visuel service" style="width: 180px; height: 110px; object-fit: cover; border-radius: 8px; display: block;" />`;
+        }
+      } else {
+        service.photo = anciennePhoto;
+        service.image = anciennePhoto;
+      }
+    } catch (err) {
+      if (err.message === 'IMAGE_TOO_LARGE') {
+        afficherErreur(null, 'Image trop volumineuse (max 5 Mo)');
+        return;
+      }
+      afficherErreur(null, 'Impossible de lire l\'image du service');
       return;
     }
     
-    const editIndex = currentEditingId;
+    if (!service.title || !service.description) {
+      afficherErreur(null, 'Le titre et la description sont obligatoires');
+      return;
+    }
+    
     if (editIndex !== null) {
       mesDonneesActuelles.services[editIndex] = service;
     } else {
@@ -2111,6 +2393,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Affiche les liens
   function afficherLiens() {
     const links = mesDonneesActuelles.links || {};
+    const cvDisponible = !!links.cvFile || !!links.cv;
     
     const cvPath = document.getElementById('cv-path');
     if (cvPath) {
@@ -2128,7 +2411,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Afficher la section de prévisualisation si un fichier est uploadé
     const previewSection = document.getElementById('cv-preview-section');
-    if (links.cvFile && previewSection) {
+    if (cvDisponible && previewSection) {
       previewSection.style.display = 'block';
       const fileName = document.getElementById('cv-file-name');
       const fileSize = document.getElementById('cv-file-size');
@@ -2139,14 +2422,61 @@ document.addEventListener('DOMContentLoaded', function() {
         fileSize.textContent = `Taille: ${(links.cvFileSize / 1024).toFixed(2)} KB`;
       }
       if (previewLink) {
-        previewLink.href = links.cvFile;
-        previewLink.download = links.cvFileName || 'CV.pdf';
+        previewLink.href = links.cvFile || links.cv;
+        previewLink.removeAttribute('download');
+        previewLink.onclick = ouvrirApercuCV;
       }
     } else if (previewSection) {
       previewSection.style.display = 'none';
     }
     
     afficherLiensSociaux();
+  }
+
+  // Ouvre la prévisualisation du CV de manière fiable (base64 ou URL)
+  function ouvrirApercuCV(e) {
+    if (e) e.preventDefault();
+
+    const links = mesDonneesActuelles?.links || {};
+    const previewLink = document.getElementById('cv-preview-link');
+    const sourceCv = links.cvFile || links.cv || previewLink?.getAttribute('href');
+
+    if (!sourceCv || sourceCv === '#') {
+      afficherErreur(null, 'Aucun CV disponible pour la prévisualisation.');
+      return false;
+    }
+
+    try {
+      if (typeof sourceCv === 'string' && sourceCv.startsWith('data:application/pdf')) {
+        const virguleIndex = sourceCv.indexOf(',');
+        const base64Data = virguleIndex !== -1 ? sourceCv.substring(virguleIndex + 1) : '';
+
+        if (!base64Data) {
+          window.open(sourceCv, '_blank', 'noopener,noreferrer');
+          return false;
+        }
+
+        const binaryString = atob(base64Data);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+
+        const blob = new Blob([bytes], { type: 'application/pdf' });
+        const blobUrl = URL.createObjectURL(blob);
+        window.open(blobUrl, '_blank', 'noopener,noreferrer');
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+        return false;
+      }
+
+      window.open(sourceCv, '_blank', 'noopener,noreferrer');
+      return false;
+    } catch (err) {
+      logError('❌ Erreur prévisualisation CV:', err);
+      afficherErreur(null, 'Impossible de prévisualiser le CV.');
+      return false;
+    }
   }
   
   // Affiche les liens sociaux
@@ -2190,6 +2520,7 @@ document.addEventListener('DOMContentLoaded', function() {
         delete mesDonneesActuelles.links.cvFile;
         delete mesDonneesActuelles.links.cvFileName;
         delete mesDonneesActuelles.links.cvFileSize;
+        cvBase64Dirty = true;
       }
       // SUPPRIMER L'ANCIEN CV BASE64 DANS cv : Si cv était en base64, le remplacer par le chemin
       if (mesDonneesActuelles.links.cv && mesDonneesActuelles.links.cv.startsWith('data:')) {
@@ -2197,6 +2528,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       // Mettre le nouveau chemin
       mesDonneesActuelles.links.cv = cvPath;
+      cvBase64Dirty = true;
     }
     
     const success = await sauvegarderSurServeur();
@@ -2499,10 +2831,12 @@ document.addEventListener('DOMContentLoaded', function() {
       if (mesDonneesActuelles.links.cv && mesDonneesActuelles.links.cv.startsWith('data:')) {
         delete mesDonneesActuelles.links.cv;
         log('🗑️ CV base64 supprimé');
+        cvBase64Dirty = true;
       } else if (mesDonneesActuelles.links.cv === 'assets/CV.pdf') {
         // Supprimer aussi le chemin par défaut
         delete mesDonneesActuelles.links.cv;
         log('🗑️ Chemin CV par défaut supprimé');
+        cvBase64Dirty = true;
       }
       log('🗑️ CV uploadé supprimé - Aucun CV défini (l\'utilisateur peut en ajouter un)');
     }
@@ -3066,6 +3400,33 @@ document.addEventListener('DOMContentLoaded', function() {
     // Formulaire certification
     const certForm = document.getElementById('certification-form');
     if (certForm) certForm.addEventListener('submit', sauvegarderCertification);
+    const certPhotoUrlInput = document.getElementById('cert-photo-url');
+    const certPhotoFileInput = document.getElementById('cert-photo-file');
+    const certPhotoPreview = document.getElementById('cert-photo-preview');
+    if (certPhotoUrlInput && certPhotoPreview) {
+      certPhotoUrlInput.addEventListener('input', () => {
+        const url = certPhotoUrlInput.value.trim();
+        if (url) {
+          certPhotoPreview.innerHTML = `<img src="${url}" alt="Visuel certification" style="max-width:100%; height:auto; border-radius: 8px;" />`;
+        }
+      });
+    }
+    if (certPhotoFileInput && certPhotoPreview) {
+      certPhotoFileInput.addEventListener('change', async () => {
+        try {
+          const base64 = await lireImageBase64(certPhotoFileInput);
+          if (base64) {
+            certPhotoPreview.innerHTML = `<img src="${base64}" alt="Visuel certification" style="max-width:100%; height:auto; border-radius: 8px;" />`;
+          }
+        } catch (err) {
+          if (err.message === 'IMAGE_TOO_LARGE') {
+            afficherErreur(null, 'Image trop volumineuse (max 5 Mo)');
+            return;
+          }
+          afficherErreur(null, 'Impossible de lire l\'image de la certification');
+        }
+      });
+    }
     
     // Formulaire timeline
     const timelineForm = document.getElementById('timeline-form');
@@ -3077,6 +3438,35 @@ document.addEventListener('DOMContentLoaded', function() {
     // Formulaire service
     const serviceForm = document.getElementById('service-form');
     if (serviceForm) serviceForm.addEventListener('submit', sauvegarderService);
+    const servicePhotoUrlInput = document.getElementById('service-photo-url');
+    const servicePhotoFileInput = document.getElementById('service-photo-file');
+    const servicePhotoPreview = document.getElementById('service-photo-preview');
+
+    if (servicePhotoUrlInput && servicePhotoPreview) {
+      servicePhotoUrlInput.addEventListener('input', () => {
+        const url = servicePhotoUrlInput.value.trim();
+        if (url) {
+          servicePhotoPreview.innerHTML = `<img src="${url}" alt="Visuel service" style="width: 180px; height: 110px; object-fit: cover; border-radius: 8px; display: block;" />`;
+        }
+      });
+    }
+
+    if (servicePhotoFileInput && servicePhotoPreview) {
+      servicePhotoFileInput.addEventListener('change', async () => {
+        try {
+          const base64 = await lireImageBase64(servicePhotoFileInput);
+          if (base64) {
+            servicePhotoPreview.innerHTML = `<img src="${base64}" alt="Visuel service" style="width: 180px; height: 110px; object-fit: cover; border-radius: 8px; display: block;" />`;
+          }
+        } catch (err) {
+          if (err.message === 'IMAGE_TOO_LARGE') {
+            afficherErreur(null, 'Image trop volumineuse (max 5 Mo)');
+            return;
+          }
+          afficherErreur(null, 'Impossible de lire l\'image du service');
+        }
+      });
+    }
     
     // Formulaire FAQ
     const faqForm = document.getElementById('faq-form');
@@ -3200,6 +3590,7 @@ document.addEventListener('DOMContentLoaded', function() {
             mesDonneesActuelles.links.cvFileSize = file.size;
             // REMPLACER l'ancien cv (chemin ou base64) par le nouveau base64
             mesDonneesActuelles.links.cv = base64;
+            cvBase64Dirty = true;
             
             log('✅ Nouveau CV base64 enregistré:', {
               fileName: file.name,
@@ -3219,12 +3610,18 @@ document.addEventListener('DOMContentLoaded', function() {
             if (fileSize) fileSize.textContent = `Taille: ${(file.size / 1024).toFixed(2)} KB`;
             if (previewLink) {
               previewLink.href = base64;
-              previewLink.download = file.name;
+              previewLink.removeAttribute('download');
+              previewLink.onclick = ouvrirApercuCV;
             }
           };
           reader.readAsDataURL(file);
         }
       });
+    }
+
+    const cvPreviewLink = document.getElementById('cv-preview-link');
+    if (cvPreviewLink) {
+      cvPreviewLink.onclick = ouvrirApercuCV;
     }
     
     // Formulaire d'upload CV

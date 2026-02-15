@@ -32,6 +32,38 @@ const {
 // Importer le système de logging centralisé
 const { log, logError, logWarn, logSecurity, logSuccess } = require('../utils/logger');
 
+// Cache mémoire très léger pour les données publiques (évite de requêter Mongo à chaque GET)
+let cachePublicPortfolio = {
+  data: null,
+  body: null,
+  etag: null,
+  ts: 0,
+  maxAgeMs: 15000 // 15 secondes de fraîcheur pour combiner vitesse et cohérence
+};
+
+const buildEtag = (obj) => {
+  try {
+    const str = JSON.stringify(obj);
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const chr = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + chr;
+      hash |= 0;
+    }
+    return 'W/"' + hash.toString(16) + '"';
+  } catch (e) {
+    return null;
+  }
+};
+
+const buildPublicApiBase = (req) => {
+  const configured = (process.env.BACKEND_PUBLIC_URL || '').trim().replace(/\/$/, '');
+  if (configured) return configured;
+  return `${req.protocol}://${req.get('host')}`;
+};
+
+const buildCvPublicLink = (req) => `${buildPublicApiBase(req)}/api/portfolio/cv`;
+
 // Limiteur strict pour endpoints publics sensibles
 const strictLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -114,7 +146,52 @@ async function envoyerMailMotDePasse({ to, projectTitle, downloadLink }) {
 router.get('/', async (req, res) => {
   try {
     log('📥 GET /api/portfolio - Début de la requête');
-    const portfolio = await Portfolio.getPortfolio();
+
+    // Réponse immédiate depuis le cache en mémoire si encore frais
+    const now = Date.now();
+    if (cachePublicPortfolio.data && (now - cachePublicPortfolio.ts) < cachePublicPortfolio.maxAgeMs) {
+      if (cachePublicPortfolio.etag && req.headers['if-none-match'] === cachePublicPortfolio.etag) {
+        return res.status(304).end();
+      }
+      if (cachePublicPortfolio.etag) {
+        res.set('ETag', cachePublicPortfolio.etag);
+      }
+      res.set('Cache-Control', 'public, max-age=15, stale-while-revalidate=30');
+      res.type('application/json');
+      return res.send(cachePublicPortfolio.body || JSON.stringify(cachePublicPortfolio.data));
+    }
+
+    // Projection publique pour éviter de charger les fichiers lourds (PDF base64) et hashes
+    const PUBLIC_PROJECTION = {
+      'projects.docFile': 0,
+      'projects.docPasswordHash': 0,
+      'stages.docFile': 0,
+      'stages.docPasswordHash': 0,
+      'alternances.docFile': 0,
+      'alternances.docPasswordHash': 0,
+      'links.cv': 0,
+      'links.cvFile': 0,
+      contactMessages: 0,
+      __v: 0,
+      createdAt: 0,
+      updatedAt: 0
+    };
+
+    let portfolio = await Portfolio.findOne().select(PUBLIC_PROJECTION).lean();
+    if (!portfolio) {
+      portfolio = await Portfolio.getPortfolio();
+    }
+
+    if (!portfolio.links) portfolio.links = {};
+
+    if (portfolio.links.cv === 'assets/CV.pdf') {
+      portfolio.links.cv = '';
+    }
+
+    const cvDisponible = !!portfolio.links.cvFileSize || !!portfolio.links.cvFileName;
+    if (cvDisponible) {
+      portfolio.links.cv = buildCvPublicLink(req);
+    }
     
     // Vérifier si des données existent (pour le logging en développement)
     const hasData = (portfolio.projects?.length > 0) || 
@@ -125,11 +202,11 @@ router.get('/', async (req, res) => {
     // Informations sur le CV (pour le debugging en développement uniquement)
     const cvInfo = portfolio.links ? {
       hasCv: !!portfolio.links.cv,
-      hasCvFile: !!portfolio.links.cvFile,
+      hasCvFile: cvDisponible,
       cvType: portfolio.links.cv ? (portfolio.links.cv.startsWith('data:') ? 'base64' : 'path') : 'none',
-      cvFileType: portfolio.links.cvFile ? (portfolio.links.cvFile.startsWith('data:') ? 'base64' : 'path') : 'none',
+      cvFileType: cvDisponible ? 'stored' : 'none',
       cvFileName: portfolio.links.cvFileName,
-      cvSize: portfolio.links.cvFile ? portfolio.links.cvFile.length : 0
+      cvSize: portfolio.links.cvFileSize || 0
     } : { error: 'No links object' };
     
     // Informations sur les settings (pour le debugging en développement uniquement)
@@ -146,7 +223,6 @@ router.get('/', async (req, res) => {
       skills: portfolio.skills?.length || 0,
       timeline: portfolio.timeline?.length || 0,
       hasPhoto: !!portfolio.personal?.photo,
-      responseSize: JSON.stringify(portfolio).length,
       cvInfo: cvInfo,
       settingsInfo: settingsInfo
     });
@@ -163,13 +239,7 @@ router.get('/', async (req, res) => {
     }
     
     // Version publique : retirer les données sensibles (messages de contact, fichiers CV bruts)
-    const publicPortfolio = JSON.parse(JSON.stringify(portfolio));
-    delete publicPortfolio.contactMessages;
-    if (publicPortfolio.links) {
-      delete publicPortfolio.links.cvFile;
-      delete publicPortfolio.links.cvFileName;
-      delete publicPortfolio.links.cvFileSize;
-    }
+    const publicPortfolio = portfolio;
 
     // Nettoyer les projets publics (pas de doc, pas de hash)
     if (Array.isArray(publicPortfolio.projects)) {
@@ -203,8 +273,27 @@ router.get('/', async (req, res) => {
       publicPortfolio.activeSearches = publicPortfolio.activeSearches.filter(item => item && item.visible !== false);
     }
 
-    res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=60');
-    res.json(publicPortfolio);
+    const etag = buildEtag(publicPortfolio);
+    if (etag && req.headers['if-none-match'] === etag) {
+      res.set('ETag', etag);
+      return res.status(304).end();
+    }
+    if (etag) res.set('ETag', etag);
+    res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=60');
+
+    const serializedPublicPortfolio = JSON.stringify(publicPortfolio);
+
+    // Mettre en cache la réponse pour accélérer les requêtes suivantes
+    cachePublicPortfolio = {
+      data: publicPortfolio,
+      body: serializedPublicPortfolio,
+      etag,
+      ts: Date.now(),
+      maxAgeMs: cachePublicPortfolio.maxAgeMs
+    };
+
+    res.type('application/json');
+    res.send(serializedPublicPortfolio);
   } catch (error) {
     // Log détaillé de l'erreur pour diagnostic
     // Les erreurs sont toujours loggées même en production pour le debugging
@@ -263,6 +352,57 @@ router.get('/', async (req, res) => {
         analytics: { googleAnalytics: '' }
       }
     });
+  }
+});
+
+router.get('/cv', strictLimiter, async (req, res) => {
+  try {
+    const portfolio = await Portfolio.findOne().select({
+      'links.cv': 1,
+      'links.cvFile': 1,
+      'links.cvFileName': 1,
+      'links.cvFileSize': 1
+    }).lean();
+
+    if (!portfolio || !portfolio.links) {
+      return res.status(404).json({ error: 'CV non disponible', code: 'CV_NOT_FOUND' });
+    }
+
+    const cvFile = portfolio.links.cvFile;
+    const cvLegacy = portfolio.links.cv;
+
+    if (typeof cvFile === 'string' && cvFile.startsWith('data:')) {
+      const commaIndex = cvFile.indexOf(',');
+      if (commaIndex <= 0) {
+        return res.status(400).json({ error: 'Format de CV invalide', code: 'CV_INVALID_FORMAT' });
+      }
+
+      const meta = cvFile.substring(5, commaIndex);
+      const mime = (meta.split(';')[0] || 'application/pdf').trim();
+      const base64Data = cvFile.substring(commaIndex + 1);
+      const fileBuffer = Buffer.from(base64Data, 'base64');
+      const filename = (portfolio.links.cvFileName || 'cv.pdf').replace(/[\r\n]/g, '').slice(0, 200);
+
+      res.set('Content-Type', mime);
+      res.set('Content-Disposition', `inline; filename="${filename}"`);
+      res.set('Cache-Control', 'public, max-age=300');
+      return res.send(fileBuffer);
+    }
+
+    if (typeof cvLegacy === 'string' && cvLegacy && !cvLegacy.startsWith('/api/portfolio/cv') && !cvLegacy.startsWith('data:')) {
+      if (cvLegacy.startsWith('http://') || cvLegacy.startsWith('https://')) {
+        return res.redirect(cvLegacy);
+      }
+      return res.status(404).json({ error: 'CV non accessible publiquement', code: 'CV_NOT_PUBLIC' });
+    }
+
+    return res.status(404).json({ error: 'CV non disponible', code: 'CV_NOT_FOUND' });
+  } catch (error) {
+    logError('❌ Erreur lecture CV public:', {
+      message: error.message,
+      name: error.name
+    });
+    return res.status(500).json({ error: 'Erreur serveur', code: 'CV_READ_ERROR' });
   }
 });
 
@@ -353,6 +493,18 @@ router.post('/',
       faq: Array.isArray(req.body.faq) ? req.body.faq : [],
       settings: req.body.settings || {}
     };
+
+    // Normaliser les photos de services (compatibilité photo/image)
+    if (Array.isArray(updateData.services)) {
+      updateData.services = updateData.services.map(service => {
+        const photoValue = service?.photo || service?.image || '';
+        return {
+          ...service,
+          photo: photoValue,
+          image: photoValue
+        };
+      });
+    }
     
     // S'assurer que les settings sont bien présentes
     // Si absentes, on utilise des valeurs par défaut pour éviter les erreurs
@@ -387,6 +539,10 @@ router.post('/',
           if (options.preservePhoto && !merged.photo && existant.photo) {
             merged.photo = existant.photo;
           }
+
+          if (options.preserveImage && !merged.image && existant.image) {
+            merged.image = existant.image;
+          }
         }
 
         return merged;
@@ -395,8 +551,10 @@ router.post('/',
 
     if (portfolioActuel) {
       updateData.projects = mergeExistingFileData(updateData.projects, portfolioActuel.projects || []);
+      updateData.certifications = mergeExistingFileData(updateData.certifications, portfolioActuel.certifications || [], { preservePhoto: true, preserveImage: true });
       updateData.stages = mergeExistingFileData(updateData.stages, portfolioActuel.stages || [], { preservePhoto: true });
       updateData.alternances = mergeExistingFileData(updateData.alternances, portfolioActuel.alternances || [], { preservePhoto: true });
+      updateData.services = mergeExistingFileData(updateData.services, portfolioActuel.services || [], { preservePhoto: true, preserveImage: true });
     }
 
     // Diagnostic : résumé des données après merge
@@ -474,18 +632,33 @@ router.post('/',
       return res.status(400).json({ error: 'Erreur lors du traitement du document du projet' });
     }
 
-    // PROTECTION : Ne pas écraser un CV base64 existant avec 'assets/CV.pdf'
-    // Si links.cv est 'assets/CV.pdf' mais qu'il existe un cvFile base64, garder le base64
+    // Normaliser les données CV et protéger le base64 existant
     if (updateData.links) {
+      if (typeof updateData.links.cvFileName === 'string') {
+        const nomCv = updateData.links.cvFileName.trim();
+        if (nomCv.startsWith('data:')) {
+          updateData.links.cvFileName = 'cv.pdf';
+        } else {
+          updateData.links.cvFileName = nomCv.slice(0, 200);
+        }
+      }
+
+      if (updateData.links.cvFile && updateData.links.cvFile.startsWith('data:') && !updateData.links.cvFileName) {
+        updateData.links.cvFileName = 'cv.pdf';
+      }
+
+      // Supprimer les placeholders hérités (ancien assets/CV.pdf)
+      if (updateData.links.cv === 'assets/CV.pdf') {
+        delete updateData.links.cv;
+      }
+
       if (portfolioActuel && portfolioActuel.links) {
-        // Si le portfolio actuel a un CV base64, ne pas l'écraser
+        // Si un CV base64 existe déjà et qu'aucun nouveau CV n'est fourni, conserver l'existant
         if (portfolioActuel.links.cvFile && portfolioActuel.links.cvFile.startsWith('data:')) {
-          // Si les nouvelles données n'ont pas de cvFile base64 mais ont 'assets/CV.pdf', garder l'ancien base64
-          // Protection contre l'écrasement accidentel du CV base64
-          if (!updateData.links.cvFile && updateData.links.cv === 'assets/CV.pdf') {
-            logSecurity('🛡️ Protection : Conservation du CV base64 existant (ignoré assets/CV.pdf)');
+          const noNewCv = !updateData.links.cvFile && !updateData.links.cv;
+          if (noNewCv) {
             updateData.links.cvFile = portfolioActuel.links.cvFile;
-            updateData.links.cv = portfolioActuel.links.cvFile; // Utiliser le base64
+            updateData.links.cv = '/api/portfolio/cv';
             updateData.links.cvFileName = portfolioActuel.links.cvFileName;
             updateData.links.cvFileSize = portfolioActuel.links.cvFileSize;
           }
@@ -493,11 +666,15 @@ router.post('/',
         // Si les nouvelles données ont un CV base64, s'assurer qu'il remplace bien l'ancien
         else if (updateData.links.cvFile && updateData.links.cvFile.startsWith('data:')) {
           logSuccess('✅ Nouveau CV base64 détecté - Remplacement de l\'ancien');
-          // S'assurer que cv contient aussi le base64
-          if (!updateData.links.cv || !updateData.links.cv.startsWith('data:')) {
-            updateData.links.cv = updateData.links.cvFile;
+          if (!updateData.links.cvFileSize) {
+            updateData.links.cvFileSize = calculerTailleBase64(updateData.links.cvFile);
           }
+          updateData.links.cv = '/api/portfolio/cv';
         }
+      }
+
+      if (updateData.links.cv && typeof updateData.links.cv === 'string' && updateData.links.cv.startsWith('data:')) {
+        updateData.links.cv = '/api/portfolio/cv';
       }
     }
     
@@ -533,15 +710,11 @@ router.post('/',
       logSecurity('🔒 Protection CV base64 activée - Vérification avant sauvegarde:', {
         cvFileLength: updateData.links.cvFile.length,
         cvFileStartsWith: updateData.links.cvFile.substring(0, 30),
-        cvFileName: updateData.links.cvFile,
+        cvFileName: updateData.links.cvFileName,
         cvFileSize: updateData.links.cvFileSize
       });
       
-      // S'assurer que cv contient aussi le base64 pour cohérence
-      if (!updateData.links.cv || !updateData.links.cv.startsWith('data:')) {
-        updateData.links.cv = updateData.links.cvFile;
-        logSuccess('✅ cv mis à jour avec cvFile base64');
-      }
+      updateData.links.cv = '/api/portfolio/cv';
     }
     
     // Vérification des settings avant sauvegarde (logging en développement uniquement)
@@ -557,7 +730,7 @@ router.post('/',
     
     // Mettre à jour directement avec findOneAndUpdate
     // Utiliser $set pour mettre à jour tous les champs, y compris links avec le CV base64 et settings
-    const portfolio = await Portfolio.findOneAndUpdate(
+    let portfolio = await Portfolio.findOneAndUpdate(
       {}, // Pas de filtre spécifique, on veut le document unique
       { $set: updateData },
       { 
@@ -591,7 +764,7 @@ router.post('/',
           { 
             $set: { 
               'links.cvFile': updateData.links.cvFile,
-              'links.cv': updateData.links.cv,
+              'links.cv': '/api/portfolio/cv',
               'links.cvFileName': updateData.links.cvFileName,
               'links.cvFileSize': updateData.links.cvFileSize
             }
@@ -712,6 +885,9 @@ router.post('/',
       message: 'Portfolio mis à jour avec succès',
       portfolio: portfolioObj
     });
+
+    // Invalider le cache public pour servir les données à jour
+    cachePublicPortfolio = { data: null, etag: null, ts: 0, maxAgeMs: cachePublicPortfolio.maxAgeMs };
     
   } catch (error) {
     // Log détaillé de l'erreur pour diagnostic
@@ -783,7 +959,7 @@ router.post('/login', validateLoginData, async (req, res) => {
     
     // Vérification de l'email admin
     // Comparaison stricte pour éviter les attaques par injection
-    if (email !== ADMIN_EMAIL) {
+    if (!ADMIN_EMAIL || email !== ADMIN_EMAIL) {
       logSecurity('❌ Tentative de connexion avec email invalide:', { email: email });
       return res.status(401).json({ 
         error: 'Identifiants invalides' 
@@ -793,19 +969,13 @@ router.post('/login', validateLoginData, async (req, res) => {
     // Vérification du mot de passe avec bcrypt
     // Utilisation de bcrypt pour comparer le hash de manière sécurisée
     const bcrypt = require('bcryptjs');
+    if (!ADMIN_PASSWORD_HASH) {
+      logError('❌ ADMIN_PASSWORD_HASH manquant - connexion refusée');
+      return res.status(500).json({ error: 'Configuration admin manquante', code: 'MISSING_ADMIN_HASH' });
+    }
+
     let isValidPassword = false;
-
-    if (ADMIN_PASSWORD_HASH) {
-      isValidPassword = await bcrypt.compare(password, ADMIN_PASSWORD_HASH);
-    } else if (process.env.ADMIN_PASSWORD) {
-      // Fallback si le hash n'est pas fourni mais le mot de passe clair est présent
-      isValidPassword = password === process.env.ADMIN_PASSWORD;
-    }
-
-    // Fallback de développement : mot de passe par défaut si aucune variable n'est définie
-    if (!ADMIN_PASSWORD_HASH && !process.env.ADMIN_PASSWORD) {
-      isValidPassword = password === 'admin123';
-    }
+    isValidPassword = await bcrypt.compare(password, ADMIN_PASSWORD_HASH);
     
     if (!isValidPassword) {
       logSecurity('❌ Mot de passe incorrect pour:', { email: email });
@@ -816,7 +986,12 @@ router.post('/login', validateLoginData, async (req, res) => {
     
     // Génération du token JWT
     const jwt = require('jsonwebtoken');
-    const secret = process.env.JWT_SECRET || 'dev-secret-change-me';
+    if (!process.env.JWT_SECRET) {
+      logError('❌ JWT_SECRET manquant - impossible de signer le token');
+      return res.status(500).json({ error: 'Configuration JWT manquante', code: 'MISSING_JWT_SECRET' });
+    }
+
+    const secret = process.env.JWT_SECRET;
     const token = jwt.sign(
       { 
         email: email,
@@ -831,7 +1006,7 @@ router.post('/login', validateLoginData, async (req, res) => {
     res.json({ 
       success: true, 
       token,
-      expiresIn: '24h',
+      expiresIn: '2h',
       user: { email, role: 'admin' }
     });
     
@@ -903,14 +1078,9 @@ router.post('/auth/change-password',
       
       res.json({ 
         success: true,
-        message: 'Nouveau hash généré. Veuillez mettre à jour votre fichier .env avec le nouveau hash et redémarrer le serveur.',
+        message: 'Nouveau hash généré. Mettez à jour ADMIN_PASSWORD_HASH dans l\'environnement puis redémarrez le serveur.',
         newHash: newPasswordHash,
-        instructions: [
-          '1. Copiez le nouveau hash ci-dessus',
-          '2. Mettez à jour ADMIN_PASSWORD_HASH dans votre fichier .env',
-          '3. Redémarrez le serveur',
-          '4. Connectez-vous avec votre nouveau mot de passe'
-        ]
+        code: 'PASSWORD_HASH_GENERATED'
       });
       
     } catch (error) {

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Mes services - accompagnement IA, data et développement web" />
+  <title>Mes services - Portfolio</title>
+  <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💼</text></svg>" />
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <script>
+    (function() {
+      try {
+        const raw = localStorage.getItem('portfolioData');
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        if (data?.settings?.maintenance?.enabled !== true) return;
+        const message = data?.settings?.maintenance?.message || 'Le site est actuellement en maintenance. Nous serons bientôt de retour !';
+
+        const style = document.createElement('style');
+        style.id = 'maintenance-guard-style-inline';
+        style.textContent = 'main,header,footer{display:none!important;}body{overflow:hidden!important;}';
+        document.head.appendChild(style);
+
+        const overlay = document.createElement('div');
+        overlay.id = 'maintenance-overlay';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;z-index:999999;padding:24px;';
+        overlay.innerHTML = '<div class="card" style="max-width:520px;width:100%;text-align:center;gap:12px;display:flex;flex-direction:column;align-items:center;"><div style="font-size:32px;">🛠️</div><h2 style="margin:0;">Site en maintenance</h2><p id="maintenance-message-text" class="muted" style="margin:0;">'+ message +'</p></div>';
+        const attach = () => {
+          if (!document.getElementById('maintenance-overlay')) {
+            document.body.prepend(overlay);
+          }
+        };
+        if (document.body) {
+          attach();
+        } else {
+          document.addEventListener('DOMContentLoaded', attach, { once: true });
+        }
+      } catch (e) {
+        console.error('Maintenance guard inline error:', e);
+      }
+    })();
+  </script>
+</head>
+<body id="top" class="dark">
+  <header class="container">
+    <nav class="nav">
+      <a class="brand" href="/">Mon Portfolio</a>
+      <button id="mobile-menu-toggle" class="menu-mobile-toggle" aria-label="Menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <div class="mobile-menu-overlay" id="mobile-menu-overlay"></div>
+      <div class="nav-links" id="nav-links">
+        <a href="/">Accueil</a>
+        <a href="about.html">À propos</a>
+        <a href="projects.html">Projets</a>
+        <a href="services.html" aria-current="page">Mes services</a>
+        <a href="reports.html">Mes rapports</a>
+        <a href="contact.html">Contact</a>
+        <a href="admin.html" class="admin-nav-link" style="display: none;">
+          <span>🔐</span>
+          <span class="admin-text">Admin</span>
+        </a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div class="back-bar">
+      <button class="back-button" type="button" onclick="window.history.length > 1 ? window.history.back() : window.location.href='index.html';">
+        ← Retour
+      </button>
+    </div>
+
+    <section class="hero projects-hero" data-animate>
+      <div class="projects-hero__inner">
+        <div class="gradient projects-hero__title">Mes services</div>
+        <p class="projects-hero__lede">
+          J’accompagne les entreprises, porteurs de projet et équipes sur des besoins concrets en IA, data et développement web.
+        </p>
+      </div>
+    </section>
+
+    <section data-animate style="margin: 32px 0 24px;">
+      <h2>Services que je propose</h2>
+      <div id="services-offers-list" class="grid cols-2" style="margin-top: 16px;">
+        <p class="muted">Chargement des services...</p>
+      </div>
+    </section>
+
+    <section data-animate style="margin: 24px 0 24px;">
+      <h2>Service livré</h2>
+      <div id="services-delivered-list" class="grid cols-2" style="margin-top: 16px;">
+        <p class="muted">Chargement des services...</p>
+      </div>
+    </section>
+
+    <section data-animate style="margin: 24px 0 24px;">
+      <h2>Service en cours</h2>
+      <div id="services-inprogress-list" class="grid cols-2" style="margin-top: 16px;">
+        <p class="muted">Chargement des services...</p>
+      </div>
+    </section>
+
+  </main>
+
+  <div class="noise"></div>
+  <div class="progress" id="scroll-progress"></div>
+  <button id="scroll-top" class="scroll-top" aria-label="Retour en haut" title="Retour en haut">↑</button>
+  <footer class="container footer">© Mon Portfolio · <span data-year></span></footer>
+
+  <script src="assets/js/portfolio.js?v=20260215g" defer></script>
+</body>
+</html>

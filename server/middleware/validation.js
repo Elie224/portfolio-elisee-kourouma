@@ -233,45 +233,23 @@ const validateLoginData = [
 // Middleware pour détecter et rejeter le code JavaScript malveillant
 const sanitizeData = (req, res, next) => {
   try {
-    const bodyString = JSON.stringify(req.body);
+    const contentLength = Number(req.headers['content-length'] || 0);
+    const isLargePayload = Number.isFinite(contentLength) && contentLength > 5 * 1024 * 1024;
     
     // EXCEPTION : Autoriser les données base64 (data:application/pdf;base64,...)
     // Les données base64 peuvent contenir des caractères qui ressemblent à du code mais qui sont valides
-    const isBase64Data = bodyString.includes('data:application/pdf') ||
-           bodyString.includes('data:application/msword') ||
-           bodyString.includes('data:application/vnd.openxmlformats-officedocument.wordprocessingml.document') ||
-           bodyString.includes('data:application/zip') ||
-           bodyString.includes('data:image/') ||
-           (req.body.links && req.body.links.cvFile && req.body.links.cvFile.startsWith('data:'));
+        const isBase64Data = (req.body.links && req.body.links.cvFile && req.body.links.cvFile.startsWith('data:')) ||
+          (req.body.links && req.body.links.cv && typeof req.body.links.cv === 'string' && req.body.links.cv.startsWith('data:')) ||
+          (Array.isArray(req.body.projects) && req.body.projects.some(p => typeof p?.docFile === 'string' && p.docFile.startsWith('data:'))) ||
+          (Array.isArray(req.body.stages) && req.body.stages.some(s => typeof s?.docFile === 'string' && s.docFile.startsWith('data:'))) ||
+          (Array.isArray(req.body.alternances) && req.body.alternances.some(a => typeof a?.docFile === 'string' && a.docFile.startsWith('data:')));
     
     // EXCEPTION : Autoriser les données base64 (data:application/pdf;base64,...)
     // Les données base64 peuvent contenir des caractères qui ressemblent à du code mais qui sont valides
     // On assouplit la validation pour les fichiers, mais on vérifie quand même les patterns vraiment dangereux
-    if (isBase64Data) {
+    if (isBase64Data || isLargePayload) {
       logSecurity('📄 Données base64 détectées - Validation de sécurité assouplie pour les fichiers');
-      
-      // Pour les données base64, on vérifie seulement les patterns vraiment dangereux
-      // Les patterns moins dangereux sont autorisés car ils font partie du fichier encodé
-      const criticalPatterns = [
-        /<script.*?>/gi,                  // Script tags HTML
-        /javascript:/gi,                  // Protocole JavaScript dans les URLs
-        /eval\s*\(/g,                     // Appels à eval() (très dangereux)
-        /document\.write/gi,              // Écriture directe dans le DOM
-        /data:text\/html/gi,              // Données inline HTML
-        /on(click|load|error|mouse)/gi     // Handlers inline
-      ];
-      
-      for (const pattern of criticalPatterns) {
-        if (pattern.test(bodyString)) {
-          logSecurity('🚨 Code JavaScript malveillant détecté dans base64:', { pattern: pattern.toString() });
-          return res.status(400).json({
-            error: 'Code JavaScript détecté dans les données',
-            message: 'Les données contiennent du code non autorisé',
-            code: 'MALICIOUS_CODE_DETECTED'
-          });
-        }
-      }
-      
+
       next();
       return;
     }
@@ -296,11 +274,12 @@ const sanitizeData = (req, res, next) => {
     ];
     
     // Vérifier chaque pattern dangereux
+    const payloadPreview = JSON.stringify(req.body || {}).slice(0, 200000);
     for (const pattern of dangerousPatterns) {
-      if (pattern.test(bodyString)) {
+      if (pattern.test(payloadPreview)) {
         logSecurity('🚨 Code JavaScript malveillant détecté:', {
           pattern: pattern.toString(),
-          preview: bodyString.substring(0, 200)
+          preview: payloadPreview.substring(0, 200)
         });
         
         return res.status(400).json({
@@ -324,9 +303,22 @@ const sanitizeData = (req, res, next) => {
 // Middleware pour limiter la taille des données
 const limitDataSize = (req, res, next) => {
   try {
-    const bodySize = JSON.stringify(req.body).length;
-    // Autoriser des payloads plus grands (docs base64 ~50 Mo => ~70 Mo en JSON)
-    const maxSize = 80 * 1024 * 1024; // 80MB
+    const maxSize = Number(process.env.MAX_JSON_BODY_BYTES || (20 * 1024 * 1024));
+
+    const contentLength = Number(req.headers['content-length'] || 0);
+    if (Number.isFinite(contentLength) && contentLength > 0) {
+      if (contentLength > maxSize) {
+        return res.status(413).json({
+          error: 'Données trop volumineuses',
+          message: `Taille maximum autorisée: ${Math.floor(maxSize / 1024 / 1024)}MB`,
+          actualSize: Math.floor(contentLength / 1024),
+          code: 'PAYLOAD_TOO_LARGE'
+        });
+      }
+      return next();
+    }
+
+    const bodySize = JSON.stringify(req.body || {}).length;
     
     if (bodySize > maxSize) {
       console.log('❌ Données trop volumineuses:', bodySize, 'bytes');

@@ -280,6 +280,44 @@ document.addEventListener('DOMContentLoaded', function() {
       elementAnnee.textContent = new Date().getFullYear();
     }
   }
+
+  function echapperHTML(valeur) {
+    if (valeur === null || valeur === undefined) return '';
+    return String(valeur)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function normaliserEmojiService(valeur) {
+    const texte = (valeur || '').toString().trim();
+    if (!texte) return '🛠️';
+
+    const emojiMatch = texte.match(/(\p{Extended_Pictographic}(?:\uFE0F|\uFE0E)?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F|\uFE0E)?)*)/u);
+    if (emojiMatch && emojiMatch[1]) return emojiMatch[1];
+
+    const flagMatch = texte.match(/([\u{1F1E6}-\u{1F1FF}]{2})/u);
+    if (flagMatch && flagMatch[1]) return flagMatch[1];
+
+    return '🛠️';
+  }
+
+  function normaliserStatutService(valeur) {
+    const brut = (valeur || '').toString().trim().toLowerCase();
+    if (!brut) return 'propose';
+
+    if (brut === 'livre' || brut === 'livré' || brut.includes('livr')) {
+      return 'livre';
+    }
+
+    if (brut === 'en-cours' || brut === 'encours' || brut.includes('cours')) {
+      return 'en-cours';
+    }
+
+    return 'propose';
+  }
   
   /**
    * Nettoie le localStorage si il contient du code malveillant
@@ -803,28 +841,16 @@ document.addEventListener('DOMContentLoaded', function() {
         // SUPPRIMER L'ANCIEN CV DU LOCALSTORAGE : Remplacer complètement par les données du serveur
         // Si le serveur a un CV base64, il doit remplacer l'ancien chemin dans localStorage
         if (donneesServeur.links) {
-          // Si le serveur a un CV base64, s'assurer qu'il remplace l'ancien
+          if (donneesServeur.links.cv === '/api/portfolio/cv') {
+            donneesServeur.links.cv = `${MON_SERVEUR}/portfolio/cv`;
+          }
+
           if (donneesServeur.links.cvFile && donneesServeur.links.cvFile.startsWith('data:')) {
-            // S'assurer que cv contient aussi le base64
-            if (!donneesServeur.links.cv || !donneesServeur.links.cv.startsWith('data:')) {
-              donneesServeur.links.cv = donneesServeur.links.cvFile;
-            }
-          } else if (!donneesServeur.links.cv || donneesServeur.links.cv === '') {
-            // Vérifier si localStorage a un CV base64 qui n'a pas été sauvegardé
-            const donneesLocales = localStorage.getItem('portfolioData');
-            if (donneesLocales) {
-              try {
-                const localData = JSON.parse(donneesLocales);
-                if (localData.links && localData.links.cvFile && localData.links.cvFile.startsWith('data:')) {
-                  donneesServeur.links.cvFile = localData.links.cvFile;
-                  donneesServeur.links.cv = localData.links.cvFile;
-                  donneesServeur.links.cvFileName = localData.links.cvFileName;
-                  donneesServeur.links.cvFileSize = localData.links.cvFileSize;
-                }
-              } catch (e) {
-                logError('Erreur parsing localStorage:', e);
-              }
-            }
+            delete donneesServeur.links.cvFile;
+          }
+
+          if ((!donneesServeur.links.cv || donneesServeur.links.cv === '') && donneesServeur.links.cvFileSize) {
+            donneesServeur.links.cv = `${MON_SERVEUR}/portfolio/cv`;
           }
         }
         
@@ -864,6 +890,9 @@ document.addEventListener('DOMContentLoaded', function() {
       // Stocker les données actuelles pour la comparaison
       donneesActuelles = mesDonnees;
       hashDonneesActuelles = calculerHash(mesDonnees);
+
+      // Afficher immédiatement toutes les données dynamiques (dont la section Services)
+      afficherMesDonnees(mesDonnees);
       
       // Vérifier le mode maintenance IMMÉDIATEMENT (avant d'afficher le contenu)
       // Utiliser requestAnimationFrame pour s'assurer que le DOM est prêt
@@ -915,7 +944,7 @@ document.addEventListener('DOMContentLoaded', function() {
         headerError.style.visibility = 'visible';
       }
       
-      const donnees = obtenirMesDonnees();
+      const donnees = await obtenirMesDonnees();
       donneesActuelles = donnees;
       hashDonneesActuelles = calculerHash(donnees);
       
@@ -970,6 +999,10 @@ document.addEventListener('DOMContentLoaded', function() {
     afficherMesCompetences(donnees.skills);
     afficherMonParcours(donnees.timeline);
     afficherMesStats(donnees.about?.stats);
+    afficherCertifications(donnees.certifications || []);
+    afficherStages(donnees.stages || []);
+    afficherAlternances(donnees.alternances || []);
+    afficherMesServices(donnees.services || []);
     
     // Charger Google Analytics si configuré
     // Charger Google Analytics immédiatement (priorité haute)
@@ -993,13 +1026,90 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
   }
+
+  function afficherMesServices(services) {
+    const containerServices = document.getElementById('services-offers-list');
+    const containerDelivered = document.getElementById('services-delivered-list');
+    const containerInProgress = document.getElementById('services-inprogress-list');
+
+    const listeServices = Array.isArray(services) ? services : [];
+
+    const renderCards = (items, messageVide) => {
+      if (!Array.isArray(items) || items.length === 0) {
+        return `<p class="muted">${messageVide}</p>`;
+      }
+
+      return items.map(service => {
+        const icon = echapperHTML(normaliserEmojiService(service?.icon));
+        const title = echapperHTML(service?.title || 'Service');
+        const description = echapperHTML(service?.description || '');
+        const photo = echapperHTML(service?.photo || service?.image || '');
+        const features = Array.isArray(service?.features)
+          ? service.features.filter(Boolean).map(item => `<li class="muted">• ${echapperHTML(item)}</li>`).join('')
+          : '';
+
+        return `
+          <article class="card" data-glass>
+            ${photo ? `<div style="margin-bottom: 12px;"><img src="${photo}" alt="Service ${title}" style="width: 120px; height: 80px; object-fit: cover; border-radius: 10px;" /></div>` : ''}
+            <div class="skill-card-header" style="margin-bottom: 12px;">
+              <div class="skill-icon" aria-hidden="true">${icon}</div>
+              <h3 style="margin: 0;">${title}</h3>
+            </div>
+            <p class="muted">${description}</p>
+            ${features ? `<ul style="margin:12px 0 0; padding-left: 0; list-style: none; display: grid; gap: 6px;">${features}</ul>` : ''}
+          </article>
+        `;
+      }).join('');
+    };
+
+    // Fallback compatibilité : ancien HTML avec une seule section
+    if (containerServices && !containerDelivered && !containerInProgress) {
+      containerServices.innerHTML = renderCards(listeServices, 'Aucun service configuré pour le moment. Vous pouvez en ajouter depuis l\'admin.');
+      return;
+    }
+
+    const servicesProposes = listeServices.filter(service => normaliserStatutService(service?.status) === 'propose');
+    const servicesLivres = listeServices.filter(service => normaliserStatutService(service?.status) === 'livre');
+    const servicesEnCours = listeServices.filter(service => normaliserStatutService(service?.status) === 'en-cours');
+
+    if (containerServices) {
+      containerServices.innerHTML = renderCards(servicesProposes, 'Aucun service proposé pour le moment.');
+    }
+
+    if (containerDelivered) {
+      containerDelivered.innerHTML = renderCards(servicesLivres, 'Aucun service livré pour le moment.');
+    }
+
+    if (containerInProgress) {
+      containerInProgress.innerHTML = renderCards(servicesEnCours, 'Aucun service en cours pour le moment.');
+    }
+
+  }
   
   // Variable pour éviter les appels répétitifs
   let dernierCvHash = null;
   let timeoutMiseAJourCV = null;
+
+  // Supprime l'entrée "CV" dans le menu de navigation si elle existe encore (anciens caches HTML)
+  function supprimerLienCvDuMenu() {
+    const navLinks = document.querySelectorAll('header .nav a, #nav-links a, .nav-links a');
+    navLinks.forEach(link => {
+      const texte = (link.textContent || '').trim().toLowerCase();
+      const href = (link.getAttribute('href') || '').trim().toLowerCase();
+      const isCvTexte = texte === 'cv';
+      const isCvHref = href.includes('assets/cv.pdf') || href.endsWith('/cv') || href === 'cv' || href === 'cv.html';
+
+      if (isCvTexte || isCvHref) {
+        link.remove();
+      }
+    });
+  }
   
   // Met à jour tous les liens CV dans la page (avec debounce)
   function mettreAJourLiensCV(links) {
+    // S'assurer que l'entrée CV du menu reste supprimée
+    supprimerLienCvDuMenu();
+
     // Calculer un hash simple des données CV pour éviter les mises à jour inutiles
     const cvHash = links ? JSON.stringify({
       cv: links.cv ? links.cv.substring(0, 50) : '',
@@ -1175,39 +1285,32 @@ document.addEventListener('DOMContentLoaded', function() {
               const blob = new Blob([byteArray], { type: 'application/pdf' });
               const url = URL.createObjectURL(blob);
               
-              // Créer un lien de téléchargement
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = filename;
-              a.style.display = 'none';
-              document.body.appendChild(a);
-              a.click();
+              // Afficher le PDF dans le même onglet
+              window.location.assign(url);
               
-              // Nettoyer après un court délai
+              // Nettoyer l'URL blob après un délai
               setTimeout(() => {
-                document.body.removeChild(a);
                 URL.revokeObjectURL(url);
-              }, 100);
+              }, 60000);
             } catch (error) {
-              logError('❌ Erreur lors du téléchargement du CV:', error);
-              // Fallback : essayer d'ouvrir directement
+              logError('❌ Erreur lors de l\'affichage du CV:', error);
+              // Fallback : afficher directement le data URL dans le même onglet
               try {
-                const blob = new Blob([base64Data], { type: 'application/pdf' });
-                const url = URL.createObjectURL(blob);
-                window.open(url, '_blank');
+                window.location.assign(base64Data);
               } catch (err) {
-                logError('❌ Impossible d\'ouvrir le CV:', err);
+                logError('❌ Impossible d\'afficher le CV:', err);
               }
             }
           }, { once: false, passive: false });
           
           // Mettre à jour le href et le style
           newLink.href = '#';
+          newLink.target = '_self';
           newLink.style.cursor = 'pointer';
           newLink.style.pointerEvents = 'auto';
-          newLink.setAttribute('title', 'Cliquez pour télécharger le CV');
+          newLink.setAttribute('title', 'Cliquez pour voir le CV');
           newLink.setAttribute('role', 'button');
-          newLink.setAttribute('aria-label', 'Télécharger le CV');
+          newLink.setAttribute('aria-label', 'Voir le CV');
           
           // S'assurer que le lien est cliquable
           newLink.onclick = null; // Supprimer tout onclick existant
@@ -1216,6 +1319,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
           // Pour les chemins/URL normaux, mettre à jour directement
           link.href = cvUrl;
+          link.target = '_self';
           // Ajouter un timestamp pour éviter le cache uniquement pour les fichiers locaux
           if (cvUrl && cvUrl.endsWith('.pdf') && !cvUrl.startsWith('http') && !cvUrl.startsWith('data:')) {
             link.href = cvUrl + (cvUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
@@ -2348,6 +2452,39 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // S'assure que le lien Mes rapports existe dans le menu (utile si page HTML plus ancienne est servie)
+  function assurerLienServices() {
+    const navigation = document.getElementById('nav-links');
+    if (!navigation) return;
+
+    const liensServices = Array.from(navigation.querySelectorAll('a')).filter(a => {
+      const href = (a.getAttribute('href') || '').toLowerCase();
+      const texte = (a.textContent || '').toLowerCase();
+      return href.includes('services') || texte.includes('mes services');
+    });
+
+    if (liensServices.length > 1) {
+      liensServices.slice(1).forEach(lien => lien.remove());
+    }
+
+    if (liensServices.length === 0) {
+      const nouveauLien = document.createElement('a');
+      nouveauLien.href = 'services.html';
+      nouveauLien.textContent = 'Mes services';
+
+      const lienRapports = navigation.querySelector('a[href="reports.html"], a[href="/reports.html"]');
+      const lienContact = navigation.querySelector('a[href="contact.html"], a[href="/contact.html"]');
+
+      if (lienRapports) {
+        navigation.insertBefore(nouveauLien, lienRapports);
+      } else if (lienContact) {
+        navigation.insertBefore(nouveauLien, lienContact);
+      } else {
+        navigation.appendChild(nouveauLien);
+      }
+    }
+  }
+
+  // S'assure que le lien Mes rapports existe dans le menu (utile si page HTML plus ancienne est servie)
   function assurerLienRapports() {
     const navigation = document.getElementById('nav-links');
     if (!navigation) return;
@@ -2370,6 +2507,9 @@ document.addEventListener('DOMContentLoaded', function() {
       const lienContact = navigation.querySelector('a[href="contact.html"]');
       navigation.insertBefore(nouveauLien, lienContact || navigation.lastElementChild);
     }
+
+    // Nettoyer à nouveau un éventuel ancien lien CV provenant d'un HTML en cache
+    supprimerLienCvDuMenu();
   }
   
   // Fonction pour forcer la fermeture de l'overlay au chargement (appelée immédiatement)
@@ -3094,10 +3234,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     container.innerHTML = certifications.map((cert, index) => {
+      const certPhoto = cert.photo || cert.image || '';
       return `
         <div class="experience-card" style="animation-delay: ${index * 0.1}s;">
           <div class="experience-card-header">
-            <div class="experience-card-icon">🏆</div>
+            <div class="experience-card-icon" style="overflow:hidden;">
+              ${certPhoto ? `<img src="${certPhoto}" alt="Visuel certification" style="width:48px; height:48px; object-fit:cover; border-radius:12px;" />` : '🏆'}
+            </div>
             <div style="flex: 1;">
               <h4 class="experience-card-title">${cert.name || 'Certification'}</h4>
               <p class="experience-card-issuer">${cert.issuer || ''}</p>
@@ -3580,6 +3723,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Configuration de l'interface
     configurerContact();
+    assurerLienServices();
     assurerLienRapports();
     configurerMenuMobile();
     
@@ -3850,6 +3994,8 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Forcer la mise à jour des liens CV après le chargement complet de la page
   window.addEventListener('load', function() {
+    supprimerLienCvDuMenu();
+
     log('🔄 Page complètement chargée - Vérification finale des liens CV');
     
     // Vérifier que les liens existent dans le DOM
@@ -3881,6 +4027,9 @@ document.addEventListener('DOMContentLoaded', function() {
       mettreAJourLiensCV(donnees?.links);
     }, 500);
   });
+
+  // Exécuter aussi dès l'initialisation pour éviter tout flash du lien CV dans le menu
+  supprimerLienCvDuMenu();
   
   // Fonction de debug (uniquement si appelée explicitement depuis la console)
   // Par défaut, cette fonction est silencieuse pour éviter les logs répétitifs

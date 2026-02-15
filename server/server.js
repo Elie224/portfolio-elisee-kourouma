@@ -42,6 +42,9 @@ if (estEnDeveloppement) {
 
 const app = express();
 
+// Masquer la signature Express et réduire quelques octets
+app.disable('x-powered-by');
+
 // ETag fort pour de meilleures revalidations côté client/CDN
 app.set('etag', 'strong');
 
@@ -239,6 +242,32 @@ app.use((req, res, next) => {
   next();
 });
 
+// Garde-fou mémoire: rejeter les payloads trop volumineux AVANT express.json
+// Important sur petites machines Fly (256MB) pour éviter les OOM pendant le parsing.
+const MAX_JSON_BODY_BYTES = Number(process.env.MAX_JSON_BODY_BYTES || (20 * 1024 * 1024)); // 20MB par défaut
+app.use((req, res, next) => {
+  if (req.method !== 'POST' && req.method !== 'PUT' && req.method !== 'PATCH') {
+    return next();
+  }
+
+  const contentType = String(req.headers['content-type'] || '').toLowerCase();
+  if (!contentType.includes('application/json')) {
+    return next();
+  }
+
+  const rawLength = req.headers['content-length'];
+  const contentLength = rawLength ? Number(rawLength) : NaN;
+  if (Number.isFinite(contentLength) && contentLength > MAX_JSON_BODY_BYTES) {
+    return res.status(413).json({
+      error: 'Données trop volumineuses',
+      message: `Taille maximum autorisée: ${Math.floor(MAX_JSON_BODY_BYTES / 1024 / 1024)}MB`,
+      code: 'PAYLOAD_TOO_LARGE'
+    });
+  }
+
+  return next();
+});
+
 // Appliquer CORS avec le chemin stocké et gestion d'erreurs
 app.use((req, res, next) => {
   global.currentPath = req.path;
@@ -258,9 +287,11 @@ app.use((req, res, next) => {
   });
 });
 
-// Autoriser des payloads volumineux (rapports base64 ~50 Mo => ~70+ Mo JSON)
-app.use(express.json({ limit: '100mb' }));
-app.use(express.urlencoded({ extended: true, limit: '100mb' }));
+// Limite JSON réduite pour stabilité mémoire sur petites instances
+// (20MB par défaut, surchargable via MAX_JSON_BODY_BYTES)
+const jsonLimitMb = `${Math.max(1, Math.floor(MAX_JSON_BODY_BYTES / 1024 / 1024))}mb`;
+app.use(express.json({ limit: jsonLimitMb }));
+app.use(express.urlencoded({ extended: true, limit: jsonLimitMb }));
 app.use(compression());
 
 // Gérer explicitement les requêtes OPTIONS (preflight) - exclure /health
@@ -412,6 +443,21 @@ mongoose.connect(process.env.MONGODB_URI)
 
 // Gestion globale des erreurs (middleware de fin)
 app.use((err, req, res, next) => {
+  const isAbortedRequest =
+    err?.code === 'ECONNABORTED' ||
+    err?.type === 'request.aborted' ||
+    err?.name === 'BadRequestError' ||
+    (typeof err?.message === 'string' && err.message.toLowerCase().includes('request aborted'));
+
+  if (isAbortedRequest) {
+    logWarn('⚠️ Requête interrompue par le client', {
+      path: req.path,
+      method: req.method,
+      ip: req.ip
+    });
+    return res.status(400).json({ error: 'Requête interrompue', code: 'REQUEST_ABORTED' });
+  }
+
   // Ignorer complètement les erreurs CORS (déjà gérées par le middleware CORS)
   // Vérifier plusieurs patterns pour détecter les erreurs CORS
   const isCorsError = err.message && (

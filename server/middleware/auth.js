@@ -10,12 +10,11 @@
 
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const { logSecurity, logError } = require('../utils/logger');
+const { logSecurity, logError, logWarn } = require('../utils/logger');
 
-// Valeurs admin avec fallback pour éviter le blocage si les variables d'environnement sont absentes
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@portfolio.local';
-const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH
-  || (process.env.ADMIN_PASSWORD ? bcrypt.hashSync(process.env.ADMIN_PASSWORD, 10) : null);
+// Valeurs admin strictes : pas de fallback silencieux en production
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || null;
+const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || null;
 
 /**
  * Middleware pour authentifier les requêtes admin
@@ -28,6 +27,16 @@ const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH
  * @param {Function} next - Fonction suivante dans la chaîne middleware
  */
 const authenticateAdmin = (req, res, next) => {
+  if (!process.env.JWT_SECRET) {
+    logError('❌ JWT_SECRET manquant - refus de l\'authentification');
+    return res.status(500).json({ error: 'Configuration serveur incomplète', code: 'MISSING_JWT_SECRET' });
+  }
+
+  if (!ADMIN_EMAIL || !ADMIN_PASSWORD_HASH) {
+    logError('❌ ADMIN_EMAIL ou ADMIN_PASSWORD_HASH manquant - blocage des routes protégées');
+    return res.status(500).json({ error: 'Configuration admin manquante', code: 'MISSING_ADMIN_CREDS' });
+  }
+
   try {
     // Vérifier l'en-tête Authorization (Bearer token)
     // Format standard : "Authorization: Bearer <token>"

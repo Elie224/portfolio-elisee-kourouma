@@ -865,9 +865,9 @@
           <a href="index.html">Accueil</a>
           <a href="about.html">À propos</a>
           <a href="projects.html">Projets</a>
+          <a href="services.html">Mes services</a>
           <a href="reports.html">Mes rapports</a>
           <a href="contact.html">Contact</a>
-          <a href="#" target="_blank" rel="noopener" data-cv-link="true">CV</a>
           <a href="admin.html" class="admin-nav-link">
             <span>🔐</span> Admin
           </a>
@@ -1766,11 +1766,74 @@
                   <div class="form-row">
                     <div class="form-group">
                       <label for="service-icon">Icône (emoji) *</label>
-                      <input type="text" id="service-icon" placeholder="💻" maxlength="2" required />
+                      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                        <input type="text" id="service-icon" placeholder="💻" maxlength="10" required style="flex: 1; min-width: 100px;" />
+                        <select id="service-emoji-selector" onchange="document.getElementById('service-icon').value = this.value; this.value = '';" style="padding: 8px 12px; border: 2px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--text); cursor: pointer; font-size: 16px;">
+                          <option value="">Choisir un emoji...</option>
+                          <option value="💻">💻 Développement web</option>
+                          <option value="📱">📱 Mobile</option>
+                          <option value="🖥️">🖥️ Desktop</option>
+                          <option value="🌐">🌐 Internet</option>
+                          <option value="🔧">🔧 Outils</option>
+                          <option value="🧰">🧰 Toolbox</option>
+                          <option value="🛠️">🛠️ Développement</option>
+                          <option value="⚙️">⚙️ Configuration</option>
+                          <option value="🔩">🔩 Technique</option>
+                          <option value="🧪">🧪 Tests</option>
+                          <option value="🔬">🔬 Recherche</option>
+                          <option value="📡">📡 Réseau</option>
+                          <option value="🔌">🔌 API</option>
+                          <option value="🗄️">🗄️ Base de données</option>
+                          <option value="💾">💾 Stockage</option>
+                          <option value="📦">📦 Packaging</option>
+                          <option value="🔄">🔄 Intégration</option>
+                          <option value="🚀">🚀 Performance</option>
+                          <option value="⚡">⚡ Vitesse</option>
+                          <option value="☁️">☁️ Cloud</option>
+                          <option value="🔐">🔐 Sécurité</option>
+                          <option value="🔒">🔒 Protection</option>
+                          <option value="🤖">🤖 IA</option>
+                          <option value="🧠">🧠 Machine Learning</option>
+                          <option value="📊">📊 Data</option>
+                          <option value="📈">📈 Analytics</option>
+                          <option value="📉">📉 Reporting</option>
+                          <option value="🔍">🔍 Audit</option>
+                          <option value="💡">💡 Conseil</option>
+                          <option value="🎯">🎯 Stratégie</option>
+                          <option value="📝">📝 Rédaction</option>
+                          <option value="📚">📚 Formation</option>
+                          <option value="🎓">🎓 Accompagnement</option>
+                          <option value="🎨">🎨 Design</option>
+                          <option value="🖼️">🖼️ UI</option>
+                          <option value="🎬">🎬 Vidéo</option>
+                          <option value="🎵">🎵 Audio</option>
+                          <option value="🛒">🛒 E-commerce</option>
+                          <option value="🏗️">🏗️ Architecture</option>
+                          <option value="🧱">🧱 Structure</option>
+                          <option value="📁">📁 Gestion de projet</option>
+                          <option value="📋">📋 Planification</option>
+                          <option value="🤝">🤝 Collaboration</option>
+                          <option value="🌍">🌍 International</option>
+                          <option value="📞">📞 Support</option>
+                          <option value="✅">✅ Qualité</option>
+                          <option value="⭐">⭐ Premium</option>
+                          <option value="💎">💎 Haut de gamme</option>
+                          <option value="🎁">🎁 Offre</option>
+                          <option value="🔮">🔮 Innovation</option>
+                        </select>
+                      </div>
                     </div>
                     <div class="form-group">
                       <label for="service-title">Titre *</label>
                       <input type="text" id="service-title" required />
+                    </div>
+                    <div class="form-group">
+                      <label for="service-status">Type de service *</label>
+                      <select id="service-status" required>
+                        <option value="propose">Services que je propose</option>
+                        <option value="livre">Service livré</option>
+                        <option value="en-cours">Service en cours</option>
+                      </select>
                     </div>
                   </div>
                   <div class="form-group">
@@ -2388,7 +2451,7 @@
     </button>
     <footer class="container footer">© Mon Portfolio · <span data-year></span></footer>
     
-    <script src="assets/js/portfolio.js"></script>
-    <script src="assets/js/admin.js"></script>
+    <script src="assets/js/portfolio.js?v=20260215"></script>
+    <script src="assets/js/admin.js?v=20260215h"></script>
   </body>
 </html>

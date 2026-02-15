@@ -81,14 +81,19 @@ const portfolioSchema = new mongoose.Schema({
     icon: String,
     title: String,
     description: String,
-    features: [String]
+    features: [String],
+    photo: String,
+    image: String,
+    status: { type: String, enum: ['propose', 'livre', 'en-cours'], default: 'propose' }
   }],
   certifications: [{
     name: String,
     issuer: String,
     date: String,
     description: String,
-    link: String
+    link: String,
+    photo: String,
+    image: String
   }],
   stages: [{
     title: { type: String, trim: true, maxlength: 150 },
