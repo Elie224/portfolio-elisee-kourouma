@@ -326,6 +326,10 @@ document.addEventListener('DOMContentLoaded', function() {
       Array.isArray(donnees.projects)
     );
 
+    const aDesDonneesAffichables = () => {
+      return Array.isArray(mesDonneesActuelles?.projects) && mesDonneesActuelles.projects.length > 0;
+    };
+
     const tenterRecuperationAdminProduction = async (token) => {
       if (!token) return false;
       try {
@@ -495,13 +499,17 @@ document.addEventListener('DOMContentLoaded', function() {
             afficherSucces('Données serveur synchronisées (cache validé)');
           } else if (erreurReseau || !statutReponse) {
             const serveurJoignable = await verifierServeurJoignable();
-            if (serveurJoignable) {
-              afficherErreur(null, 'Synchronisation serveur temporairement indisponible. Cache local affiché.');
-            } else {
-              afficherErreur(null, 'Connexion serveur indisponible. Cache local affiché.');
+            if (!aDesDonneesAffichables()) {
+              if (serveurJoignable) {
+                afficherErreur(null, 'Synchronisation serveur temporairement indisponible. Réessayez dans quelques secondes.');
+              } else {
+                afficherErreur(null, 'Connexion serveur indisponible. Réessayez dans quelques secondes.');
+              }
             }
           } else {
-            afficherErreur(null, 'Réponse API incomplète. Cache local affiché.');
+            if (!aDesDonneesAffichables()) {
+              afficherErreur(null, 'Réponse API incomplète. Réessayez dans quelques secondes.');
+            }
           }
         }
       }
@@ -531,10 +539,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         afficherToutesMesDonnees();
         const serveurJoignable = await verifierServeurJoignable();
-        if (serveurJoignable) {
-          afficherErreur(null, 'Synchronisation serveur temporairement indisponible. Cache local affiché.');
-        } else {
-          afficherErreur(null, 'Connexion serveur indisponible. Cache local affiché.');
+        if (!aDesDonneesAffichables()) {
+          if (serveurJoignable) {
+            afficherErreur(null, 'Synchronisation serveur temporairement indisponible. Réessayez dans quelques secondes.');
+          } else {
+            afficherErreur(null, 'Connexion serveur indisponible. Réessayez dans quelques secondes.');
+          }
         }
       }
     } finally {
