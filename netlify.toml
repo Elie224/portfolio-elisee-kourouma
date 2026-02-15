@@ -25,6 +25,12 @@
     Cache-Control = "public, max-age=0, must-revalidate"
 
 [[headers]]
+  for = "/assets/js/admin.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+    Cache-Control = "no-store, no-cache, must-revalidate"
+
+[[headers]]
   for = "/assets/**/*.jpeg"
   [headers.values]
     Content-Type = "image/jpeg"
@@ -54,6 +60,12 @@
   [headers.values]
     Content-Type = "text/html; charset=utf-8"
     Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/admin.html"
+  [headers.values]
+    Content-Type = "text/html; charset=utf-8"
+    Cache-Control = "no-store, no-cache, must-revalidate"
 
 # Headers de sécurité pour toutes les pages
 [[headers]]

@@ -472,7 +472,7 @@ document.addEventListener('DOMContentLoaded', function() {
           
           afficherToutesMesDonnees();
           if (statutReponse === 304) {
-            afficherSucces('Données locales à jour');
+            afficherSucces('Données serveur synchronisées (cache validé)');
           } else if (erreurReseau || !statutReponse) {
             const serveurJoignable = await verifierServeurJoignable();
             if (serveurJoignable) {
