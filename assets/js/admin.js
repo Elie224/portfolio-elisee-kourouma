@@ -1128,6 +1128,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const modal = document.getElementById('project-form-modal');
     const form = document.getElementById('project-form');
     const title = document.getElementById('project-form-title');
+
+    if (!suisJeConnecte()) {
+      afficherErreur(null, 'Session expirée. Reconnectez-vous pour modifier les projets.');
+      afficherConnexion();
+      return;
+    }
     
     if (!modal || !form) return;
     
@@ -1222,7 +1228,26 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Sauvegarde un projet
   async function sauvegarderProjet(e) {
-    e.preventDefault();
+    if (e && typeof e.preventDefault === 'function') {
+      e.preventDefault();
+    }
+
+    if (!suisJeConnecte()) {
+      afficherErreur(null, 'Session expirée. Reconnectez-vous pour enregistrer vos modifications.');
+      afficherConnexion();
+      return;
+    }
+
+    const normaliserUrl = (valeur) => {
+      const brut = (valeur || '').trim();
+      if (!brut) return '';
+      const avecProtocole = /^https?:\/\//i.test(brut) ? brut : `https://${brut}`;
+      try {
+        return new URL(avecProtocole).toString();
+      } catch {
+        return null;
+      }
+    };
     
     const editIndex = currentEditingId;
     const projetExistant = editIndex !== null ? (mesDonneesActuelles.projects[editIndex] || {}) : {};
@@ -1232,25 +1257,57 @@ document.addEventListener('DOMContentLoaded', function() {
     const docPassword = document.getElementById('project-doc-password')?.value.trim() || '';
     const docRemoved = (document.getElementById('project-doc-removed')?.value || 'false') === 'true';
 
-    const projet = {
-      ...projetExistant,
-      title: document.getElementById('project-title').value.trim(),
-      type: document.getElementById('project-type').value,
-      category: document.getElementById('project-category').value.trim(),
-      shortDesc: document.getElementById('project-short-desc').value.trim(),
-      description: document.getElementById('project-description').value.trim(),
-      features: document.getElementById('project-features').value.split('\n').filter(f => f.trim()),
-      tags: document.getElementById('project-tags').value.split(',').map(t => t.trim()).filter(t => t),
-      link: document.getElementById('project-link').value.trim(),
-      demoLink: document.getElementById('project-demo-link').value.trim(),
-      featured: document.getElementById('project-featured').checked,
-      public: document.getElementById('project-public').checked
-    };
-    
-    if (!projet.title) {
+    const titre = document.getElementById('project-title').value.trim();
+    const shortDesc = document.getElementById('project-short-desc').value.trim();
+    const description = document.getElementById('project-description').value.trim();
+    const tags = document.getElementById('project-tags').value.split(',').map(t => t.trim()).filter(t => t);
+    const lienProjet = normaliserUrl(document.getElementById('project-link').value);
+    const lienDemo = normaliserUrl(document.getElementById('project-demo-link').value);
+
+    if (!titre) {
       afficherErreur(null, 'Le titre est obligatoire');
       return;
     }
+
+    if (!shortDesc) {
+      afficherErreur(null, 'La description courte est obligatoire');
+      return;
+    }
+
+    if (!description) {
+      afficherErreur(null, 'La description complète est obligatoire');
+      return;
+    }
+
+    if (tags.length === 0) {
+      afficherErreur(null, 'Ajoutez au moins une technologie');
+      return;
+    }
+
+    if (lienProjet === null) {
+      afficherErreur(null, 'Lien du projet invalide');
+      return;
+    }
+
+    if (lienDemo === null) {
+      afficherErreur(null, 'Lien de démo invalide');
+      return;
+    }
+
+    const projet = {
+      ...projetExistant,
+      title: titre,
+      type: document.getElementById('project-type').value,
+      category: document.getElementById('project-category').value.trim(),
+      shortDesc,
+      description,
+      features: document.getElementById('project-features').value.split('\n').filter(f => f.trim()),
+      tags,
+      link: lienProjet || '',
+      demoLink: lienDemo || '',
+      featured: document.getElementById('project-featured').checked,
+      public: document.getElementById('project-public').checked
+    };
 
     if (docRemoved) {
       delete projet.docFile;
@@ -3843,7 +3900,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Formulaire projet
     const projectForm = document.getElementById('project-form');
-    if (projectForm) projectForm.addEventListener('submit', sauvegarderProjet);
+    if (projectForm) {
+      projectForm.noValidate = true;
+      projectForm.addEventListener('submit', sauvegarderProjet);
+    }
     const projectDocInput = document.getElementById('project-doc-file');
     if (projectDocInput) projectDocInput.addEventListener('change', gererSelectionDocProjet);
     const projectDocRemoveBtn = document.getElementById('project-doc-remove-btn');
