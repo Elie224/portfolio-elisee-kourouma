@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const logWarn = estEnDeveloppement ? console.warn.bind(console) : () => {};
   
   const API_PRODUCTION = 'https://portfolio-backend-elisee.fly.dev/api';
+  const API_PROXY = '/api';
 
   function normaliserApiBase(url) {
     if (!url || typeof url !== 'string') return null;
@@ -50,12 +51,12 @@ document.addEventListener('DOMContentLoaded', function() {
       return overrideParam;
     }
 
-    // En production web, toujours utiliser l'API officielle sauf override explicite via ?api=
+    // En production web, privilégier le proxy same-origin Netlify pour éviter les blocages cross-origin
     if (!isLocalHost && !isLocalLan) {
       if (overrideStorage) {
         localStorage.removeItem('portfolioApiBase');
       }
-      return API_PRODUCTION;
+      return API_PROXY;
     }
 
     const apiStorageNormalisee = normaliserApiBase(overrideStorage);

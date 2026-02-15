@@ -3,6 +3,13 @@
 [build]
   publish = "."
 
+# Proxy API backend en same-origin pour éviter les problèmes CORS côté navigateur
+[[redirects]]
+  from = "/api/*"
+  to = "https://portfolio-backend-elisee.fly.dev/api/:splat"
+  status = 200
+  force = true
+
 # Redirections pour SPA - rediriger uniquement les routes qui n'existent pas
 # Ne pas forcer la redirection pour les fichiers existants
 [[redirects]]
