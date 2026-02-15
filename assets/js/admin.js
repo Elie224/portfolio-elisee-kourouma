@@ -277,12 +277,12 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       for (const base of bases) {
-        const healthUrl = `${base.replace(/\/api$/, '')}/health`;
+        const probeUrl = `${base}/portfolio`;
         try {
-          const healthResponse = await fetch(healthUrl, {
+          const probeResponse = await fetch(probeUrl, {
             cache: 'no-store'
           });
-          if (healthResponse.ok) {
+          if (probeResponse.ok || probeResponse.status === 304) {
             return true;
           }
         } catch (e) {
