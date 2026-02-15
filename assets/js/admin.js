@@ -269,6 +269,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
       throw derniereErreur || new Error('Requête impossible');
     };
+
+    const verifierServeurJoignable = async () => {
+      const bases = [MON_SERVEUR];
+      if (MON_SERVEUR !== API_PRODUCTION) {
+        bases.push(API_PRODUCTION);
+      }
+
+      for (const base of bases) {
+        const healthUrl = `${base.replace(/\/api$/, '')}/health`;
+        try {
+          const healthResponse = await fetch(healthUrl, {
+            cache: 'no-store'
+          });
+          if (healthResponse.ok) {
+            return true;
+          }
+        } catch (e) {
+          // essayer la base suivante
+        }
+      }
+
+      return false;
+    };
     
     try {
       const token = obtenirToken();
@@ -378,7 +401,12 @@ document.addEventListener('DOMContentLoaded', function() {
           if (statutReponse === 304) {
             afficherSucces('Données locales à jour');
           } else if (erreurReseau || !statutReponse) {
-            afficherErreur(null, 'Connexion serveur instable, affichage des données locales');
+            const serveurJoignable = await verifierServeurJoignable();
+            if (serveurJoignable) {
+              afficherErreur(null, 'Serveur joignable, mais API temporairement indisponible. Données locales affichées');
+            } else {
+              afficherErreur(null, 'Connexion serveur impossible, affichage des données locales');
+            }
           } else {
             afficherSucces('Données locales chargées');
           }
@@ -391,7 +419,12 @@ document.addEventListener('DOMContentLoaded', function() {
       if (donneesLocales) {
         mesDonneesActuelles = JSON.parse(donneesLocales);
         afficherToutesMesDonnees();
-        afficherErreur(null, 'Connexion serveur impossible, affichage des données locales');
+        const serveurJoignable = await verifierServeurJoignable();
+        if (serveurJoignable) {
+          afficherErreur(null, 'Serveur joignable, mais API temporairement indisponible. Données locales affichées');
+        } else {
+          afficherErreur(null, 'Connexion serveur impossible, affichage des données locales');
+        }
       }
     } finally {
       isLoading = false;
