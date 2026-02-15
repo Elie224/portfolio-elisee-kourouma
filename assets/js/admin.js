@@ -240,11 +240,16 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       let reponse = null;
+      let statutReponse = null;
 
       for (const base of bases) {
         const endpoint = token ? `${base}/portfolio/admin` : `${base}/portfolio`;
         try {
-          const tentative = await fetch(endpoint, { headers });
+          const tentative = await fetch(endpoint, {
+            headers,
+            cache: 'no-store'
+          });
+          statutReponse = tentative.status;
 
           if ((tentative.status === 401 || tentative.status === 403) && token) {
             seDeconnecter();
@@ -309,7 +314,7 @@ document.addEventListener('DOMContentLoaded', function() {
         afficherToutesMesDonnees();
         afficherSucces('Données chargées depuis le serveur');
       } else {
-        // Si erreur serveur, utiliser localStorage
+        // Si erreur serveur ou réponse conditionnelle (304), utiliser localStorage
         const donneesLocales = localStorage.getItem('portfolioData');
         if (donneesLocales) {
           mesDonneesActuelles = JSON.parse(donneesLocales);
@@ -327,7 +332,11 @@ document.addEventListener('DOMContentLoaded', function() {
           }
           
           afficherToutesMesDonnees();
-          afficherErreur(null, 'Serveur indisponible, utilisation des données locales');
+          if (statutReponse === 304) {
+            afficherSucces('Données locales à jour');
+          } else {
+            afficherErreur(null, 'Serveur indisponible, utilisation des données locales');
+          }
         }
       }
     } catch (erreur) {
