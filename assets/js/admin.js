@@ -245,6 +245,42 @@ document.addEventListener('DOMContentLoaded', function() {
     if (isLoading) return;
     isLoading = true;
 
+    const forcerHydratationProjetsDepuisServeur = async () => {
+      const bases = [MON_SERVEUR];
+      if (MON_SERVEUR !== API_PRODUCTION) {
+        bases.push(API_PRODUCTION);
+      }
+
+      for (const base of bases) {
+        try {
+          const reponsePublique = await fetch(`${base}/portfolio`, {
+            cache: 'no-store'
+          });
+          if (!reponsePublique.ok) continue;
+
+          const donneesPubliques = await reponsePublique.json();
+          const projetsServeur = Array.isArray(donneesPubliques.projects) ? donneesPubliques.projects : [];
+          if (projetsServeur.length > 0) {
+            mesDonneesActuelles.projects = projetsServeur;
+            if (Array.isArray(donneesPubliques.services)) {
+              mesDonneesActuelles.services = donneesPubliques.services;
+            }
+            if (Array.isArray(donneesPubliques.skills)) {
+              mesDonneesActuelles.skills = donneesPubliques.skills;
+            }
+            localStorage.setItem('portfolioData', JSON.stringify(mesDonneesActuelles));
+            afficherListeProjets();
+            mettreAJourStatsDashboard();
+            return true;
+          }
+        } catch (e) {
+          // essayer la base suivante
+        }
+      }
+
+      return false;
+    };
+
     const attendre = (ms) => new Promise(resolve => setTimeout(resolve, ms));
     const fetchAvecRetry = async (endpoint, options = {}, maxTentatives = 2) => {
       let derniereErreur = null;
@@ -506,6 +542,7 @@ document.addEventListener('DOMContentLoaded', function() {
           afficherErreur(null, 'Session expirée : reconnectez-vous pour modifier les projets');
         }
         afficherSucces('Données chargées depuis le serveur');
+        await forcerHydratationProjetsDepuisServeur();
       } else {
         // Si erreur serveur ou réponse conditionnelle (304), utiliser localStorage
         const donneesLocales = localStorage.getItem('portfolioData');
@@ -565,6 +602,7 @@ document.addEventListener('DOMContentLoaded', function() {
               logWarn('⚠️ Réponse API incomplète, fallback local conservé');
             }
           }
+          await forcerHydratationProjetsDepuisServeur();
         }
       }
     } catch (erreur) {
@@ -605,6 +643,7 @@ document.addEventListener('DOMContentLoaded', function() {
           const serveurJoignable = await verifierServeurJoignable();
           logWarn('⚠️ Exception chargement, fallback local conservé', { serveurJoignable });
         }
+        await forcerHydratationProjetsDepuisServeur();
       }
     } finally {
       isLoading = false;
