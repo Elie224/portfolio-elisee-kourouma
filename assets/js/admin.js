@@ -353,10 +353,41 @@ document.addEventListener('DOMContentLoaded', function() {
         return false;
       }
     };
+
+    const tenterRecuperationPublique = async () => {
+      const bases = [MON_SERVEUR];
+      if (MON_SERVEUR !== API_PRODUCTION) {
+        bases.push(API_PRODUCTION);
+      }
+
+      for (const base of bases) {
+        try {
+          const reponsePublique = await fetchAvecRetry(`${base}/portfolio`, {
+            cache: 'no-store'
+          }, 3);
+
+          if (!reponsePublique.ok) continue;
+
+          const donneesPubliques = await reponsePublique.json();
+          mesDonneesActuelles = normaliserDonneesChargees(donneesPubliques);
+          if (!mesDonneesActuelles.settings.analytics) {
+            mesDonneesActuelles.settings.analytics = { googleAnalytics: '' };
+          }
+          localStorage.setItem('portfolioData', JSON.stringify(mesDonneesActuelles));
+          afficherToutesMesDonnees();
+          return true;
+        } catch (e) {
+          // essayer la base suivante
+        }
+      }
+
+      return false;
+    };
     
     try {
-      const token = obtenirToken();
-      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      let token = obtenirToken();
+      let headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      let sessionExpiree = false;
       const bases = [MON_SERVEUR];
       if (MON_SERVEUR !== API_PRODUCTION) {
         bases.push(API_PRODUCTION);
@@ -376,9 +407,22 @@ document.addEventListener('DOMContentLoaded', function() {
           statutReponse = tentative.status;
 
           if ((tentative.status === 401 || tentative.status === 403) && token) {
-            seDeconnecter();
-            isLoading = false;
-            return;
+            sessionExpiree = true;
+            localStorage.removeItem('adminToken');
+            token = null;
+            headers = {};
+
+            const tentativePublique = await fetchAvecRetry(`${base}/portfolio`, {
+              cache: 'no-store'
+            });
+            if (tentativePublique.ok) {
+              reponse = tentativePublique;
+              if (base !== MON_SERVEUR) {
+                localStorage.setItem('portfolioApiBase', API_PRODUCTION);
+              }
+              break;
+            }
+            continue;
           }
 
           if (tentative.ok) {
@@ -458,6 +502,9 @@ document.addEventListener('DOMContentLoaded', function() {
         cvBase64Dirty = false;
         
         afficherToutesMesDonnees();
+        if (sessionExpiree) {
+          afficherErreur(null, 'Session expirée : reconnectez-vous pour modifier les projets');
+        }
         afficherSucces('Données chargées depuis le serveur');
       } else {
         // Si erreur serveur ou réponse conditionnelle (304), utiliser localStorage
@@ -467,6 +514,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
           // Si le cache local est incomplet (ex: projets absents), tenter une récupération directe admin
           if ((!cacheLocalEstValide(donneesLocalesParsees) || donneesLocalesParsees.projects.length === 0) && await tenterRecuperationAdminProduction(token)) {
+            return;
+          }
+
+          if ((!cacheLocalEstValide(donneesLocalesParsees) || donneesLocalesParsees.projects.length === 0) && await tenterRecuperationPublique()) {
             return;
           }
 
@@ -520,6 +571,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Même en cas d'exception, tenter une récupération admin directe pour éviter une liste de projets vide
         if ((!cacheLocalEstValide(donneesLocalesParsees) || donneesLocalesParsees.projects.length === 0) && await tenterRecuperationAdminProduction(obtenirToken())) {
+          return;
+        }
+
+        if ((!cacheLocalEstValide(donneesLocalesParsees) || donneesLocalesParsees.projects.length === 0) && await tenterRecuperationPublique()) {
           return;
         }
 
