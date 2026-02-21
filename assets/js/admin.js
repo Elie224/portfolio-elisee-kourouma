@@ -34,7 +34,31 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function normaliserGoogleAnalyticsId(value) {
     if (typeof value !== 'string') return '';
-    return value.trim().toUpperCase();
+    const brut = value.trim().toUpperCase();
+    if (!brut) return '';
+    const match = brut.match(/\bG-[A-Z0-9]+\b/);
+    return match ? match[0] : brut;
+  }
+
+  function resoudreGoogleAnalyticsId(settings = {}) {
+    if (!settings || typeof settings !== 'object') return '';
+
+    const candidats = [
+      settings?.analytics?.googleAnalytics,
+      settings?.analytics?.gaId,
+      settings?.googleAnalytics,
+      settings?.gaId,
+      settings?.analyticsId
+    ];
+
+    for (const candidat of candidats) {
+      const id = normaliserGoogleAnalyticsId(typeof candidat === 'string' ? candidat : '');
+      if (/^G-[A-Z0-9]+$/i.test(id)) {
+        return id;
+      }
+    }
+
+    return '';
   }
 
   // Adresse de mon serveur backend (avec fallback local / réseau / override)
@@ -363,27 +387,35 @@ document.addEventListener('DOMContentLoaded', function() {
       return projetsSource;
     };
 
-    const normaliserDonneesChargees = (donnees) => ({
-      personal: donnees.personal || {},
-      projects: resoudreProjets(donnees.projects),
-      skills: normaliserCollection(donnees.skills),
-      timeline: normaliserCollection(donnees.timeline),
-      activeSearches: normaliserCollection(donnees.activeSearches),
-      certifications: normaliserCollection(donnees.certifications),
-      stages: normaliserCollection(donnees.stages),
-      alternances: normaliserCollection(donnees.alternances),
-      techEvents: normaliserCollection(donnees.techEvents),
-      services: normaliserCollection(donnees.services),
-      faq: normaliserCollection(donnees.faq),
-      contactMessages: normaliserCollection(donnees.contactMessages),
-      links: donnees.links || {},
-      about: donnees.about || {},
-      settings: donnees.settings || {
-        maintenance: { enabled: false, message: 'Le site est actuellement en maintenance. Nous serons bientôt de retour !' },
-        seo: { title: '', description: '', keywords: '' },
-        analytics: { googleAnalytics: '' }
-      }
-    });
+    const normaliserDonneesChargees = (donnees) => {
+      const settingsBruts = donnees.settings || {};
+      const analyticsId = resoudreGoogleAnalyticsId(settingsBruts);
+
+      return {
+        personal: donnees.personal || {},
+        projects: resoudreProjets(donnees.projects),
+        skills: normaliserCollection(donnees.skills),
+        timeline: normaliserCollection(donnees.timeline),
+        activeSearches: normaliserCollection(donnees.activeSearches),
+        certifications: normaliserCollection(donnees.certifications),
+        stages: normaliserCollection(donnees.stages),
+        alternances: normaliserCollection(donnees.alternances),
+        techEvents: normaliserCollection(donnees.techEvents),
+        services: normaliserCollection(donnees.services),
+        faq: normaliserCollection(donnees.faq),
+        contactMessages: normaliserCollection(donnees.contactMessages),
+        links: donnees.links || {},
+        about: donnees.about || {},
+        settings: {
+          maintenance: settingsBruts.maintenance || { enabled: false, message: 'Le site est actuellement en maintenance. Nous serons bientôt de retour !' },
+          seo: settingsBruts.seo || { title: '', description: '', keywords: '' },
+          analytics: {
+            ...(settingsBruts.analytics || {}),
+            googleAnalytics: analyticsId
+          }
+        }
+      };
+    };
 
     const cacheLocalEstValide = (donnees) => (
       !!donnees &&
@@ -3393,10 +3425,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Afficher le statut Google Analytics
     if (statVisitors) {
-      const hasAnalytics = normaliserGoogleAnalyticsId(mesDonneesActuelles.settings?.analytics?.googleAnalytics || '');
+      const hasAnalytics = resoudreGoogleAnalyticsId(mesDonneesActuelles.settings || {});
       if (hasAnalytics) {
         // Google Analytics est configuré - afficher un indicateur actif
         statVisitors.innerHTML = '<span style="color: var(--success);">✓</span> Actif';
+        statVisitors.style.color = '';
         statVisitors.title = `Google Analytics configuré (ID: ${hasAnalytics}). Voir les données sur analytics.google.com`;
       } else {
         // Google Analytics non configuré
@@ -3676,6 +3709,11 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
+      const googleAnalyticsInput = document.getElementById('google-analytics');
+      if (googleAnalyticsInput) {
+        googleAnalyticsInput.value = googleAnalyticsId;
+      }
+
       const settings = {
         maintenance: {
           enabled: document.getElementById('maintenance-mode')?.checked || false,
@@ -3693,6 +3731,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Sauvegarder dans les données actuelles
       mesDonneesActuelles.settings = settings;
+      mettreAJourStatsDashboard();
       
       // Log pour debug
       log('💾 Settings à sauvegarder:', {
@@ -3732,6 +3771,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       if (success) {
         log('✅ Settings sauvegardés sur le serveur avec succès');
+        mettreAJourStatsDashboard();
       } else {
         logError('❌ Erreur lors de la sauvegarde des settings sur le serveur');
       }
@@ -3966,10 +4006,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Charger l'ID Google Analytics
     const googleAnalyticsInput = document.getElementById('google-analytics');
     if (googleAnalyticsInput) {
-      // Récupérer l'ID depuis settings.analytics.googleAnalytics
-      const gaId = (settings.analytics && settings.analytics.googleAnalytics) 
-        ? normaliserGoogleAnalyticsId(settings.analytics.googleAnalytics) 
-        : '';
+      const gaId = resoudreGoogleAnalyticsId(settings);
+      if (!settings.analytics) settings.analytics = {};
+      settings.analytics.googleAnalytics = gaId;
       
       googleAnalyticsInput.value = gaId;
       
