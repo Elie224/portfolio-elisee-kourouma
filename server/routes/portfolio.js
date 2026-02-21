@@ -448,6 +448,40 @@ router.post('/',
   try {
     logSuccess('📥 Requête de mise à jour reçue de:', { email: req.admin.email });
 
+    const bodyKeys = Object.keys(req.body || {}).filter((key) => req.body[key] !== undefined);
+    const partialMode = typeof req.query.partial === 'string' ? req.query.partial.trim().toLowerCase() : '';
+    const certOnlyPayload = bodyKeys.length > 0 && bodyKeys.every((key) => key === 'certifications');
+
+    if (partialMode === 'certifications' || certOnlyPayload) {
+      const certifications = Array.isArray(req.body.certifications)
+        ? req.body.certifications.map((item) => ({
+            ...(item && typeof item === 'object' ? item : {}),
+            name: typeof item?.name === 'string' ? item.name : '',
+            issuer: typeof item?.issuer === 'string' ? item.issuer : '',
+            date: typeof item?.date === 'string' ? item.date : '',
+            description: typeof item?.description === 'string' ? item.description : '',
+            link: typeof item?.link === 'string' ? item.link : '',
+            photo: typeof item?.photo === 'string' ? item.photo : '',
+            image: typeof item?.image === 'string' ? item.image : '',
+            document: typeof item?.document === 'string' ? item.document : ''
+          }))
+        : [];
+
+      await Portfolio.findOneAndUpdate(
+        {},
+        { $set: { certifications } },
+        { new: true, upsert: true, runValidators: false }
+      );
+
+      cachePublicPortfolio = { data: null, etag: null, ts: 0, maxAgeMs: cachePublicPortfolio.maxAgeMs };
+
+      return res.json({
+        success: true,
+        message: 'Certifications mises à jour avec succès',
+        portfolio: { certifications }
+      });
+    }
+
     // Récupérer un snapshot allégé pour limiter la mémoire pendant les updates
     const portfolioActuel = await Portfolio.findOne().select({
       projects: 1,

@@ -842,7 +842,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
       for (const endpoint of endpoints) {
         try {
-          const reponse = await fetch(endpoint, {
+          const endpointFinal = options?.lightweight
+            ? `${endpoint}${endpoint.includes('?') ? '&' : '?'}partial=certifications`
+            : endpoint;
+
+          const reponse = await fetch(endpointFinal, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -857,7 +861,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('✅ POST /portfolio envoyé', {
               status: reponse.status,
               ok: reponse.ok,
-              endpoint,
+              endpoint: endpointFinal,
               contentLength: payloadSize
             });
           }
@@ -923,6 +927,12 @@ document.addEventListener('DOMContentLoaded', function() {
             clearTimeout(watchdog);
             seDeconnecter();
             afficherErreur(null, 'Session expirée. Reconnectez-vous pour enregistrer.');
+            return false;
+          }
+
+          if (reponse.status === 413) {
+            clearTimeout(watchdog);
+            afficherErreur(null, 'Le serveur refuse la requête car elle est trop volumineuse. Réduisez la taille du PDF/image puis réessayez.');
             return false;
           }
 
@@ -1604,15 +1614,34 @@ document.addEventListener('DOMContentLoaded', function() {
     return valeur.startsWith('data:image/') || /\.(png|jpe?g|gif|webp|svg|bmp|avif)([?#].*)?$/.test(valeur);
   }
 
+  function convertirDataUrlPdfEnBlobUrl(source) {
+    try {
+      if (!estSourcePdf(source) || !source.startsWith('data:application/pdf')) return source;
+      const splitIndex = source.indexOf(',');
+      if (splitIndex < 0) return source;
+      const base64 = source.substring(splitIndex + 1);
+      const raw = atob(base64);
+      const bytes = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; i += 1) {
+        bytes[i] = raw.charCodeAt(i);
+      }
+      const blob = new Blob([bytes], { type: 'application/pdf' });
+      return URL.createObjectURL(blob);
+    } catch (err) {
+      return source;
+    }
+  }
+
   function htmlApercuCertification(mediaSource) {
     if (!mediaSource) return '';
     if (estSourcePdf(mediaSource)) {
+      const pdfLisible = convertirDataUrlPdfEnBlobUrl(mediaSource);
       return `
         <div class="muted" style="display:flex; align-items:center; gap:8px; margin-top:8px;">
           <span style="font-size:20px;">📄</span>
           <span>Document PDF sélectionné</span>
         </div>
-        <a href="${mediaSource}" target="_blank" rel="noopener" class="btn-small" style="margin-top:8px; display:inline-block;">Voir le PDF</a>
+        <a href="${pdfLisible}" target="_blank" rel="noopener" class="btn-small" style="margin-top:8px; display:inline-block;">Voir le PDF</a>
       `;
     }
     return `<img src="${mediaSource}" alt="Visuel certification" style="max-width:100%; height:auto; border-radius: 8px;" />`;

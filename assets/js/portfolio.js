@@ -3224,6 +3224,26 @@ document.addEventListener('DOMContentLoaded', function() {
       const valeur = source.trim().toLowerCase();
       return valeur.startsWith('data:application/pdf') || /\.pdf([?#].*)?$/.test(valeur);
     };
+
+    const urlPdfLisible = (source) => {
+      try {
+        if (!estMediaPdf(source) || typeof source !== 'string' || !source.startsWith('data:application/pdf')) {
+          return source;
+        }
+        const splitIndex = source.indexOf(',');
+        if (splitIndex < 0) return source;
+        const base64 = source.substring(splitIndex + 1);
+        const raw = atob(base64);
+        const bytes = new Uint8Array(raw.length);
+        for (let i = 0; i < raw.length; i += 1) {
+          bytes[i] = raw.charCodeAt(i);
+        }
+        const blob = new Blob([bytes], { type: 'application/pdf' });
+        return URL.createObjectURL(blob);
+      } catch (err) {
+        return source;
+      }
+    };
     
     if (!certifications || certifications.length === 0) {
       container.innerHTML = `
@@ -3238,7 +3258,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const certPhoto = cert.image || cert.photo || '';
       const certPhotoEstPdf = estMediaPdf(certPhoto);
       const documentPdf = estMediaPdf(cert.photo) ? cert.photo : '';
-      const lienCertification = cert.link || cert.document || documentPdf || (certPhotoEstPdf ? certPhoto : '');
+      const lienCertificationRaw = cert.link || cert.document || documentPdf || (certPhotoEstPdf ? certPhoto : '');
+      const lienCertification = estMediaPdf(lienCertificationRaw) ? urlPdfLisible(lienCertificationRaw) : lienCertificationRaw;
       return `
         <div class="experience-card" style="animation-delay: ${index * 0.1}s;">
           <div class="experience-card-header">
