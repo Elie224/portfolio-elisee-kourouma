@@ -1504,6 +1504,63 @@ document.addEventListener('DOMContentLoaded', function() {
   
   
   /* ===== GESTION DES CERTIFICATIONS ===== */
+
+  function estSourcePdf(source) {
+    if (typeof source !== 'string' || !source.trim()) return false;
+    const valeur = source.trim().toLowerCase();
+    return valeur.startsWith('data:application/pdf') || /\.pdf([?#].*)?$/.test(valeur);
+  }
+
+  function estSourceImage(source) {
+    if (typeof source !== 'string' || !source.trim()) return false;
+    const valeur = source.trim().toLowerCase();
+    return valeur.startsWith('data:image/') || /\.(png|jpe?g|gif|webp|svg|bmp|avif)([?#].*)?$/.test(valeur);
+  }
+
+  function htmlApercuCertification(mediaSource) {
+    if (!mediaSource) return '';
+    if (estSourcePdf(mediaSource)) {
+      return `
+        <div class="muted" style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+          <span style="font-size:20px;">📄</span>
+          <span>Document PDF sélectionné</span>
+        </div>
+        <a href="${mediaSource}" target="_blank" rel="noopener" class="btn-small" style="margin-top:8px; display:inline-block;">Voir le PDF</a>
+      `;
+    }
+    return `<img src="${mediaSource}" alt="Visuel certification" style="max-width:100%; height:auto; border-radius: 8px;" />`;
+  }
+
+  function majApercuCertification(mediaSource) {
+    const certPhotoPreview = document.getElementById('cert-photo-preview');
+    if (!certPhotoPreview) return;
+    certPhotoPreview.innerHTML = htmlApercuCertification(mediaSource);
+  }
+
+  async function lireMediaCertificationBase64(input) {
+    return new Promise((resolve, reject) => {
+      const file = input?.files?.[0];
+      if (!file) return resolve(null);
+
+      const tailleMax = 10 * 1024 * 1024;
+      if (file.size > tailleMax) {
+        return reject(new Error('CERT_MEDIA_TOO_LARGE'));
+      }
+
+      const nomFichier = file.name || '';
+      const estImage = file.type.startsWith('image/');
+      const estPdf = file.type === 'application/pdf' || /\.pdf$/i.test(nomFichier);
+
+      if (!estImage && !estPdf) {
+        return reject(new Error('CERT_MEDIA_TYPE_INVALID'));
+      }
+
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target.result);
+      reader.onerror = () => reject(new Error('CERT_MEDIA_READ_ERROR'));
+      reader.readAsDataURL(file);
+    });
+  }
   
   // Affiche la liste des certifications
   function afficherListeCertifications() {
@@ -1522,7 +1579,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <input type="checkbox" class="select-checkbox" data-type="certifications" data-index="${index}" onchange="toggleItemSelection('certifications', ${index}, this.checked)" />
         <h4>${cert.name || 'Certification'}</h4>
         <p class="item-meta">${cert.issuer || ''} ${cert.date ? '· ' + cert.date : ''}</p>
-        ${(cert.photo || cert.image) ? '<p class="muted" style="margin: 4px 0;">📷 Photo configurée</p>' : ''}
+        ${(cert.image || cert.photo) ? `<p class="muted" style="margin: 4px 0;">${cert.image ? '📷 Badge photo configuré' : (estSourcePdf(cert.photo) ? '📄 PDF configuré' : '📷 Photo configurée')}</p>` : ''}
         <p class="muted">${cert.description || ''}</p>
         <div class="item-actions">
           <button class="btn-small" onclick="editCertification(${index})">Modifier</button>
@@ -1555,7 +1612,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const certPhotoPreview = document.getElementById('cert-photo-preview');
       if (certPhotoPreview) {
         const certPhoto = cert.photo || cert.image || '';
-        certPhotoPreview.innerHTML = certPhoto ? `<img src="${certPhoto}" alt="Visuel certification" style="max-width:100%; height:auto; border-radius: 8px;" />` : '';
+        majApercuCertification(certPhoto);
       }
       const certPhotoFile = document.getElementById('cert-photo-file');
       if (certPhotoFile) certPhotoFile.value = '';
@@ -1563,7 +1620,7 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('cert-date').value = cert.date || '';
       document.getElementById('cert-url').value = cert.link || '';
       const certImage = document.getElementById('cert-image');
-      if (certImage) certImage.value = cert.image || cert.photo || '';
+      if (certImage) certImage.value = estSourceImage(cert.image) ? cert.image : '';
     } else {
       form.reset();
       document.getElementById('certification-id').value = '';
@@ -1600,36 +1657,45 @@ document.addEventListener('DOMContentLoaded', function() {
       description: '',
       link: document.getElementById('cert-url').value.trim(),
       photo: '',
-      image: ''
+      image: '',
+      document: ''
     };
 
     try {
-      const nouvellePhotoBase64 = await lireImageBase64(photoFileInput);
+      const nouvellePhotoBase64 = await lireMediaCertificationBase64(photoFileInput);
       const photoUrl = photoUrlInput?.value.trim();
       const imageUrl = imageInput?.value.trim();
 
-      if (nouvellePhotoBase64) {
-        cert.photo = nouvellePhotoBase64;
-        cert.image = imageUrl || ancienneImageOuPhoto(ancien);
-        if (photoPreview) {
-          photoPreview.innerHTML = `<img src="${nouvellePhotoBase64}" alt="Visuel certification" style="max-width:100%; height:auto; border-radius: 8px;" />`;
-        }
-      } else if (photoUrl) {
-        cert.photo = photoUrl;
-        cert.image = imageUrl || photoUrl;
-        if (photoPreview) {
-          photoPreview.innerHTML = `<img src="${photoUrl}" alt="Visuel certification" style="max-width:100%; height:auto; border-radius: 8px;" />`;
-        }
-      } else {
-        cert.photo = ancien.photo || '';
-        cert.image = imageUrl || ancien.image || ancien.photo || '';
-      }
-    } catch (err) {
-      if (err.message === 'IMAGE_TOO_LARGE') {
-        afficherErreur(null, 'Image trop volumineuse (max 5 Mo)');
+      if (imageUrl && !estSourceImage(imageUrl)) {
+        afficherErreur(null, 'Le badge doit être une image (pas un PDF).');
         return;
       }
-      afficherErreur(null, 'Impossible de lire l\'image de la certification');
+
+      if (nouvellePhotoBase64) {
+        cert.photo = nouvellePhotoBase64;
+        cert.image = imageUrl || (!estSourcePdf(nouvellePhotoBase64) ? nouvellePhotoBase64 : '');
+        cert.document = estSourcePdf(nouvellePhotoBase64) ? nouvellePhotoBase64 : '';
+        if (photoPreview) majApercuCertification(nouvellePhotoBase64);
+      } else if (photoUrl) {
+        cert.photo = photoUrl;
+        cert.image = imageUrl || (!estSourcePdf(photoUrl) ? photoUrl : '');
+        cert.document = estSourcePdf(photoUrl) ? photoUrl : '';
+        if (photoPreview) majApercuCertification(photoUrl);
+      } else {
+        cert.photo = ancien.photo || '';
+        cert.image = imageUrl || (estSourceImage(ancien.image) ? ancien.image : '') || (estSourcePdf(ancien.photo) ? '' : (ancien.photo || ''));
+        cert.document = estSourcePdf(ancien.photo) ? ancien.photo : (ancien.document || '');
+      }
+    } catch (err) {
+      if (err.message === 'CERT_MEDIA_TOO_LARGE') {
+        afficherErreur(null, 'Fichier trop volumineux (max 10 Mo)');
+        return;
+      }
+      if (err.message === 'CERT_MEDIA_TYPE_INVALID') {
+        afficherErreur(null, 'Format non supporté. Utilisez une image ou un PDF.');
+        return;
+      }
+      afficherErreur(null, 'Impossible de lire le fichier de la certification');
       return;
     }
     
@@ -3981,24 +4047,26 @@ document.addEventListener('DOMContentLoaded', function() {
     if (certPhotoUrlInput && certPhotoPreview) {
       certPhotoUrlInput.addEventListener('input', () => {
         const url = certPhotoUrlInput.value.trim();
-        if (url) {
-          certPhotoPreview.innerHTML = `<img src="${url}" alt="Visuel certification" style="max-width:100%; height:auto; border-radius: 8px;" />`;
-        }
+        majApercuCertification(url);
       });
     }
     if (certPhotoFileInput && certPhotoPreview) {
       certPhotoFileInput.addEventListener('change', async () => {
         try {
-          const base64 = await lireImageBase64(certPhotoFileInput);
+          const base64 = await lireMediaCertificationBase64(certPhotoFileInput);
           if (base64) {
-            certPhotoPreview.innerHTML = `<img src="${base64}" alt="Visuel certification" style="max-width:100%; height:auto; border-radius: 8px;" />`;
+            majApercuCertification(base64);
           }
         } catch (err) {
-          if (err.message === 'IMAGE_TOO_LARGE') {
-            afficherErreur(null, 'Image trop volumineuse (max 5 Mo)');
+          if (err.message === 'CERT_MEDIA_TOO_LARGE') {
+            afficherErreur(null, 'Fichier trop volumineux (max 10 Mo)');
             return;
           }
-          afficherErreur(null, 'Impossible de lire l\'image de la certification');
+          if (err.message === 'CERT_MEDIA_TYPE_INVALID') {
+            afficherErreur(null, 'Format non supporté. Utilisez une image ou un PDF.');
+            return;
+          }
+          afficherErreur(null, 'Impossible de lire le fichier de la certification');
         }
       });
     }

@@ -3218,6 +3218,12 @@ document.addEventListener('DOMContentLoaded', function() {
   function afficherCertifications(certifications) {
     const container = document.getElementById('certifications-container');
     if (!container) return;
+
+    const estMediaPdf = (source) => {
+      if (typeof source !== 'string' || !source.trim()) return false;
+      const valeur = source.trim().toLowerCase();
+      return valeur.startsWith('data:application/pdf') || /\.pdf([?#].*)?$/.test(valeur);
+    };
     
     if (!certifications || certifications.length === 0) {
       container.innerHTML = `
@@ -3229,12 +3235,18 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     container.innerHTML = certifications.map((cert, index) => {
-      const certPhoto = cert.photo || cert.image || '';
+      const certPhoto = cert.image || cert.photo || '';
+      const certPhotoEstPdf = estMediaPdf(certPhoto);
+      const documentPdf = estMediaPdf(cert.photo) ? cert.photo : '';
+      const lienCertification = cert.link || cert.document || documentPdf || (certPhotoEstPdf ? certPhoto : '');
       return `
         <div class="experience-card" style="animation-delay: ${index * 0.1}s;">
           <div class="experience-card-header">
             <div class="experience-card-icon" style="overflow:hidden;">
-              ${certPhoto ? `<img src="${certPhoto}" alt="Visuel certification" style="width:48px; height:48px; object-fit:cover; border-radius:12px;" />` : '🏆'}
+              ${certPhoto ? (certPhotoEstPdf
+                ? '<span title="Document PDF" style="display:flex; align-items:center; justify-content:center; width:48px; height:48px; border-radius:12px;">📄</span>'
+                : `<img src="${certPhoto}" alt="Visuel certification" style="width:48px; height:48px; object-fit:cover; border-radius:12px;" />`
+              ) : '🏆'}
             </div>
             <div style="flex: 1;">
               <h4 class="experience-card-title">${cert.name || 'Certification'}</h4>
@@ -3243,9 +3255,9 @@ document.addEventListener('DOMContentLoaded', function() {
             ${cert.date ? `<span class="experience-card-date">${cert.date}</span>` : ''}
           </div>
           ${cert.description ? `<p class="experience-card-description">${cert.description}</p>` : ''}
-          ${cert.link ? `
-            <a href="${cert.link}" target="_blank" rel="noopener noreferrer" class="experience-card-link">
-              Voir la certification
+          ${lienCertification ? `
+            <a href="${lienCertification}" target="_blank" rel="noopener noreferrer" class="experience-card-link">
+              ${cert.link ? 'Voir la certification' : 'Voir le document PDF'}
             </a>
           ` : ''}
         </div>

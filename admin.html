@@ -1880,12 +1880,12 @@
                     <input type="text" id="cert-name" required />
                   </div>
                   <div class="form-group">
-                    <label for="cert-photo-url">Photo (URL ou base64)</label>
-                    <input type="text" id="cert-photo-url" placeholder="URL de la photo ou base64" />
+                    <label for="cert-photo-url">Média (image ou PDF via URL/base64)</label>
+                    <input type="text" id="cert-photo-url" placeholder="URL/base64 de l'image ou du PDF" />
                   </div>
                   <div class="form-group">
-                    <label for="cert-photo-file">Télécharger une photo</label>
-                    <input type="file" id="cert-photo-file" accept="image/*" />
+                    <label for="cert-photo-file">Télécharger une image ou un PDF</label>
+                    <input type="file" id="cert-photo-file" accept="image/*,application/pdf,.pdf" />
                     <div id="cert-photo-preview" class="photo-preview-container"></div>
                   </div>
                   <div class="form-row">
@@ -1903,8 +1903,8 @@
                     <input type="url" id="cert-url" placeholder="https://..." />
                   </div>
                   <div class="form-group">
-                    <label for="cert-image">Image/Badge (URL)</label>
-                    <input type="text" id="cert-image" placeholder="assets/cert.jpg" />
+                    <label for="cert-image">Badge (photo uniquement - URL/base64)</label>
+                    <input type="text" id="cert-image" placeholder="https://.../badge.jpg ou data:image/..." />
                   </div>
                   <div style="display: flex; gap: 12px; margin-top: 20px;">
                     <button type="submit" class="btn">Enregistrer</button>
@@ -2452,6 +2452,6 @@
     <footer class="container footer">© Mon Portfolio · <span data-year></span></footer>
     
     <script src="assets/js/portfolio.js?v=20260215s"></script>
-    <script src="assets/js/admin.js?v=20260215ao"></script>
+    <script src="assets/js/admin.js?v=20260221b"></script>
   </body>
 </html>
