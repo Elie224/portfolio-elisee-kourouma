@@ -448,8 +448,15 @@ router.post('/',
   try {
     logSuccess('📥 Requête de mise à jour reçue de:', { email: req.admin.email });
 
-    // Récupérer l'état actuel pour préserver les fichiers/photos si non renvoyés par le front
-    const portfolioActuel = await Portfolio.findOne();
+    // Récupérer un snapshot allégé pour limiter la mémoire pendant les updates
+    const portfolioActuel = await Portfolio.findOne().select({
+      projects: 1,
+      certifications: 1,
+      stages: 1,
+      alternances: 1,
+      services: 1,
+      links: 1
+    }).lean();
 
     // Diagnostic : résumé des fichiers reçus (stages/alternances) avant merge
     const diagPayload = (items = []) => (Array.isArray(items) ? items.map((x, i) => ({
