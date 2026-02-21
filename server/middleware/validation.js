@@ -236,13 +236,24 @@ const sanitizeData = (req, res, next) => {
     const contentLength = Number(req.headers['content-length'] || 0);
     const isLargePayload = Number.isFinite(contentLength) && contentLength > 5 * 1024 * 1024;
     
-    // EXCEPTION : Autoriser les données base64 (data:application/pdf;base64,...)
-    // Les données base64 peuvent contenir des caractères qui ressemblent à du code mais qui sont valides
-        const isBase64Data = (req.body.links && req.body.links.cvFile && req.body.links.cvFile.startsWith('data:')) ||
-          (req.body.links && req.body.links.cv && typeof req.body.links.cv === 'string' && req.body.links.cv.startsWith('data:')) ||
-          (Array.isArray(req.body.projects) && req.body.projects.some(p => typeof p?.docFile === 'string' && p.docFile.startsWith('data:'))) ||
-          (Array.isArray(req.body.stages) && req.body.stages.some(s => typeof s?.docFile === 'string' && s.docFile.startsWith('data:'))) ||
-          (Array.isArray(req.body.alternances) && req.body.alternances.some(a => typeof a?.docFile === 'string' && a.docFile.startsWith('data:')));
+    // EXCEPTION : Autoriser les données base64 de fichiers/images
+    // Les payloads base64 peuvent déclencher de faux positifs dans les regex de sécurité
+    const isDataUrl = (value) => typeof value === 'string' && value.startsWith('data:');
+    const hasDataUrlInArray = (arr, keys = []) => Array.isArray(arr) && arr.some((item) =>
+      keys.some((key) => isDataUrl(item?.[key]))
+    );
+
+    const isBase64Data =
+      isDataUrl(req.body?.links?.cvFile) ||
+      isDataUrl(req.body?.links?.cv) ||
+      hasDataUrlInArray(req.body?.projects, ['docFile']) ||
+      hasDataUrlInArray(req.body?.stages, ['docFile', 'photo']) ||
+      hasDataUrlInArray(req.body?.alternances, ['docFile', 'photo']) ||
+      hasDataUrlInArray(req.body?.certifications, ['photo', 'image', 'document']) ||
+      hasDataUrlInArray(req.body?.services, ['photo', 'image']) ||
+      hasDataUrlInArray(req.body?.testimonials, ['photo']) ||
+      hasDataUrlInArray(req.body?.techEvents, ['photo']) ||
+      isDataUrl(req.body?.personal?.photo);
     
     // EXCEPTION : Autoriser les données base64 (data:application/pdf;base64,...)
     // Les données base64 peuvent contenir des caractères qui ressemblent à du code mais qui sont valides

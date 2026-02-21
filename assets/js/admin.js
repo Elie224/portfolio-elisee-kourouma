@@ -848,7 +848,15 @@ document.addEventListener('DOMContentLoaded', function() {
           }
 
           dernierStatut = reponse.status;
-          dernierMessage = resultat.error || resultat.message || '';
+          const detailValidation = Array.isArray(resultat.details) && resultat.details.length
+            ? (resultat.details[0]?.msg || resultat.details[0]?.message || '')
+            : '';
+          const codeErreur = resultat.code ? ` [${resultat.code}]` : '';
+          dernierMessage = [
+            resultat.error || '',
+            resultat.message || '',
+            detailValidation
+          ].filter(Boolean).join(' · ') + codeErreur;
         } catch (erreurTentative) {
           derniereErreur = erreurTentative;
         }
