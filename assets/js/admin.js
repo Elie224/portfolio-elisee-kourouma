@@ -679,7 +679,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   // Sauvegarde les données sur le serveur
-  async function sauvegarderSurServeur(messageSucces = 'Action sauvegardée avec succès') {
+  async function sauvegarderSurServeur(messageSucces = 'Action sauvegardée avec succès', options = {}) {
     const token = obtenirToken();
     if (!token) {
       afficherErreur(null, 'Vous devez être connecté pour sauvegarder');
@@ -778,6 +778,35 @@ document.addEventListener('DOMContentLoaded', function() {
       };
 
       const donneesAEnvoyer = supprimerNullUndefined(donneesAEnvoyerBrut);
+
+      if (options?.lightweight) {
+        if (donneesAEnvoyer.links) {
+          delete donneesAEnvoyer.links.cvFile;
+          delete donneesAEnvoyer.links.cvFileName;
+          delete donneesAEnvoyer.links.cvFileSize;
+          if (typeof donneesAEnvoyer.links.cv === 'string' && donneesAEnvoyer.links.cv.startsWith('data:')) {
+            delete donneesAEnvoyer.links.cv;
+          }
+        }
+
+        const nettoyerDocs = (items) => {
+          if (!Array.isArray(items)) return items;
+          return items.map((item) => {
+            if (!item || typeof item !== 'object') return item;
+            const copie = { ...item };
+            delete copie.docFile;
+            delete copie.docFileName;
+            delete copie.docFileSize;
+            delete copie.docPassword;
+            delete copie.docPasswordHash;
+            return copie;
+          });
+        };
+
+        donneesAEnvoyer.projects = nettoyerDocs(donneesAEnvoyer.projects);
+        donneesAEnvoyer.stages = nettoyerDocs(donneesAEnvoyer.stages);
+        donneesAEnvoyer.alternances = nettoyerDocs(donneesAEnvoyer.alternances);
+      }
       donneesAEnvoyer.personal = {
         ...(donneesAEnvoyer.personal || {}),
         fullName: typeof donneesAEnvoyer.personal?.fullName === 'string' ? donneesAEnvoyer.personal.fullName : (donneesAEnvoyer.personal?.fullName ? String(donneesAEnvoyer.personal.fullName) : ''),
@@ -1814,7 +1843,7 @@ document.addEventListener('DOMContentLoaded', function() {
       mesDonneesActuelles.certifications.push(cert);
     }
 
-    const sauvegardeOk = await sauvegarderSurServeur('Certification sauvegardée et publiée');
+    const sauvegardeOk = await sauvegarderSurServeur('Certification sauvegardée et publiée', { lightweight: true });
     if (!sauvegardeOk) {
       mesDonneesActuelles.certifications = certificationsAvant;
       afficherListeCertifications();
@@ -1840,7 +1869,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette certification ?')) {
       const certificationsAvant = Array.isArray(mesDonneesActuelles.certifications) ? [...mesDonneesActuelles.certifications] : [];
       mesDonneesActuelles.certifications.splice(index, 1);
-      sauvegarderSurServeur('Certification supprimée').then((ok) => {
+      sauvegarderSurServeur('Certification supprimée', { lightweight: true }).then((ok) => {
         if (!ok) {
           mesDonneesActuelles.certifications = certificationsAvant;
         }

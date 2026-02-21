@@ -260,10 +260,10 @@
 
                 <div id="doc-details-password-block" style="display:none; margin-top: 12px; padding: 12px; border: 1px solid var(--couleur-bordure); border-radius: 10px;">
                   <p class="muted" style="margin: 0 0 8px 0; font-size: 13px;">Déjà un mot de passe ? Saisissez-le pour télécharger.</p>
-                  <div style="display:flex; gap:8px; flex-wrap: wrap;">
-                    <input type="password" id="doc-details-password" placeholder="Mot de passe" style="flex:1; min-width: 200px; padding: 10px 12px;" />
-                    <button type="button" class="btn" id="doc-details-password-submit">Valider le mot de passe</button>
-                  </div>
+                  <form id="doc-details-password-form" style="display:flex; gap:8px; flex-wrap: wrap;" onsubmit="return false;">
+                    <input type="password" id="doc-details-password" placeholder="Mot de passe" style="flex:1; min-width: 200px; padding: 10px 12px;" autocomplete="current-password" />
+                    <button type="submit" class="btn" id="doc-details-password-submit">Valider le mot de passe</button>
+                  </form>
                   <div id="doc-details-password-status" class="muted" style="min-height: 16px; font-size: 13px; margin-top:6px;"></div>
                 </div>
 
