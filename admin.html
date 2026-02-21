@@ -1905,6 +1905,8 @@
                   <div class="form-group">
                     <label for="cert-image">Badge (photo uniquement - URL/base64)</label>
                     <input type="text" id="cert-image" placeholder="https://.../badge.jpg ou data:image/..." />
+                    <input type="file" id="cert-image-file" accept="image/*" style="margin-top:10px;" />
+                    <div id="cert-image-preview" class="photo-preview-container"></div>
                   </div>
                   <div style="display: flex; gap: 12px; margin-top: 20px;">
                     <button type="submit" class="btn">Enregistrer</button>
@@ -2452,6 +2454,6 @@
     <footer class="container footer">© Mon Portfolio · <span data-year></span></footer>
     
     <script src="assets/js/portfolio.js?v=20260215s"></script>
-    <script src="assets/js/admin.js?v=20260221b"></script>
+    <script src="assets/js/admin.js?v=20260221c"></script>
   </body>
 </html>
