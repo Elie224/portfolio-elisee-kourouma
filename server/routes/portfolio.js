@@ -483,22 +483,22 @@ router.post('/',
     
     // Préparation des données (la validation a déjà été faite par les middlewares)
     const updateData = {
-      personal: req.body.personal || {},
-      projects: Array.isArray(req.body.projects) ? req.body.projects : [],
-      skills: Array.isArray(req.body.skills) ? req.body.skills : [],
-      links: req.body.links || {},
-      about: req.body.about || {},
-      timeline: Array.isArray(req.body.timeline) ? req.body.timeline : [],
-      activeSearches: Array.isArray(req.body.activeSearches) ? req.body.activeSearches : [],
-      services: Array.isArray(req.body.services) ? req.body.services : [],
-      certifications: Array.isArray(req.body.certifications) ? req.body.certifications : [],
-      testimonials: Array.isArray(req.body.testimonials) ? req.body.testimonials : [],
-      stages: Array.isArray(req.body.stages) ? req.body.stages : [],
-      alternances: Array.isArray(req.body.alternances) ? req.body.alternances : [],
-      techEvents: Array.isArray(req.body.techEvents) ? req.body.techEvents : [],
-      contactMessages: Array.isArray(req.body.contactMessages) ? req.body.contactMessages : [],
-      faq: Array.isArray(req.body.faq) ? req.body.faq : [],
-      settings: req.body.settings || {}
+      personal: (req.body.personal !== undefined) ? req.body.personal : (portfolioActuel?.personal || {}),
+      projects: Array.isArray(req.body.projects) ? req.body.projects : (portfolioActuel?.projects || []),
+      skills: Array.isArray(req.body.skills) ? req.body.skills : (portfolioActuel?.skills || []),
+      links: (req.body.links !== undefined) ? req.body.links : (portfolioActuel?.links || {}),
+      about: (req.body.about !== undefined) ? req.body.about : (portfolioActuel?.about || {}),
+      timeline: Array.isArray(req.body.timeline) ? req.body.timeline : (portfolioActuel?.timeline || []),
+      activeSearches: Array.isArray(req.body.activeSearches) ? req.body.activeSearches : (portfolioActuel?.activeSearches || []),
+      services: Array.isArray(req.body.services) ? req.body.services : (portfolioActuel?.services || []),
+      certifications: Array.isArray(req.body.certifications) ? req.body.certifications : (portfolioActuel?.certifications || []),
+      testimonials: Array.isArray(req.body.testimonials) ? req.body.testimonials : (portfolioActuel?.testimonials || []),
+      stages: Array.isArray(req.body.stages) ? req.body.stages : (portfolioActuel?.stages || []),
+      alternances: Array.isArray(req.body.alternances) ? req.body.alternances : (portfolioActuel?.alternances || []),
+      techEvents: Array.isArray(req.body.techEvents) ? req.body.techEvents : (portfolioActuel?.techEvents || []),
+      contactMessages: Array.isArray(req.body.contactMessages) ? req.body.contactMessages : (portfolioActuel?.contactMessages || []),
+      faq: Array.isArray(req.body.faq) ? req.body.faq : (portfolioActuel?.faq || []),
+      settings: (req.body.settings !== undefined) ? req.body.settings : (portfolioActuel?.settings || {})
     };
 
     // Normaliser les photos de services (compatibilité photo/image)

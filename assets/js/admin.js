@@ -777,39 +777,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
       };
 
-      const donneesAEnvoyer = supprimerNullUndefined(donneesAEnvoyerBrut);
+      let donneesAEnvoyer = supprimerNullUndefined(donneesAEnvoyerBrut);
 
       if (options?.lightweight) {
         const certIndexAConserver = Number.isInteger(options.keepCertificationIndex) ? options.keepCertificationIndex : null;
-        if (donneesAEnvoyer.links) {
-          delete donneesAEnvoyer.links.cvFile;
-          delete donneesAEnvoyer.links.cvFileName;
-          delete donneesAEnvoyer.links.cvFileSize;
-          if (typeof donneesAEnvoyer.links.cv === 'string' && donneesAEnvoyer.links.cv.startsWith('data:')) {
-            delete donneesAEnvoyer.links.cv;
-          }
-        }
-
-        const nettoyerDocs = (items) => {
-          if (!Array.isArray(items)) return items;
-          return items.map((item) => {
-            if (!item || typeof item !== 'object') return item;
-            const copie = { ...item };
-            delete copie.docFile;
-            delete copie.docFileName;
-            delete copie.docFileSize;
-            delete copie.docPassword;
-            delete copie.docPasswordHash;
-            return copie;
-          });
-        };
-
-        donneesAEnvoyer.projects = nettoyerDocs(donneesAEnvoyer.projects);
-        donneesAEnvoyer.stages = nettoyerDocs(donneesAEnvoyer.stages);
-        donneesAEnvoyer.alternances = nettoyerDocs(donneesAEnvoyer.alternances);
-
-        if (Array.isArray(donneesAEnvoyer.certifications)) {
-          donneesAEnvoyer.certifications = donneesAEnvoyer.certifications.map((cert, index) => {
+        const certificationsNettoyees = Array.isArray(donneesAEnvoyer.certifications)
+          ? donneesAEnvoyer.certifications.map((cert, index) => {
             if (!cert || typeof cert !== 'object') return cert;
             if (certIndexAConserver !== null && index === certIndexAConserver) {
               return cert;
@@ -819,25 +792,22 @@ document.addEventListener('DOMContentLoaded', function() {
             if (typeof copie.image === 'string' && copie.image.startsWith('data:')) delete copie.image;
             if (typeof copie.document === 'string' && copie.document.startsWith('data:')) delete copie.document;
             return copie;
-          });
-        }
+          })
+          : [];
+
+        donneesAEnvoyer = {
+          certifications: certificationsNettoyees
+        };
       }
 
-      const payloadString = JSON.stringify(donneesAEnvoyer);
-      const payloadSize = payloadString.length;
-      const maxPayloadSafe = 7.5 * 1024 * 1024;
-
-      if (payloadSize > maxPayloadSafe && options?.lightweight) {
-        afficherErreur(null, 'Le fichier de certification est trop volumineux pour être publié. Réduisez la taille (≈ 6 Mo max) puis réessayez.');
-        clearTimeout(watchdog);
-        return false;
+      if (donneesAEnvoyer.personal) {
+        donneesAEnvoyer.personal = {
+          ...(donneesAEnvoyer.personal || {}),
+          fullName: typeof donneesAEnvoyer.personal?.fullName === 'string' ? donneesAEnvoyer.personal.fullName : (donneesAEnvoyer.personal?.fullName ? String(donneesAEnvoyer.personal.fullName) : ''),
+          email: typeof donneesAEnvoyer.personal?.email === 'string' ? donneesAEnvoyer.personal.email : (donneesAEnvoyer.personal?.email ? String(donneesAEnvoyer.personal.email) : ''),
+          phone: typeof donneesAEnvoyer.personal?.phone === 'string' ? donneesAEnvoyer.personal.phone : (donneesAEnvoyer.personal?.phone ? String(donneesAEnvoyer.personal.phone) : '')
+        };
       }
-      donneesAEnvoyer.personal = {
-        ...(donneesAEnvoyer.personal || {}),
-        fullName: typeof donneesAEnvoyer.personal?.fullName === 'string' ? donneesAEnvoyer.personal.fullName : (donneesAEnvoyer.personal?.fullName ? String(donneesAEnvoyer.personal.fullName) : ''),
-        email: typeof donneesAEnvoyer.personal?.email === 'string' ? donneesAEnvoyer.personal.email : (donneesAEnvoyer.personal?.email ? String(donneesAEnvoyer.personal.email) : ''),
-        phone: typeof donneesAEnvoyer.personal?.phone === 'string' ? donneesAEnvoyer.personal.phone : (donneesAEnvoyer.personal?.phone ? String(donneesAEnvoyer.personal.phone) : '')
-      };
       donneesAEnvoyer.certifications = normaliserCertificationsPourApi(donneesAEnvoyer.certifications || []);
 
       if (!cvBase64Dirty && donneesAEnvoyer.links && typeof donneesAEnvoyer.links.cvFile === 'string' && donneesAEnvoyer.links.cvFile.startsWith('data:')) {
@@ -847,6 +817,16 @@ document.addEventListener('DOMContentLoaded', function() {
         if (typeof donneesAEnvoyer.links.cv === 'string' && donneesAEnvoyer.links.cv.startsWith('data:')) {
           donneesAEnvoyer.links.cv = '/api/portfolio/cv';
         }
+      }
+
+      const payloadString = JSON.stringify(donneesAEnvoyer);
+      const payloadSize = payloadString.length;
+      const maxPayloadSafe = 11 * 1024 * 1024;
+
+      if (payloadSize > maxPayloadSafe && options?.lightweight) {
+        afficherErreur(null, 'Le fichier de certification est encore trop volumineux pour la publication. Réduisez un peu plus la taille puis réessayez.');
+        clearTimeout(watchdog);
+        return false;
       }
       
       // Log pour debug
