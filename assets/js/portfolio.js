@@ -3244,8 +3244,8 @@ document.addEventListener('DOMContentLoaded', function() {
           <div class="experience-card-header">
             <div class="experience-card-icon" style="overflow:hidden;">
               ${certPhoto ? (certPhotoEstPdf
-                ? '<span title="Document PDF" style="display:flex; align-items:center; justify-content:center; width:48px; height:48px; border-radius:12px;">📄</span>'
-                : `<img src="${certPhoto}" alt="Visuel certification" style="width:48px; height:48px; object-fit:cover; border-radius:12px;" />`
+                ? '<span title="Document PDF" style="display:flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:8px;">📄</span>'
+                : `<img src="${certPhoto}" alt="Visuel certification" style="width:28px; height:28px; object-fit:cover; border-radius:8px;" />`
               ) : '🏆'}
             </div>
             <div style="flex: 1;">

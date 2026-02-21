@@ -731,7 +731,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
       
-      const donneesAEnvoyer = {
+      const donneesAEnvoyerBrut = {
         ...mesDonneesActuelles,
         links: { ...(mesDonneesActuelles.links || {}) },
         settings: mesDonneesActuelles.settings || {
@@ -740,6 +740,51 @@ document.addEventListener('DOMContentLoaded', function() {
           analytics: { googleAnalytics: '' }
         }
       };
+
+      const supprimerNullUndefined = (value) => {
+        if (Array.isArray(value)) {
+          return value.map(supprimerNullUndefined).filter((item) => item !== undefined);
+        }
+        if (value && typeof value === 'object') {
+          const sortie = {};
+          Object.entries(value).forEach(([key, subValue]) => {
+            const nettoyee = supprimerNullUndefined(subValue);
+            if (nettoyee !== undefined) {
+              sortie[key] = nettoyee;
+            }
+          });
+          return sortie;
+        }
+        if (value === null || value === undefined) return undefined;
+        return value;
+      };
+
+      const normaliserCertificationsPourApi = (items = []) => {
+        if (!Array.isArray(items)) return [];
+        return items.map((item) => {
+          const cert = item && typeof item === 'object' ? { ...item } : {};
+          return {
+            ...cert,
+            name: typeof cert.name === 'string' ? cert.name : '',
+            issuer: typeof cert.issuer === 'string' ? cert.issuer : '',
+            date: typeof cert.date === 'string' ? cert.date : '',
+            description: typeof cert.description === 'string' ? cert.description : '',
+            link: typeof cert.link === 'string' ? cert.link : '',
+            photo: typeof cert.photo === 'string' ? cert.photo : '',
+            image: typeof cert.image === 'string' ? cert.image : '',
+            document: typeof cert.document === 'string' ? cert.document : ''
+          };
+        });
+      };
+
+      const donneesAEnvoyer = supprimerNullUndefined(donneesAEnvoyerBrut);
+      donneesAEnvoyer.personal = {
+        ...(donneesAEnvoyer.personal || {}),
+        fullName: typeof donneesAEnvoyer.personal?.fullName === 'string' ? donneesAEnvoyer.personal.fullName : (donneesAEnvoyer.personal?.fullName ? String(donneesAEnvoyer.personal.fullName) : ''),
+        email: typeof donneesAEnvoyer.personal?.email === 'string' ? donneesAEnvoyer.personal.email : (donneesAEnvoyer.personal?.email ? String(donneesAEnvoyer.personal.email) : ''),
+        phone: typeof donneesAEnvoyer.personal?.phone === 'string' ? donneesAEnvoyer.personal.phone : (donneesAEnvoyer.personal?.phone ? String(donneesAEnvoyer.personal.phone) : '')
+      };
+      donneesAEnvoyer.certifications = normaliserCertificationsPourApi(donneesAEnvoyer.certifications || []);
 
       if (!cvBase64Dirty && donneesAEnvoyer.links && typeof donneesAEnvoyer.links.cvFile === 'string' && donneesAEnvoyer.links.cvFile.startsWith('data:')) {
         delete donneesAEnvoyer.links.cvFile;
@@ -1552,7 +1597,7 @@ document.addEventListener('DOMContentLoaded', function() {
       certImagePreview.innerHTML = '';
       return;
     }
-    certImagePreview.innerHTML = `<img src="${imageSource}" alt="Badge certification" style="max-width:100%; height:auto; border-radius: 8px;" />`;
+    certImagePreview.innerHTML = `<img src="${imageSource}" alt="Badge certification" style="width:48px; height:48px; object-fit:cover; border-radius: 10px;" />`;
   }
 
   async function lireMediaCertificationBase64(input) {
