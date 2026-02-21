@@ -265,7 +265,7 @@ app.use((req, res, next) => {
 
 // Garde-fou mémoire: rejeter les payloads trop volumineux AVANT express.json
 // Important sur petites machines Fly (256MB) pour éviter les OOM pendant le parsing.
-const MAX_JSON_BODY_BYTES = Number(process.env.MAX_JSON_BODY_BYTES || (8 * 1024 * 1024)); // 8MB par défaut (anti-OOM)
+const MAX_JSON_BODY_BYTES = Number(process.env.MAX_JSON_BODY_BYTES || (12 * 1024 * 1024)); // 12MB par défaut (compromis anti-OOM + uploads)
 app.use((req, res, next) => {
   if (req.method !== 'POST' && req.method !== 'PUT' && req.method !== 'PATCH') {
     return next();
@@ -309,7 +309,7 @@ app.use((req, res, next) => {
 });
 
 // Limite JSON réduite pour stabilité mémoire sur petites instances
-// (8MB par défaut, surchargable via MAX_JSON_BODY_BYTES)
+// (12MB par défaut, surchargable via MAX_JSON_BODY_BYTES)
 const jsonLimitMb = `${Math.max(1, Math.floor(MAX_JSON_BODY_BYTES / 1024 / 1024))}mb`;
 app.use(express.json({ limit: jsonLimitMb }));
 app.use(express.urlencoded({ extended: true, limit: jsonLimitMb }));

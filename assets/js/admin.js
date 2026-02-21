@@ -780,6 +780,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const donneesAEnvoyer = supprimerNullUndefined(donneesAEnvoyerBrut);
 
       if (options?.lightweight) {
+        const certIndexAConserver = Number.isInteger(options.keepCertificationIndex) ? options.keepCertificationIndex : null;
         if (donneesAEnvoyer.links) {
           delete donneesAEnvoyer.links.cvFile;
           delete donneesAEnvoyer.links.cvFileName;
@@ -806,6 +807,30 @@ document.addEventListener('DOMContentLoaded', function() {
         donneesAEnvoyer.projects = nettoyerDocs(donneesAEnvoyer.projects);
         donneesAEnvoyer.stages = nettoyerDocs(donneesAEnvoyer.stages);
         donneesAEnvoyer.alternances = nettoyerDocs(donneesAEnvoyer.alternances);
+
+        if (Array.isArray(donneesAEnvoyer.certifications)) {
+          donneesAEnvoyer.certifications = donneesAEnvoyer.certifications.map((cert, index) => {
+            if (!cert || typeof cert !== 'object') return cert;
+            if (certIndexAConserver !== null && index === certIndexAConserver) {
+              return cert;
+            }
+            const copie = { ...cert };
+            if (typeof copie.photo === 'string' && copie.photo.startsWith('data:')) delete copie.photo;
+            if (typeof copie.image === 'string' && copie.image.startsWith('data:')) delete copie.image;
+            if (typeof copie.document === 'string' && copie.document.startsWith('data:')) delete copie.document;
+            return copie;
+          });
+        }
+      }
+
+      const payloadString = JSON.stringify(donneesAEnvoyer);
+      const payloadSize = payloadString.length;
+      const maxPayloadSafe = 7.5 * 1024 * 1024;
+
+      if (payloadSize > maxPayloadSafe && options?.lightweight) {
+        afficherErreur(null, 'Le fichier de certification est trop volumineux pour être publié. Réduisez la taille (≈ 6 Mo max) puis réessayez.');
+        clearTimeout(watchdog);
+        return false;
       }
       donneesAEnvoyer.personal = {
         ...(donneesAEnvoyer.personal || {}),
@@ -843,7 +868,7 @@ document.addEventListener('DOMContentLoaded', function() {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify(donneesAEnvoyer)
+            body: payloadString
           });
 
           const resultat = await reponse.json().catch(() => ({}));
@@ -853,7 +878,7 @@ document.addEventListener('DOMContentLoaded', function() {
               status: reponse.status,
               ok: reponse.ok,
               endpoint,
-              contentLength: JSON.stringify(donneesAEnvoyer).length
+              contentLength: payloadSize
             });
           }
 
@@ -1843,7 +1868,8 @@ document.addEventListener('DOMContentLoaded', function() {
       mesDonneesActuelles.certifications.push(cert);
     }
 
-    const sauvegardeOk = await sauvegarderSurServeur('Certification sauvegardée et publiée', { lightweight: true });
+    const indexCertification = editIndex !== null ? editIndex : (mesDonneesActuelles.certifications.length - 1);
+    const sauvegardeOk = await sauvegarderSurServeur('Certification sauvegardée et publiée', { lightweight: true, keepCertificationIndex: indexCertification });
     if (!sauvegardeOk) {
       mesDonneesActuelles.certifications = certificationsAvant;
       afficherListeCertifications();

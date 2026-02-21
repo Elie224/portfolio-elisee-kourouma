@@ -93,10 +93,10 @@
           </form>
           <div id="doc-password-block" style="display:none; margin-top: 14px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--card-bg, #0f172a);">
             <p class="muted" style="margin: 0 0 8px 0; font-size: 13px;">Déjà un code ? Saisissez-le pour télécharger.</p>
-            <div style="display:flex; gap:8px; flex-wrap: wrap;">
-              <input type="password" id="doc-password" placeholder="Code" style="flex:1; min-width: 200px; padding: 10px 12px;" />
-              <button type="button" class="btn" id="doc-password-submit">Valider le code</button>
-            </div>
+            <form id="doc-password-form" style="display:flex; gap:8px; flex-wrap: wrap;" onsubmit="return false;">
+              <input type="password" id="doc-password" placeholder="Code" style="flex:1; min-width: 200px; padding: 10px 12px;" autocomplete="current-password" />
+              <button type="submit" class="btn" id="doc-password-submit">Valider le code</button>
+            </form>
             <div id="doc-password-status" class="muted" style="min-height: 16px; font-size: 13px; margin-top:6px;"></div>
           </div>
         </div>`;
