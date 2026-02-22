@@ -453,7 +453,7 @@ router.post('/',
     const certOnlyPayload = bodyKeys.length > 0 && bodyKeys.every((key) => key === 'certifications');
 
     if (partialMode === 'certifications' || certOnlyPayload) {
-      const certifications = Array.isArray(req.body.certifications)
+      const certificationsRecues = Array.isArray(req.body.certifications)
         ? req.body.certifications.map((item) => ({
             ...(item && typeof item === 'object' ? item : {}),
             name: typeof item?.name === 'string' ? item.name : '',
@@ -466,6 +466,22 @@ router.post('/',
             document: typeof item?.document === 'string' ? item.document : ''
           }))
         : [];
+
+      const portfolioExistant = await Portfolio.findOne().select({ certifications: 1 }).lean();
+      const certificationsExistantes = Array.isArray(portfolioExistant?.certifications) ? portfolioExistant.certifications : [];
+
+      const certifications = certificationsRecues.map((item, idx) => {
+        const id = item && (item._id || item.id);
+        const existant = certificationsExistantes.find(e => e && (String(e._id) === String(id) || String(e.id) === String(id))) || certificationsExistantes[idx];
+        if (!existant) return item;
+
+        return {
+          ...item,
+          photo: item.photo || existant.photo || '',
+          image: item.image || existant.image || '',
+          document: item.document || existant.document || ''
+        };
+      });
 
       await Portfolio.findOneAndUpdate(
         {},
@@ -584,6 +600,10 @@ router.post('/',
           if (options.preserveImage && !merged.image && existant.image) {
             merged.image = existant.image;
           }
+
+          if (options.preserveDocument && !merged.document && existant.document) {
+            merged.document = existant.document;
+          }
         }
 
         return merged;
@@ -592,7 +612,7 @@ router.post('/',
 
     if (portfolioActuel) {
       updateData.projects = mergeExistingFileData(updateData.projects, portfolioActuel.projects || []);
-      updateData.certifications = mergeExistingFileData(updateData.certifications, portfolioActuel.certifications || [], { preservePhoto: true, preserveImage: true });
+      updateData.certifications = mergeExistingFileData(updateData.certifications, portfolioActuel.certifications || [], { preservePhoto: true, preserveImage: true, preserveDocument: true });
       updateData.stages = mergeExistingFileData(updateData.stages, portfolioActuel.stages || [], { preservePhoto: true });
       updateData.alternances = mergeExistingFileData(updateData.alternances, portfolioActuel.alternances || [], { preservePhoto: true });
       updateData.services = mergeExistingFileData(updateData.services, portfolioActuel.services || [], { preservePhoto: true, preserveImage: true });

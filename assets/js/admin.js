@@ -24,6 +24,19 @@ document.addEventListener('DOMContentLoaded', function() {
   const API_PRODUCTION = 'https://portfolio-backend-elisee.fly.dev/api';
   const API_PROXY = '/api';
 
+  function fusionnerItemEdition(liste, editIndex, nouvelItem) {
+    if (!Array.isArray(liste) || editIndex === null || editIndex === undefined || editIndex < 0) {
+      return nouvelItem;
+    }
+    const ancienItem = liste[editIndex];
+    if (!ancienItem || typeof ancienItem !== 'object' || !nouvelItem || typeof nouvelItem !== 'object') {
+      return nouvelItem;
+    }
+    return {
+      ...ancienItem,
+      ...nouvelItem
+    };
+  }
   function normaliserApiBase(url) {
     if (!url || typeof url !== 'string') return null;
     const propre = url.trim().replace(/\/$/, '');
@@ -1528,7 +1541,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const ancienneListeProjets = [...(mesDonneesActuelles.projects || [])];
     if (editIndex !== null) {
-      mesDonneesActuelles.projects[editIndex] = projet;
+      mesDonneesActuelles.projects[editIndex] = fusionnerItemEdition(mesDonneesActuelles.projects, editIndex, projet);
     } else {
       mesDonneesActuelles.projects.push(projet);
     }
@@ -1929,7 +1942,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     if (editIndex !== null) {
-      mesDonneesActuelles.certifications[editIndex] = cert;
+      mesDonneesActuelles.certifications[editIndex] = fusionnerItemEdition(mesDonneesActuelles.certifications, editIndex, cert);
     } else {
       mesDonneesActuelles.certifications.push(cert);
     }
@@ -2173,7 +2186,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (editIndex !== null) {
-      mesDonneesActuelles.stages[editIndex] = item;
+      mesDonneesActuelles.stages[editIndex] = fusionnerItemEdition(mesDonneesActuelles.stages, editIndex, item);
     } else {
       mesDonneesActuelles.stages.push(item);
     }
@@ -2357,7 +2370,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (editIndex !== null) {
-      mesDonneesActuelles.alternances[editIndex] = item;
+      mesDonneesActuelles.alternances[editIndex] = fusionnerItemEdition(mesDonneesActuelles.alternances, editIndex, item);
     } else {
       mesDonneesActuelles.alternances.push(item);
     }
@@ -2470,7 +2483,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const editIndex = currentEditingId;
     if (editIndex !== null) {
-      mesDonneesActuelles.techEvents[editIndex] = item;
+      mesDonneesActuelles.techEvents[editIndex] = fusionnerItemEdition(mesDonneesActuelles.techEvents, editIndex, item);
     } else {
       mesDonneesActuelles.techEvents.push(item);
     }
@@ -2590,7 +2603,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const editIndex = currentEditingId;
     if (editIndex !== null) {
-      mesDonneesActuelles.timeline[editIndex] = item;
+      mesDonneesActuelles.timeline[editIndex] = fusionnerItemEdition(mesDonneesActuelles.timeline, editIndex, item);
     } else {
       mesDonneesActuelles.timeline.push(item);
     }
@@ -2689,7 +2702,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     const editIndex = currentEditingId;
     if (editIndex !== null) {
-      mesDonneesActuelles.activeSearches[editIndex] = item;
+      mesDonneesActuelles.activeSearches[editIndex] = fusionnerItemEdition(mesDonneesActuelles.activeSearches, editIndex, item);
     } else {
       mesDonneesActuelles.activeSearches.push(item);
     }
@@ -3011,7 +3024,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     if (editIndex !== null) {
-      mesDonneesActuelles.services[editIndex] = service;
+      mesDonneesActuelles.services[editIndex] = fusionnerItemEdition(mesDonneesActuelles.services, editIndex, service);
     } else {
       mesDonneesActuelles.services.push(service);
     }
@@ -3113,7 +3126,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const editIndex = currentEditingId;
     if (editIndex !== null) {
-      mesDonneesActuelles.faq[editIndex] = item;
+      mesDonneesActuelles.faq[editIndex] = fusionnerItemEdition(mesDonneesActuelles.faq, editIndex, item);
     } else {
       mesDonneesActuelles.faq.push(item);
     }
@@ -4200,7 +4213,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const item = { text, author, role, rating, photo };
     const editIndex = currentEditingId;
     if (editIndex !== null) {
-      mesDonneesActuelles.testimonials[editIndex] = item;
+      mesDonneesActuelles.testimonials[editIndex] = fusionnerItemEdition(mesDonneesActuelles.testimonials, editIndex, item);
     } else {
       if (!mesDonneesActuelles.testimonials) mesDonneesActuelles.testimonials = [];
       mesDonneesActuelles.testimonials.push(item);
