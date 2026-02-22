@@ -451,6 +451,25 @@ router.post('/',
     const bodyKeys = Object.keys(req.body || {}).filter((key) => req.body[key] !== undefined);
     const partialMode = typeof req.query.partial === 'string' ? req.query.partial.trim().toLowerCase() : '';
     const certOnlyPayload = bodyKeys.length > 0 && bodyKeys.every((key) => key === 'certifications');
+    const aboutOnlyPayload = bodyKeys.length > 0 && bodyKeys.every((key) => key === 'about');
+
+    if (partialMode === 'about' || aboutOnlyPayload) {
+      const about = (req.body?.about && typeof req.body.about === 'object') ? req.body.about : {};
+
+      const portfolioMisAJour = await Portfolio.findOneAndUpdate(
+        {},
+        { $set: { about } },
+        { new: true, upsert: true, runValidators: false }
+      );
+
+      cachePublicPortfolio = { data: null, etag: null, ts: 0, maxAgeMs: cachePublicPortfolio.maxAgeMs };
+
+      return res.json({
+        success: true,
+        message: 'Section about mise à jour avec succès',
+        portfolio: { about: portfolioMisAJour?.about || about }
+      });
+    }
 
     if (partialMode === 'certifications' || certOnlyPayload) {
       const certificationsRecues = Array.isArray(req.body.certifications)

@@ -622,6 +622,34 @@ document.addEventListener('DOMContentLoaded', function() {
       if (reponse && reponse.ok) {
         const donnees = await reponse.json();
         mesDonneesActuelles = normaliserDonneesChargees(donnees);
+
+        const restaurerSkillsDepuisBackup = () => {
+          const skillsActuels = Array.isArray(mesDonneesActuelles.skills) ? mesDonneesActuelles.skills : [];
+          if (skillsActuels.length > 0) return false;
+
+          const sources = [
+            localStorage.getItem('portfolioDataBackup'),
+            localStorage.getItem('portfolioData')
+          ];
+
+          for (const source of sources) {
+            try {
+              const parse = source ? JSON.parse(source) : null;
+              const skillsBackup = Array.isArray(parse?.skills) ? parse.skills : [];
+              if (skillsBackup.length > 0) {
+                mesDonneesActuelles.skills = skillsBackup;
+                logWarn('♻️ Compétences restaurées depuis sauvegarde locale');
+                return true;
+              }
+            } catch (e) {
+              // ignorer source invalide
+            }
+          }
+
+          return false;
+        };
+
+        restaurerSkillsDepuisBackup();
         
         // S'assurer que les settings ont bien la structure analytics
         if (!mesDonneesActuelles.settings.analytics) {
@@ -639,6 +667,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Sauvegarder aussi dans localStorage comme backup
         localStorage.setItem('portfolioData', JSON.stringify(mesDonneesActuelles));
+        localStorage.setItem('portfolioDataBackup', JSON.stringify(mesDonneesActuelles));
         cvBase64Dirty = false;
         
         afficherToutesMesDonnees();
@@ -882,6 +911,12 @@ document.addEventListener('DOMContentLoaded', function() {
         };
       }
 
+      if (options?.partial === 'about') {
+        donneesAEnvoyer = {
+          about: donneesAEnvoyer.about || mesDonneesActuelles.about || {}
+        };
+      }
+
       if (donneesAEnvoyer.personal) {
         const personalBrut = { ...(donneesAEnvoyer.personal || {}) };
 
@@ -947,7 +982,9 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
           const endpointFinal = options?.lightweight
             ? `${endpoint}${endpoint.includes('?') ? '&' : '?'}partial=certifications`
-            : endpoint;
+            : (options?.partial === 'about'
+                ? `${endpoint}${endpoint.includes('?') ? '&' : '?'}partial=about`
+                : endpoint);
 
           const reponse = await fetch(endpointFinal, {
             method: 'POST',
@@ -1007,6 +1044,10 @@ document.addEventListener('DOMContentLoaded', function() {
                   maintenanceMessage: mesDonneesActuelles.settings?.maintenance?.message
                 });
               }
+            }
+
+            if (resultat.portfolio && resultat.portfolio.about) {
+              mesDonneesActuelles.about = resultat.portfolio.about;
             }
         
             // Sauvegarder aussi dans localStorage avec les données mises à jour
@@ -3331,7 +3372,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     };
     
-    await sauvegarderSurServeur();
+    await sauvegarderSurServeur('Descriptions sauvegardées avec succès', { partial: 'about' });
   };
   
   
@@ -3573,7 +3614,7 @@ document.addEventListener('DOMContentLoaded', function() {
       technologies: parseInt(document.getElementById('stats-technologies-display')?.value || 0)
     };
     
-    await sauvegarderSurServeur();
+    await sauvegarderSurServeur('Statistiques sauvegardées avec succès', { partial: 'about' });
   };
   
   
