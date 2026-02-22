@@ -883,12 +883,33 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       if (donneesAEnvoyer.personal) {
-        donneesAEnvoyer.personal = {
-          ...(donneesAEnvoyer.personal || {}),
-          fullName: typeof donneesAEnvoyer.personal?.fullName === 'string' ? donneesAEnvoyer.personal.fullName : (donneesAEnvoyer.personal?.fullName ? String(donneesAEnvoyer.personal.fullName) : ''),
-          email: typeof donneesAEnvoyer.personal?.email === 'string' ? donneesAEnvoyer.personal.email : (donneesAEnvoyer.personal?.email ? String(donneesAEnvoyer.personal.email) : ''),
-          phone: typeof donneesAEnvoyer.personal?.phone === 'string' ? donneesAEnvoyer.personal.phone : (donneesAEnvoyer.personal?.phone ? String(donneesAEnvoyer.personal.phone) : '')
-        };
+        const personalBrut = { ...(donneesAEnvoyer.personal || {}) };
+
+        const nomCompletSource = typeof personalBrut.fullName === 'string'
+          ? personalBrut.fullName
+          : (typeof personalBrut.name === 'string' ? personalBrut.name : '');
+        const nomComplet = (nomCompletSource || '').trim();
+        if (nomComplet.length >= 2 && nomComplet.length <= 100) {
+          personalBrut.fullName = nomComplet;
+        } else {
+          delete personalBrut.fullName;
+        }
+
+        const email = (typeof personalBrut.email === 'string' ? personalBrut.email : '').trim();
+        if (email && /^\S+@\S+\.\S+$/.test(email)) {
+          personalBrut.email = email;
+        } else {
+          delete personalBrut.email;
+        }
+
+        const phone = (typeof personalBrut.phone === 'string' ? personalBrut.phone : '').trim();
+        if (phone && phone.length <= 20) {
+          personalBrut.phone = phone;
+        } else {
+          delete personalBrut.phone;
+        }
+
+        donneesAEnvoyer.personal = personalBrut;
       }
       donneesAEnvoyer.certifications = normaliserCertificationsPourApi(donneesAEnvoyer.certifications || []);
 
