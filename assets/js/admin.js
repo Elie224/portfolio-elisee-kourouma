@@ -795,6 +795,16 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!Array.isArray(items)) return [];
         return items.map((item) => {
           const cert = item && typeof item === 'object' ? { ...item } : {};
+          const photo = typeof cert.photo === 'string' ? cert.photo : '';
+          const image = typeof cert.image === 'string' ? cert.image : '';
+          let document = typeof cert.document === 'string' ? cert.document : '';
+
+          if (!document && estSourcePdf(photo)) {
+            document = photo;
+          }
+
+          const photoNormalisee = estSourcePdf(photo) ? '' : photo;
+
           return {
             ...cert,
             name: typeof cert.name === 'string' ? cert.name : '',
@@ -802,9 +812,9 @@ document.addEventListener('DOMContentLoaded', function() {
             date: typeof cert.date === 'string' ? cert.date : '',
             description: typeof cert.description === 'string' ? cert.description : '',
             link: typeof cert.link === 'string' ? cert.link : '',
-            photo: typeof cert.photo === 'string' ? cert.photo : '',
-            image: typeof cert.image === 'string' ? cert.image : '',
-            document: typeof cert.document === 'string' ? cert.document : ''
+            photo: photoNormalisee,
+            image,
+            document
           };
         });
       };
@@ -1110,7 +1120,11 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   // Sauvegarde les infos personnelles
-  async function sauvegarderInfosPersonnelles() {
+  async function sauvegarderInfosPersonnelles(e) {
+    if (e && typeof e.preventDefault === 'function') {
+      e.preventDefault();
+    }
+
     mesDonneesActuelles.personal = {
       fullName: document.getElementById('full-name')?.value || '',
       email: document.getElementById('email')?.value || '',
@@ -1766,7 +1780,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <input type="checkbox" class="select-checkbox" data-type="certifications" data-index="${index}" onchange="toggleItemSelection('certifications', ${index}, this.checked)" />
         <h4>${cert.name || 'Certification'}</h4>
         <p class="item-meta">${cert.issuer || ''} ${cert.date ? '· ' + cert.date : ''}</p>
-        ${(cert.image || cert.photo) ? `<p class="muted" style="margin: 4px 0;">${cert.image ? '📷 Badge photo configuré' : (estSourcePdf(cert.photo) ? '📄 PDF configuré' : '📷 Photo configurée')}</p>` : ''}
+        ${(cert.image || cert.photo || cert.document) ? `<p class="muted" style="margin: 4px 0;">${cert.image ? '📷 Badge photo configuré' : (estSourcePdf(cert.photo || cert.document || '') ? '📄 PDF configuré' : '📷 Photo configurée')}</p>` : ''}
         <p class="muted">${cert.description || ''}</p>
         <div class="item-actions">
           <button class="btn-small" onclick="editCertification(${index})">Modifier</button>
@@ -1795,10 +1809,11 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('certification-id').value = editIndex;
       document.getElementById('cert-name').value = cert.name || '';
       const certPhotoUrl = document.getElementById('cert-photo-url');
-      if (certPhotoUrl) certPhotoUrl.value = cert.photo && !cert.photo.startsWith('data:') ? cert.photo : '';
+      const certMediaSource = cert.photo || cert.document || '';
+      if (certPhotoUrl) certPhotoUrl.value = certMediaSource && !certMediaSource.startsWith('data:') ? certMediaSource : '';
       const certPhotoPreview = document.getElementById('cert-photo-preview');
       if (certPhotoPreview) {
-        const certPhoto = cert.photo || cert.image || '';
+        const certPhoto = cert.photo || cert.document || cert.image || '';
         majApercuCertification(certPhoto);
       }
       const certPhotoFile = document.getElementById('cert-photo-file');
@@ -1870,16 +1885,32 @@ document.addEventListener('DOMContentLoaded', function() {
       majApercuBadgeCertification(badgeImage);
 
       if (nouvellePhotoBase64) {
-        cert.photo = nouvellePhotoBase64;
-        cert.document = estSourcePdf(nouvellePhotoBase64) ? nouvellePhotoBase64 : '';
+        if (estSourcePdf(nouvellePhotoBase64)) {
+          cert.document = nouvellePhotoBase64;
+          cert.photo = '';
+        } else {
+          cert.photo = nouvellePhotoBase64;
+          cert.document = '';
+        }
         if (photoPreview) majApercuCertification(nouvellePhotoBase64);
       } else if (photoUrl) {
-        cert.photo = photoUrl;
-        cert.document = estSourcePdf(photoUrl) ? photoUrl : '';
+        if (estSourcePdf(photoUrl)) {
+          cert.document = photoUrl;
+          cert.photo = '';
+        } else {
+          cert.photo = photoUrl;
+          cert.document = '';
+        }
         if (photoPreview) majApercuCertification(photoUrl);
       } else {
-        cert.photo = ancien.photo || '';
-        cert.document = estSourcePdf(ancien.photo) ? ancien.photo : (ancien.document || '');
+        const mediaExistant = ancien.photo || ancien.document || '';
+        if (estSourcePdf(mediaExistant)) {
+          cert.document = mediaExistant;
+          cert.photo = '';
+        } else {
+          cert.photo = ancien.photo || '';
+          cert.document = ancien.document || '';
+        }
       }
 
       if (!cert.image && cert.photo && !estSourcePdf(cert.photo)) {
@@ -4258,19 +4289,29 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Configure tous les formulaires
   function configurerFormulaires() {
+    const lierFormulaireSubmit = (form, handler) => {
+      if (!form || typeof handler !== 'function') return;
+      form.addEventListener('submit', (e) => {
+        if (e && typeof e.preventDefault === 'function') {
+          e.preventDefault();
+        }
+        handler(e);
+      });
+    };
+
     // Formulaire de connexion
     const loginForm = document.getElementById('login-form');
-    if (loginForm) loginForm.addEventListener('submit', seConnecter);
+    lierFormulaireSubmit(loginForm, seConnecter);
     
     // Formulaire infos personnelles
     const personalForm = document.getElementById('personal-info-form');
-    if (personalForm) personalForm.addEventListener('submit', sauvegarderInfosPersonnelles);
+    lierFormulaireSubmit(personalForm, sauvegarderInfosPersonnelles);
     
     // Formulaire projet
     const projectForm = document.getElementById('project-form');
     if (projectForm) {
       projectForm.noValidate = true;
-      projectForm.addEventListener('submit', sauvegarderProjet);
+      lierFormulaireSubmit(projectForm, sauvegarderProjet);
     }
     const projectDocInput = document.getElementById('project-doc-file');
     if (projectDocInput) projectDocInput.addEventListener('change', gererSelectionDocProjet);
@@ -4279,11 +4320,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Formulaire compétence
     const skillForm = document.getElementById('skill-category-form');
-    if (skillForm) skillForm.addEventListener('submit', sauvegarderCompetence);
+    lierFormulaireSubmit(skillForm, sauvegarderCompetence);
     
     // Formulaire certification
     const certForm = document.getElementById('certification-form');
-    if (certForm) certForm.addEventListener('submit', sauvegarderCertification);
+    lierFormulaireSubmit(certForm, sauvegarderCertification);
     const certPhotoUrlInput = document.getElementById('cert-photo-url');
     const certPhotoFileInput = document.getElementById('cert-photo-file');
     const certPhotoPreview = document.getElementById('cert-photo-preview');
@@ -4351,14 +4392,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Formulaire timeline
     const timelineForm = document.getElementById('timeline-form');
-    if (timelineForm) timelineForm.addEventListener('submit', sauvegarderTimeline);
+    lierFormulaireSubmit(timelineForm, sauvegarderTimeline);
 
     const activeSearchForm = document.getElementById('active-search-form');
-    if (activeSearchForm) activeSearchForm.addEventListener('submit', sauvegarderActiveSearch);
+    lierFormulaireSubmit(activeSearchForm, sauvegarderActiveSearch);
     
     // Formulaire service
     const serviceForm = document.getElementById('service-form');
-    if (serviceForm) serviceForm.addEventListener('submit', sauvegarderService);
+    lierFormulaireSubmit(serviceForm, sauvegarderService);
     const servicePhotoUrlInput = document.getElementById('service-photo-url');
     const servicePhotoFileInput = document.getElementById('service-photo-file');
     const servicePhotoPreview = document.getElementById('service-photo-preview');
@@ -4391,19 +4432,19 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Formulaire FAQ
     const faqForm = document.getElementById('faq-form');
-    if (faqForm) faqForm.addEventListener('submit', sauvegarderFAQ);
+    lierFormulaireSubmit(faqForm, sauvegarderFAQ);
     
     // Formulaire CV
     const cvForm = document.getElementById('cv-form');
-    if (cvForm) cvForm.addEventListener('submit', sauvegarderCV);
+    lierFormulaireSubmit(cvForm, sauvegarderCV);
     
     // Formulaire lien social
     const socialForm = document.getElementById('social-link-form');
-    if (socialForm) socialForm.addEventListener('submit', ajouterLienSocial);
+    lierFormulaireSubmit(socialForm, ajouterLienSocial);
     
     // Formulaire stage
     const stageForm = document.getElementById('stage-form');
-    if (stageForm) stageForm.addEventListener('submit', sauvegarderStage);
+    lierFormulaireSubmit(stageForm, sauvegarderStage);
     const stageReportInput = document.getElementById('stage-report-file');
     if (stageReportInput) {
       stageReportInput.addEventListener('change', () => {
@@ -4415,25 +4456,25 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Formulaire alternance
     const alternanceForm = document.getElementById('alternance-form');
-    if (alternanceForm) alternanceForm.addEventListener('submit', sauvegarderAlternance);
+    lierFormulaireSubmit(alternanceForm, sauvegarderAlternance);
     
     // Formulaire événement technologique
     const techEventForm = document.getElementById('tech-event-form');
-    if (techEventForm) techEventForm.addEventListener('submit', sauvegarderTechEvent);
+    lierFormulaireSubmit(techEventForm, sauvegarderTechEvent);
 
     // Formulaire témoignage
     const testimonialForm = document.getElementById('testimonial-form');
-    if (testimonialForm) testimonialForm.addEventListener('submit', sauvegarderTestimonial);
+    lierFormulaireSubmit(testimonialForm, sauvegarderTestimonial);
     
     // Formulaires Paramètres
     const accountInfoForm = document.getElementById('account-info-form');
-    if (accountInfoForm) accountInfoForm.addEventListener('submit', sauvegarderInfosCompte);
+    lierFormulaireSubmit(accountInfoForm, sauvegarderInfosCompte);
     
     const changePasswordForm = document.getElementById('change-password-form');
-    if (changePasswordForm) changePasswordForm.addEventListener('submit', changerMotDePasse);
+    lierFormulaireSubmit(changePasswordForm, changerMotDePasse);
     
     const otherInfoForm = document.getElementById('other-info-form');
-    if (otherInfoForm) otherInfoForm.addEventListener('submit', sauvegarderAutresInfos);
+    lierFormulaireSubmit(otherInfoForm, sauvegarderAutresInfos);
     
     // Bouton déconnexion
     const logoutBtn = document.getElementById('logout-btn');
