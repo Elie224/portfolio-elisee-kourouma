@@ -736,7 +736,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     const watchdog = setTimeout(() => {
       if (debugSave) {
-        console.warn('⏱️ POST /portfolio toujours en cours (5s)...', { endpoint });
+        console.warn('⏱️ POST /portfolio toujours en cours (5s)...', { endpoint: endpoints[0] });
       }
     }, 5000);
     
@@ -985,9 +985,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
       clearTimeout(watchdog);
       if (dernierStatut) {
-        afficherErreur(null, `Erreur sauvegarde (HTTP ${dernierStatut})${dernierMessage ? ` : ${dernierMessage}` : ''}`);
+        if (!options?.silentFailure) {
+          afficherErreur(null, `Erreur sauvegarde (HTTP ${dernierStatut})${dernierMessage ? ` : ${dernierMessage}` : ''}`);
+        }
       } else if (derniereErreur) {
-        afficherErreur(null, 'Impossible de sauvegarder sur le serveur');
+        if (!options?.silentFailure) {
+          const detailErreur = (typeof derniereErreur?.message === 'string' && derniereErreur.message.trim())
+            ? ` (${derniereErreur.message.trim()})`
+            : '';
+          afficherErreur(null, `Impossible de sauvegarder sur le serveur${detailErreur}`);
+        }
       }
       return false;
     } catch (erreur) {
@@ -997,7 +1004,9 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('❌ Sauvegarde non envoyée ou échouée', { endpoint: endpoints[0], erreur });
         alert('Sauvegarde bloquée avant POST: ' + (erreur?.message || erreur));
       }
-      afficherErreur(null, 'Impossible de sauvegarder sur le serveur');
+      if (!options?.silentFailure) {
+        afficherErreur(null, 'Impossible de sauvegarder sur le serveur');
+      }
       return false;
     }
   }
@@ -1910,10 +1919,21 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     const indexCertification = editIndex !== null ? editIndex : (mesDonneesActuelles.certifications.length - 1);
-    const sauvegardeOk = await sauvegarderSurServeur('Certification sauvegardée et publiée', { lightweight: true, keepCertificationIndex: indexCertification });
+    let sauvegardeOk = await sauvegarderSurServeur('Certification sauvegardée et publiée', {
+      lightweight: true,
+      keepCertificationIndex: indexCertification,
+      silentFailure: true
+    });
+
+    if (!sauvegardeOk) {
+      logWarn('⚠️ Échec sauvegarde certifications en mode léger, tentative de sauvegarde complète...');
+      sauvegardeOk = await sauvegarderSurServeur('Certification sauvegardée et publiée');
+    }
+
     if (!sauvegardeOk) {
       mesDonneesActuelles.certifications = certificationsAvant;
       afficherListeCertifications();
+      afficherErreur(null, 'Impossible de sauvegarder la certification. Réessayez dans quelques secondes.');
       return;
     }
 
@@ -1936,9 +1956,14 @@ document.addEventListener('DOMContentLoaded', function() {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette certification ?')) {
       const certificationsAvant = Array.isArray(mesDonneesActuelles.certifications) ? [...mesDonneesActuelles.certifications] : [];
       mesDonneesActuelles.certifications.splice(index, 1);
-      sauvegarderSurServeur('Certification supprimée', { lightweight: true }).then((ok) => {
+      sauvegarderSurServeur('Certification supprimée', { lightweight: true, silentFailure: true }).then(async (ok) => {
+        if (!ok) {
+          logWarn('⚠️ Échec suppression certifications en mode léger, tentative de sauvegarde complète...');
+          ok = await sauvegarderSurServeur('Certification supprimée');
+        }
         if (!ok) {
           mesDonneesActuelles.certifications = certificationsAvant;
+          afficherErreur(null, 'Impossible de supprimer la certification pour le moment.');
         }
         afficherListeCertifications();
       });
