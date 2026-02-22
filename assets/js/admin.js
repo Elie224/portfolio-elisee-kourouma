@@ -822,23 +822,8 @@ document.addEventListener('DOMContentLoaded', function() {
       let donneesAEnvoyer = supprimerNullUndefined(donneesAEnvoyerBrut);
 
       if (options?.lightweight) {
-        const certIndexAConserver = Number.isInteger(options.keepCertificationIndex) ? options.keepCertificationIndex : null;
-        const certificationsNettoyees = Array.isArray(donneesAEnvoyer.certifications)
-          ? donneesAEnvoyer.certifications.map((cert, index) => {
-            if (!cert || typeof cert !== 'object') return cert;
-            if (certIndexAConserver !== null && index === certIndexAConserver) {
-              return cert;
-            }
-            const copie = { ...cert };
-            if (typeof copie.photo === 'string' && copie.photo.startsWith('data:')) delete copie.photo;
-            if (typeof copie.image === 'string' && copie.image.startsWith('data:')) delete copie.image;
-            if (typeof copie.document === 'string' && copie.document.startsWith('data:')) delete copie.document;
-            return copie;
-          })
-          : [];
-
         donneesAEnvoyer = {
-          certifications: certificationsNettoyees
+          certifications: Array.isArray(donneesAEnvoyer.certifications) ? donneesAEnvoyer.certifications : []
         };
       }
 
