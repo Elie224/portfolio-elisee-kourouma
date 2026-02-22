@@ -1697,7 +1697,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <a href="${pdfLisible}" target="_blank" rel="noopener" class="btn-small" style="margin-top:8px; display:inline-block;">Voir le PDF</a>
       `;
     }
-    return `<img src="${mediaSource}" alt="Visuel certification" style="max-width:100%; height:auto; border-radius: 8px;" />`;
+    return `<img src="${mediaSource}" alt="Visuel certification" style="width:160px; max-width:100%; max-height:110px; object-fit:cover; border-radius: 8px;" />`;
   }
 
   function majApercuCertification(mediaSource) {
@@ -1811,7 +1811,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (certPhotoUrl) certPhotoUrl.value = certMediaSource && !certMediaSource.startsWith('data:') ? certMediaSource : '';
       const certPhotoPreview = document.getElementById('cert-photo-preview');
       if (certPhotoPreview) {
-        const certPhoto = cert.photo || cert.document || cert.image || '';
+        const certPhoto = cert.photo || cert.document || '';
         majApercuCertification(certPhoto);
       }
       const certPhotoFile = document.getElementById('cert-photo-file');
@@ -1911,10 +1911,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
 
-      if (!cert.image && cert.photo && !estSourcePdf(cert.photo)) {
-        cert.image = cert.photo;
-        majApercuBadgeCertification(cert.image);
-      }
     } catch (err) {
       if (err.message === 'CERT_MEDIA_TOO_LARGE') {
         afficherErreur(null, 'Fichier trop volumineux (max 10 Mo)');

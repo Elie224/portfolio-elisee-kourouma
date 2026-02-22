@@ -93,7 +93,8 @@ const portfolioSchema = new mongoose.Schema({
     description: String,
     link: String,
     photo: String,
-    image: String
+    image: String,
+    document: String
   }],
   stages: [{
     title: { type: String, trim: true, maxlength: 150 },
