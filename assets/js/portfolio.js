@@ -3255,9 +3255,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     container.innerHTML = certifications.map((cert, index) => {
-      const certPhoto = cert.image || cert.photo || '';
+      const certPhoto = cert.photo || cert.document || cert.image || '';
       const certPhotoEstPdf = estMediaPdf(certPhoto);
-      const documentPdf = estMediaPdf(cert.photo) ? cert.photo : '';
+      const documentPdf = estMediaPdf(cert.photo) ? cert.photo : (estMediaPdf(cert.document) ? cert.document : '');
       const lienCertificationRaw = cert.link || cert.document || documentPdf || (certPhotoEstPdf ? certPhoto : '');
       const lienCertification = estMediaPdf(lienCertificationRaw) ? urlPdfLisible(lienCertificationRaw) : lienCertificationRaw;
       return `

@@ -403,6 +403,37 @@ document.addEventListener('DOMContentLoaded', function() {
     const normaliserDonneesChargees = (donnees) => {
       const settingsBruts = donnees.settings || {};
       const analyticsId = resoudreGoogleAnalyticsId(settingsBruts);
+      const normaliserCertificationsChargees = (items = []) => {
+        const liste = normaliserCollection(items);
+        return liste.map((item) => {
+          const cert = item && typeof item === 'object' ? { ...item } : {};
+          let photo = typeof cert.photo === 'string' ? cert.photo : '';
+          let image = typeof cert.image === 'string' ? cert.image : '';
+          let document = typeof cert.document === 'string' ? cert.document : '';
+
+          if (!document && estSourcePdf(photo)) {
+            document = photo;
+            photo = '';
+          }
+
+          if (!photo && !document && image) {
+            if (estSourcePdf(image)) {
+              document = image;
+              image = '';
+            } else if (image.startsWith('data:image/') && image.length > 90000) {
+              photo = image;
+              image = '';
+            }
+          }
+
+          return {
+            ...cert,
+            photo,
+            image,
+            document
+          };
+        });
+      };
 
       return {
         personal: donnees.personal || {},
@@ -410,7 +441,7 @@ document.addEventListener('DOMContentLoaded', function() {
         skills: normaliserCollection(donnees.skills),
         timeline: normaliserCollection(donnees.timeline),
         activeSearches: normaliserCollection(donnees.activeSearches),
-        certifications: normaliserCollection(donnees.certifications),
+        certifications: normaliserCertificationsChargees(donnees.certifications),
         stages: normaliserCollection(donnees.stages),
         alternances: normaliserCollection(donnees.alternances),
         techEvents: normaliserCollection(donnees.techEvents),
@@ -808,12 +839,23 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!Array.isArray(items)) return [];
         return items.map((item) => {
           const cert = item && typeof item === 'object' ? { ...item } : {};
-          const photo = typeof cert.photo === 'string' ? cert.photo : '';
-          const image = typeof cert.image === 'string' ? cert.image : '';
+          let photo = typeof cert.photo === 'string' ? cert.photo : '';
+          let image = typeof cert.image === 'string' ? cert.image : '';
           let document = typeof cert.document === 'string' ? cert.document : '';
 
           if (!document && estSourcePdf(photo)) {
             document = photo;
+            photo = '';
+          }
+
+          if (!photo && !document && image) {
+            if (estSourcePdf(image)) {
+              document = image;
+              image = '';
+            } else if (image.startsWith('data:image/') && image.length > 90000) {
+              photo = image;
+              image = '';
+            }
           }
 
           const photoNormalisee = estSourcePdf(photo) ? '' : photo;
