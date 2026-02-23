@@ -957,6 +957,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
 
+      if (donneesAEnvoyer.links) {
+        const cvValeur = typeof donneesAEnvoyer.links.cv === 'string' ? donneesAEnvoyer.links.cv.trim() : '';
+        const cvEstPlaceholder = cvValeur === '/api/portfolio/cv' || /\/api\/portfolio\/cv$/i.test(cvValeur);
+        const cvFileValeur = typeof donneesAEnvoyer.links.cvFile === 'string' ? donneesAEnvoyer.links.cvFile : '';
+        const hasNewCvFile = cvFileValeur.startsWith('data:');
+
+        if (!hasNewCvFile && (cvEstPlaceholder || !cvValeur)) {
+          delete donneesAEnvoyer.links.cv;
+          delete donneesAEnvoyer.links.cvFile;
+          delete donneesAEnvoyer.links.cvFileName;
+          delete donneesAEnvoyer.links.cvFileSize;
+        }
+      }
+
       const payloadString = JSON.stringify(donneesAEnvoyer);
       const payloadSize = payloadString.length;
       const maxPayloadSafe = 11 * 1024 * 1024;
