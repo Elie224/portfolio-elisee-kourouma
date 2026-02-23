@@ -735,7 +735,9 @@ router.post('/',
       if (portfolioActuel && portfolioActuel.links) {
         // Si un CV base64 existe déjà et qu'aucun nouveau CV n'est fourni, conserver l'existant
         if (portfolioActuel.links.cvFile && portfolioActuel.links.cvFile.startsWith('data:')) {
-          const noNewCv = !updateData.links.cvFile && !updateData.links.cv;
+          const cvCourant = typeof updateData.links.cv === 'string' ? updateData.links.cv.trim() : '';
+          const cvApiPlaceholder = cvCourant === '/api/portfolio/cv' || /\/api\/portfolio\/cv$/i.test(cvCourant);
+          const noNewCv = !updateData.links.cvFile && (!cvCourant || cvApiPlaceholder);
           if (noNewCv) {
             updateData.links.cvFile = portfolioActuel.links.cvFile;
             updateData.links.cv = '/api/portfolio/cv';
