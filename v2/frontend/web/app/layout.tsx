@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Sora, Space_Mono } from "next/font/google";
-import Link from "next/link";
 import Script from "next/script";
 import MaintenanceGuard from "@/app/components/maintenance-guard";
+import SiteNav from "@/app/components/site-nav";
 import { getPortfolioContent } from "@/lib/portfolio-content-store";
 import "./globals.css";
 
@@ -66,18 +66,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         ) : null}
         <div className="page-bg" aria-hidden="true" />
         <header className="site-shell">
-          <nav className="top-nav">
-            <Link href="/" className="brand">
-              Mon Portfolio
-            </Link>
-            <div className="nav-links">
-              {links.map((item) => (
-                <Link key={item.href} href={item.href}>
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          </nav>
+          <SiteNav links={links} />
         </header>
 
         <MaintenanceGuard
