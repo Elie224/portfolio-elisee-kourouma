@@ -126,9 +126,10 @@ function resolveD1Binding(): D1Like | null {
     DB?: D1Like;
     env?: { DB?: D1Like };
     __env?: { DB?: D1Like };
+    cloudflare?: { env?: { DB?: D1Like } };
   };
 
-  return g.DB ?? g.env?.DB ?? g.__env?.DB ?? null;
+  return g.DB ?? g.env?.DB ?? g.__env?.DB ?? g.cloudflare?.env?.DB ?? null;
 }
 
 function normalize(input: unknown): PortfolioContent {
@@ -219,13 +220,16 @@ async function ensureD1Table(db: D1Like): Promise<void> {
 }
 
 async function readLocal(): Promise<PortfolioContent> {
-  await mkdir(DATA_DIR, { recursive: true });
+  await mkdir(DATA_DIR, { recursive: true }).catch(() => undefined);
   try {
     const raw = await readFile(STORE_FILE, "utf8");
     return normalize(JSON.parse(raw));
   } catch {
     const seeded = structuredClone(defaultContent);
-    await writeFile(STORE_FILE, JSON.stringify(seeded, null, 2), "utf8");
+    // Workers can run without writable local filesystem; keep runtime alive with defaults.
+    await writeFile(STORE_FILE, JSON.stringify(seeded, null, 2), "utf8").catch(
+      () => undefined,
+    );
     return seeded;
   }
 }

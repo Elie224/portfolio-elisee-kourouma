@@ -61,9 +61,10 @@ function resolveD1Binding(): D1Like | null {
     DB?: D1Like;
     env?: { DB?: D1Like };
     __env?: { DB?: D1Like };
+    cloudflare?: { env?: { DB?: D1Like } };
   };
 
-  return g.DB ?? g.env?.DB ?? g.__env?.DB ?? null;
+  return g.DB ?? g.env?.DB ?? g.__env?.DB ?? g.cloudflare?.env?.DB ?? null;
 }
 
 function toSlug(value: string): string {
@@ -95,7 +96,7 @@ function normalizeStore(input: unknown): ProjectsStoreShape {
 }
 
 async function ensureLocalStore(): Promise<ProjectsStoreShape> {
-  await mkdir(DATA_DIR, { recursive: true });
+  await mkdir(DATA_DIR, { recursive: true }).catch(() => undefined);
   try {
     const raw = await readFile(STORE_FILE, "utf8");
     const store = normalizeStore(JSON.parse(raw));
@@ -105,7 +106,10 @@ async function ensureLocalStore(): Promise<ProjectsStoreShape> {
   }
 
   const seeded: ProjectsStoreShape = { projects: [...projectCatalog] };
-  await writeFile(STORE_FILE, JSON.stringify(seeded, null, 2), "utf8");
+  // Workers can run without writable local filesystem; return seeded data if write fails.
+  await writeFile(STORE_FILE, JSON.stringify(seeded, null, 2), "utf8").catch(
+    () => undefined,
+  );
   return seeded;
 }
 
