@@ -21,11 +21,10 @@ export default async function ProjectsPage() {
     <>
       <BackBar />
       <section className="hero">
-        <p className="hero-kicker">Work</p>
-        <h1>Selected Projects</h1>
+        <h1>Projets & expériences</h1>
         <p>
-          Une vue d&apos;ensemble des projets produits, data et IA, avec contexte,
-          decisions techniques et resultats.
+          Produits web et IA conçus avec une approche orientée impact : rapides,
+          sécurisés et maintenables de bout en bout.
         </p>
       </section>
 

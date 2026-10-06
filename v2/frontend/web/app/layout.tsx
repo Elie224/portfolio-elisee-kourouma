@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Sora, Space_Mono } from "next/font/google";
+import Link from "next/link";
 import Script from "next/script";
 import MaintenanceGuard from "@/app/components/maintenance-guard";
-import SiteNav from "@/app/components/site-nav";
 import { getPortfolioContent } from "@/lib/portfolio-content-store";
 import "./globals.css";
 
@@ -34,6 +34,15 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+const links = [
+  { href: "/", label: "Accueil" },
+  { href: "/about", label: "À propos" },
+  { href: "/projects", label: "Projets" },
+  { href: "/services", label: "Mes services" },
+  { href: "/reports", label: "Mes rapports" },
+  { href: "/contact", label: "Contact" },
+];
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const content = await getPortfolioContent();
   const gaId = content.seo.gaId.trim();
@@ -57,7 +66,18 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         ) : null}
         <div className="page-bg" aria-hidden="true" />
         <header className="site-shell">
-          <SiteNav linkedin={content.links.linkedin} github={content.links.github} />
+          <nav className="top-nav">
+            <Link href="/" className="brand">
+              Mon Portfolio
+            </Link>
+            <div className="nav-links">
+              {links.map((item) => (
+                <Link key={item.href} href={item.href}>
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </nav>
         </header>
 
         <MaintenanceGuard
@@ -69,10 +89,25 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </MaintenanceGuard>
 
         <footer className="site-shell footer">
-          <span>{content.personal.name || "Mon Portfolio"}</span>
-          <span aria-hidden="true">/</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M11 2v20" />
+            <path d="M2 11h20" />
+          </svg>
+          <span>© Mon Portfolio</span>
+          <span aria-hidden="true">·</span>
           <span>{new Date().getFullYear()}</span>
-          <span aria-hidden="true">/</span>
+          <span aria-hidden="true">·</span>
           <span>Psaume 23</span>
         </footer>
       </body>

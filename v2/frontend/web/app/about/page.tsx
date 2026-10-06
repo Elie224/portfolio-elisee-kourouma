@@ -18,19 +18,33 @@ export default async function AboutPage() {
   return (
     <>
       <BackBar />
-      <section className="hero split-hero">
-        <div className="hero-copy">
-          <p className="hero-kicker">About</p>
-          <h1>Profil et parcours</h1>
-          <p>{content.about.description}</p>
-          <div className="stat-strip">
-            <span>{content.timeline.length || 1} etapes</span>
-            <span>{content.certifications.length} certifications</span>
-            <span>{content.testimonials.length} temoignages</span>
-          </div>
+      <section className="hero">
+        <h1>Profil & parcours</h1>
+        <p>{content.about.description}</p>
+      </section>
+
+      <section className="section">
+        <h2>En quelques chiffres</h2>
+        <div className="grid grid-3">
+          <article className="card">
+            <h3>Projets livres</h3>
+            <p>10+</p>
+          </article>
+          <article className="card">
+            <h3>Annees d&apos;experience</h3>
+            <p>2+</p>
+          </article>
+          <article className="card">
+            <h3>Technologies maîtrisées</h3>
+            <p>10+</p>
+          </article>
         </div>
+      </section>
+
+      <section className="section">
         <article className="card">
-          <h3>Identite</h3>
+          <h2>Qui suis-je ?</h2>
+          <p>{content.about.description}</p>
           {content.personal.currentEducation ? (
             <p>
               <strong>Formation actuelle:</strong> {content.personal.currentEducation}
@@ -55,10 +69,7 @@ export default async function AboutPage() {
       </section>
 
       <section className="section">
-        <div className="section-heading">
-          <h2>Temoignages</h2>
-          <p>Perception terrain sur la collaboration et l&apos;execution.</p>
-        </div>
+        <h2>Temoignages</h2>
         <div className="grid grid-2">
           {content.testimonials.length === 0 ? (
             <article className="card">
@@ -79,20 +90,17 @@ export default async function AboutPage() {
       </section>
 
       <section className="section">
-        <div className="section-heading">
-          <h2>Experience timeline</h2>
-          <p>Les etapes marquantes de mon parcours.</p>
-        </div>
-        <div className="timeline-list">
+        <h2>Mon parcours</h2>
+        <div className="grid">
           {content.timeline.length === 0 ? (
             <article className="card">
-              <p>Aucun element de parcours pour le moment.</p>
+              <p>Aucun élément de parcours pour le moment.</p>
             </article>
           ) : (
             content.timeline.map((item, index) => (
               <article className="card" key={`${item.title}-${index}`}>
                 <h3>{item.title}</h3>
-                {item.date ? <p className="muted">{item.date}</p> : null}
+                {item.date ? <p>{item.date}</p> : null}
                 {item.description ? <p>{item.description}</p> : null}
               </article>
             ))
@@ -100,61 +108,19 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      <section className="section two-col">
-        <article>
-          <h2>Certifications</h2>
-          <div className="grid grid-2">
-            {content.certifications.length === 0 ? (
-              <article className="card">
-                <p>Aucune certification renseignee.</p>
-              </article>
-            ) : (
-              content.certifications.map((item, index) => (
-                <article className="card" key={`${item.name}-${index}`}>
-                  <h3>{item.name}</h3>
-                  {item.issuer ? <p>{item.issuer}</p> : null}
-                  {item.date ? <p className="muted">{item.date}</p> : null}
-                </article>
-              ))
-            )}
-          </div>
-        </article>
-
-        <article>
-          <h2>Stages et alternances</h2>
-          <div className="grid">
-            {[...content.stages, ...content.alternances].length === 0 ? (
-              <article className="card">
-                <p>Aucune experience renseignee.</p>
-              </article>
-            ) : (
-              [...content.stages, ...content.alternances].map((item, index) => (
-                <article className="card" key={`${item.title}-${index}`}>
-                  <h3>{item.title}</h3>
-                  {item.company ? <p>{item.company}</p> : null}
-                  {item.period ? <p className="muted">{item.period}</p> : null}
-                </article>
-              ))
-            )}
-          </div>
-        </article>
-      </section>
-
       <section className="section">
-        <div className="section-heading">
-          <h2>FAQ</h2>
-          <p>Questions frequentes autour de mon profil et de ma methode de travail.</p>
-        </div>
-        <div className="grid">
-          {content.faq.length === 0 ? (
+        <h2>Certifications</h2>
+        <div className="grid grid-2">
+          {content.certifications.length === 0 ? (
             <article className="card">
-              <p>Aucune question frequente renseignee.</p>
+              <p>Aucune certification renseignée.</p>
             </article>
           ) : (
-            content.faq.map((item, index) => (
-              <article className="card" key={`${item.question}-${index}`}>
-                <h3>{item.question}</h3>
-                <p>{item.answer}</p>
+            content.certifications.map((item, index) => (
+              <article className="card" key={`${item.name}-${index}`}>
+                <h3>{item.name}</h3>
+                {item.issuer ? <p>{item.issuer}</p> : null}
+                {item.date ? <p>{item.date}</p> : null}
               </article>
             ))
           )}
@@ -162,39 +128,78 @@ export default async function AboutPage() {
       </section>
 
       <section className="section">
-        <h2>En quelques chiffres</h2>
-        <div className="grid grid-3">
-          <article className="card">
-            <h3>Projets livres</h3>
-            <p>10+</p>
-          </article>
-          <article className="card">
-            <h3>Annees d&apos;experience</h3>
-            <p>2+</p>
-          </article>
-          <article className="card">
-            <h3>Technologies maîtrisées</h3>
-            <p>10+</p>
-          </article>
+        <h2>Stages</h2>
+        <p>Demandes de code et telechargements pour les stages realises.</p>
+        <div className="grid grid-2">
+          {content.stages.length === 0 ? (
+            <article className="card">
+              <p>Aucun stage renseigné.</p>
+            </article>
+          ) : (
+            content.stages.map((item, index) => (
+              <article className="card" key={`${item.title}-${index}`}>
+                <h3>{item.title}</h3>
+                {item.company ? <p>{item.company}</p> : null}
+                {item.period ? <p>{item.period}</p> : null}
+              </article>
+            ))
+          )}
         </div>
       </section>
 
       <section className="section">
-        <div className="section-heading">
-          <h2>Evenements technologiques</h2>
-          <p>Veille, participation et immersion dans l&apos;ecosysteme tech.</p>
+        <h2>Alternances</h2>
+        <p>Demandes de code et telechargements pour les alternances.</p>
+        <div className="grid grid-2">
+          {content.alternances.length === 0 ? (
+            <article className="card">
+              <p>Aucune alternance renseignée.</p>
+            </article>
+          ) : (
+            content.alternances.map((item, index) => (
+              <article className="card" key={`${item.title}-${index}`}>
+                <h3>{item.title}</h3>
+                {item.company ? <p>{item.company}</p> : null}
+                {item.period ? <p>{item.period}</p> : null}
+              </article>
+            ))
+          )}
         </div>
+      </section>
+
+      <section className="section">
+        <h2>Événements technologiques</h2>
+        <p>Veille, participation et immersion dans l&apos;écosystème tech.</p>
         <div className="grid grid-2">
           {content.techEvents.length === 0 ? (
             <article className="card">
-              <p>Aucun evenement renseigne.</p>
+              <p>Aucun événement renseigné.</p>
             </article>
           ) : (
             content.techEvents.map((item, index) => (
               <article className="card" key={`${item.name}-${index}`}>
                 <h3>{item.name}</h3>
                 {item.location ? <p>{item.location}</p> : null}
-                {item.date ? <p className="muted">{item.date}</p> : null}
+                {item.date ? <p>{item.date}</p> : null}
+              </article>
+            ))
+          )}
+        </div>
+      </section>
+
+      <section className="section">
+        <h2>FAQ</h2>
+        <p>Les réponses aux questions les plus fréquentes.</p>
+        <div className="grid">
+          {content.faq.length === 0 ? (
+            <article className="card">
+              <p>Aucune question fréquente renseignée.</p>
+            </article>
+          ) : (
+            content.faq.map((item, index) => (
+              <article className="card" key={`${item.question}-${index}`}>
+                <h3>{item.question}</h3>
+                <p>{item.answer}</p>
               </article>
             ))
           )}
