@@ -1,0 +1,17 @@
+{
+  "name": "portfelio-v2",
+  "private": true,
+  "packageManager": "pnpm@10.4.1",
+  "scripts": {
+    "dev": "pnpm --filter web dev",
+    "build": "pnpm --filter web build",
+    "build:cloudflare": "pnpm --filter web build:cloudflare",
+    "start": "pnpm --filter web start",
+    "cf:preview": "pnpm --filter web cf:preview",
+    "cf:deploy": "pnpm --filter web cf:deploy",
+    "cf:d1:migrate:local": "pnpm --filter web exec wrangler d1 migrations apply DB --local",
+    "cf:d1:migrate:remote": "pnpm --filter web exec wrangler d1 migrations apply DB --remote",
+    "lint": "pnpm --filter web lint",
+    "typecheck": "pnpm --filter web exec tsc --noEmit"
+  }
+}

@@ -1,0 +1,22 @@
+name = "portfolio-v2-web"
+main = ".open-next/worker.js"
+compatibility_date = "2026-10-05"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "portfolio-v2-db"
+database_id = "REPLACE_WITH_PROD_DATABASE_ID"
+migrations_dir = "../../backend/db/migrations"
+# preview_database_id = "REPLACE_WITH_PREVIEW_DATABASE_ID"
+
+[[r2_buckets]]
+binding = "PROJECT_IMAGES_BUCKET"
+bucket_name = "replace-with-project-images-bucket"
+
+[vars]
+APP_NAME = "portfolio-v2"

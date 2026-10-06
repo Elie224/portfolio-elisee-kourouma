@@ -1,0 +1,11 @@
+{
+  "name": "@portfelio/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "migrate:local": "pnpm --filter web exec wrangler d1 migrations apply DB --local",
+    "migrate:remote": "pnpm --filter web exec wrangler d1 migrations apply DB --remote"
+  }
+}

@@ -1,0 +1,36 @@
+# fly.toml app configuration file generated for portfolio-backend-elisee on 2026-01-26T00:02:24+01:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'portfolio-backend-elisee'
+primary_region = 'cdg'
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  NODE_ENV = 'production'
+  PORT = '3000'
+  MAX_JSON_BODY_BYTES = '12582912'
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = 'off'
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ['app']
+
+  [[http_service.checks]]
+    interval = '30s'
+    timeout = '10s'
+    grace_period = '30s'
+    method = 'GET'
+    path = '/health'
+
+[[vm]]
+  memory = '512mb'
+  cpus = 2
+  memory_mb = 512
+  swap_size_mb = 512

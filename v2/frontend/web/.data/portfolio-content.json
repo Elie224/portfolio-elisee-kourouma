@@ -1,0 +1,128 @@
+{
+  "personal": {
+    "name": "Nema Elisee Kourouma",
+    "title": "Produit · IA · Web  ",
+    "subtitle": "Master 2 en Intelligence Artificielle · Ecole Superieure d'Informatique de Paris",
+    "fullName": "Nema Elisee Kourouma",
+    "email": "kouroumaelisee@gmail.com",
+    "phone": "",
+    "currentEducation": "",
+    "previousEducation": "",
+    "photo": "/images/profile-photo.jpeg"
+  },
+  "about": {
+    "description": "Issu d'une formation en mathematiques et informatique (USMBA Fes), je developpe une forte appetence pour les produits data et l'intelligence artificielle. J'aime transformer des idees en solutions concretes, utiles et orientees impact."
+  },
+  "links": {
+    "email": "kouroumaelisee@gmail.com",
+    "cvUrl": "/assets/CV.pdf",
+    "linkedin": "https://www.linkedin.com/in/nema-elisee-kourouma-99b088320",
+    "github": ""
+  },
+  "skills": [
+    {
+      "name": "Python",
+      "level": "Avance"
+    },
+    {
+      "name": "React / Next.js",
+      "level": "Intermediaire"
+    },
+    {
+      "name": "SQL / PostgreSQL",
+      "level": "Avance"
+    }
+  ],
+  "timeline": [
+    {
+      "title": "Master 2 Intelligence Artificielle",
+      "date": "2025 - en cours",
+      "description": "Ecole Superieure d'Informatique de Paris"
+    },
+    {
+      "title": "Licence Mathematiques et Informatique",
+      "date": "USMBA Fes",
+      "description": "Fondations en algorithmique, modelisation et data"
+    }
+  ],
+  "activeSearches": [
+    {
+      "title": "Alternance Data / IA",
+      "status": "Disponible a partir de maintenant"
+    }
+  ],
+  "certifications": [
+    {
+      "name": "Machine Learning Specialization",
+      "issuer": "Coursera",
+      "date": "2025"
+    }
+  ],
+  "stages": [
+    {
+      "title": "Stage Data Engineering",
+      "company": "Entreprise partenaire",
+      "period": "2024"
+    }
+  ],
+  "alternances": [
+    {
+      "title": "Alternance IA appliquee",
+      "company": "Organisation en transformation data",
+      "period": "2025 - 2026"
+    }
+  ],
+  "techEvents": [
+    {
+      "name": "Meetup Data & IA",
+      "date": "2026",
+      "location": "Paris"
+    }
+  ],
+  "testimonials": [],
+  "services": {
+    "proposed": [
+      "Audit Data/IA et cadrage d'architecture",
+      "Conception d'API et applications web metier",
+      "Industrialisation de pipelines data"
+    ],
+    "delivered": [
+      "Migration SQL Server vers PostgreSQL",
+      "Mise en place de dashboards Metabase"
+    ],
+    "inProgress": [
+      "Automatisations intelligentes orientees operations",
+      "Outillage IA pour processus documentaires"
+    ]
+  },
+  "faq": [
+    {
+      "question": "Quels types de missions recherchez-vous ?",
+      "answer": "Principalement des missions IA, data engineering et automatisation metier."
+    },
+    {
+      "question": "Travaillez-vous en equipe produit ?",
+      "answer": "Oui, avec une approche orientee impact, qualite et maintenabilite."
+    }
+  ],
+  "reports": [
+    "EBP vers PostgreSQL: retour d'experience et architecture cible",
+    "Mise en place d'un systeme multi-agents pour productivite metier",
+    "Dashboards financiers avec PostgreSQL et Metabase"
+  ],
+  "seo": {
+    "title": "Nema Elisee Kourouma - Portfolio V2",
+    "description": "Portfolio V2 refondu avec Next.js, TypeScript et App Router.",
+    "keywords": "portfolio,data,ia,web",
+    "gaId": ""
+  },
+  "settings": {
+    "maintenanceMode": false,
+    "maintenanceMessage": "Le site est temporairement en maintenance. Merci de revenir plus tard.",
+    "allowContact": true
+  },
+  "account": {
+    "adminEmail": "admin@portfolio.local",
+    "note": ""
+  }
+}

@@ -1,0 +1,8 @@
+# Dev variables for Cloudflare worker runtime (copy to .dev.vars)
+APP_NAME=portfolio-v2
+# Optional: point to a local/preview DB id if needed by your workflow
+# DB=...
+# Optional: image bucket binding used by /api/admin/uploads/project-image
+# PROJECT_IMAGES_BUCKET=...
+# Optional: public base URL used to return CDN links when R2 upload succeeds
+# PROJECT_IMAGES_PUBLIC_BASE_URL=https://cdn.example.com

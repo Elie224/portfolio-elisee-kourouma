@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /admin
+Disallow: /app/
+Disallow: /api/portfolio/admin
+Disallow: /api/portfolio/login
+Disallow: /api/portfolio/auth/
+
+# Securite : empeche l indexation des pages d admin
+# Les pages d admin ont aussi <meta name="robots" content="noindex,nofollow">
+
+Sitemap: https://elisee-kourouma.fr/sitemap.xml
