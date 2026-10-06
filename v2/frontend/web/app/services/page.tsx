@@ -19,15 +19,20 @@ export default async function ServicesPage() {
     <>
       <BackBar />
       <section className="hero">
-        <h1>Mes services</h1>
+        <p className="hero-kicker">Stack</p>
+        <h1>Services et expertise</h1>
         <p>
           J&apos;accompagne les entreprises, porteurs de projet et equipes sur des
-          besoins concrets en IA, data et developpement web.
+          besoins concrets en IA, data et developpement web avec une execution
+          claire, mesuree et orientee resultat.
         </p>
       </section>
 
       <section className="section">
-        <h2>Services que je propose</h2>
+        <div className="section-heading">
+          <h2>Ce que je propose</h2>
+          <p>Interventions possibles en cadrage, implementation et delivery.</p>
+        </div>
         <div className="grid grid-3">
           {services.proposed.map((item) => (
             <article className="card" key={item}>
@@ -38,7 +43,10 @@ export default async function ServicesPage() {
       </section>
 
       <section className="section">
-        <h2>Service livré</h2>
+        <div className="section-heading">
+          <h2>Deja livre</h2>
+          <p>References realisees sur des contextes techniques differents.</p>
+        </div>
         <div className="grid grid-3">
           {services.delivered.map((item) => (
             <article className="card" key={item}>
@@ -49,7 +57,10 @@ export default async function ServicesPage() {
       </section>
 
       <section className="section">
-        <h2>Service en cours</h2>
+        <div className="section-heading">
+          <h2>En cours</h2>
+          <p>Travaux actifs et pistes d&apos;amelioration en progression.</p>
+        </div>
         <div className="grid grid-3">
           {services.inProgress.map((item) => (
             <article className="card" key={item}>

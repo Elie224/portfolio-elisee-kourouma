@@ -20,7 +20,8 @@ export default async function ReportsPage() {
     <>
       <BackBar />
       <section className="hero">
-        <h1>Mes rapports</h1>
+        <p className="hero-kicker">Reports</p>
+        <h1>Rapports academiques et techniques</h1>
         <p>
           Rapports de stage et d&apos;alternance disponibles sur demande. Chaque
           document est protégé par un code partagé uniquement aux personnes
@@ -29,8 +30,11 @@ export default async function ReportsPage() {
       </section>
 
       <section className="section">
+        <div className="section-heading">
+          <h2>Acces protege</h2>
+          <p>Chaque document suit un workflow de validation simple et securise.</p>
+        </div>
         <article className="card">
-          <h3>Accès protégé</h3>
           <p>
             1) Demandez le code via le bouton dédié. 2) Saisissez le code reçu
             pour télécharger le rapport. Les demandes sont envoyées directement
@@ -47,7 +51,10 @@ export default async function ReportsPage() {
       <ReportsClient stages={content.stages} alternances={content.alternances} />
 
       <section className="section">
-        <h2>Autres publications</h2>
+        <div className="section-heading">
+          <h2>Autres publications</h2>
+          <p>Contenus complementaires disponibles en lecture.</p>
+        </div>
         <div className="grid">
           {reports.map((item) => (
             <article className="card" key={item}>

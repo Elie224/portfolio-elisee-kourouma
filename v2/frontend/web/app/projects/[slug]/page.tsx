@@ -51,6 +51,7 @@ export default async function ProjectDetailPage({
     content.personal.name,
     content.links.linkedin || undefined,
   );
+  const publishedDate = new Date(project.publishedAt).toLocaleDateString("fr-FR");
 
   return (
     <>
@@ -59,25 +60,73 @@ export default async function ProjectDetailPage({
         dangerouslySetInnerHTML={{ __html: projectJsonLd }}
       />
       <BackBar fallbackHref="/projects" />
-      <section className="hero">
-        <p>{project.type}</p>
-        <h1>{project.title}</h1>
+
+      <section className="hero split-hero">
+        <div className="hero-copy">
+          <p className="hero-kicker">Case Study / {project.type}</p>
+          <h1>{project.title}</h1>
+          <p>{project.summary}</p>
+          <div className="stat-strip">
+            <span>Publie le {publishedDate}</span>
+            <span>{project.featured ? "Projet en vedette" : "Projet archive"}</span>
+          </div>
+        </div>
+
         {project.imageUrl ? (
-          <div style={{ margin: "0.8rem 0" }}>
+          <div className="hero-portrait">
             <SafeProjectImage
               src={project.imageUrl}
               alt={`Image ${project.title}`}
               style={{ width: "100%", maxHeight: "360px", objectFit: "cover", borderRadius: "0.8rem" }}
             />
           </div>
-        ) : null}
-        <p>{project.summary}</p>
-        <p>Publie le {project.publishedAt}</p>
+        ) : (
+          <div className="hero-portrait">
+            <div className="portrait-frame portrait-placeholder">Projet</div>
+          </div>
+        )}
       </section>
 
       <section className="section">
-        <h2>Stack</h2>
-        <p>{project.stack.join(" · ")}</p>
+        <div className="section-heading">
+          <h2>Contexte et execution</h2>
+          <p>Structure d&apos;intervention du besoin jusqu&apos;au resultat.</p>
+        </div>
+        <div className="case-grid">
+          <article className="card case-section">
+            <h3>Probleme</h3>
+            <p>{project.summary}</p>
+          </article>
+          <article className="card case-section">
+            <h3>Approche</h3>
+            <p>
+              Conception d&apos;une architecture orientee impact, avec priorite sur la
+              fiabilite, la maintenabilite et le delai de livraison.
+            </p>
+          </article>
+          <article className="card case-section">
+            <h3>Resultat</h3>
+            <p>
+              Solution operationnelle livree, documentee et exploitable, avec une
+              trajectoire claire pour les iterations suivantes.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="section-heading">
+          <h2>Stack et ressources</h2>
+          <p>Technologies utilisees et liens associes.</p>
+        </div>
+        <div className="chip-list">
+          {project.stack.map((item) => (
+            <span key={item} className="chip">
+              {item}
+            </span>
+          ))}
+        </div>
+
         <div className="cta-row">
           {project.liveUrl ? (
             <a href={project.liveUrl} target="_blank" rel="noopener noreferrer" className="btn primary">

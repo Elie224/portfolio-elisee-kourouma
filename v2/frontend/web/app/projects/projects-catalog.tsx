@@ -164,9 +164,12 @@ export default function ProjectsCatalog({ projects }: ProjectsCatalogProps) {
 
   return (
     <section className="section">
-      <h2>Catalogue des projets</h2>
+      <div className="section-heading">
+        <h2>Catalogue complet</h2>
+        <p>Filtre, trie et ouvre chaque projet en mode detail.</p>
+      </div>
 
-      <div className="grid grid-3" style={{ marginBottom: "1rem" }}>
+      <div className="grid grid-3 section-gap-sm">
         <article className="card stats-card">
           <p>Projets au total</p>
           <strong>{projects.length}</strong>
@@ -181,37 +184,27 @@ export default function ProjectsCatalog({ projects }: ProjectsCatalogProps) {
         </article>
       </div>
 
-      <div className="grid project-filters-panel" style={{ marginBottom: "1rem" }}>
+      <div className="project-filters-panel section-gap-sm">
         <div>
           <h3>Recherche et filtres</h3>
           <p className="filters-help">
             Combine recherche, type et tri pour cibler precisement les projets publies.
           </p>
         </div>
+
         <div className="grid grid-3">
           <input
             type="text"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Rechercher un projet, une technologie..."
-            style={{
-              width: "100%",
-              border: "1px solid var(--line)",
-              borderRadius: "0.75rem",
-              padding: "0.7rem 0.8rem",
-              background: "#fff",
-            }}
+            className="control"
           />
 
           <select
             value={typeFilter}
             onChange={(event) => setTypeFilter(event.target.value as ProjectType | "")}
-            style={{
-              border: "1px solid var(--line)",
-              borderRadius: "0.75rem",
-              padding: "0.7rem 0.8rem",
-              background: "#fff",
-            }}
+            className="control"
           >
             <option value="">Tous les types</option>
             {availableTypes.map((type) => (
@@ -224,12 +217,7 @@ export default function ProjectsCatalog({ projects }: ProjectsCatalogProps) {
           <select
             value={sortMode}
             onChange={(event) => setSortMode(event.target.value as SortMode)}
-            style={{
-              border: "1px solid var(--line)",
-              borderRadius: "0.75rem",
-              padding: "0.7rem 0.8rem",
-              background: "#fff",
-            }}
+            className="control"
           >
             <option value="default">Trier par défaut</option>
             <option value="featured">En vedette</option>
@@ -238,7 +226,7 @@ export default function ProjectsCatalog({ projects }: ProjectsCatalogProps) {
           </select>
         </div>
 
-        <div className="cta-row" style={{ marginTop: "0.3rem" }}>
+        <div className="cta-row section-gap-xs">
           <button type="button" className="btn" onClick={clearFilters}>
             Effacer
           </button>
@@ -249,13 +237,13 @@ export default function ProjectsCatalog({ projects }: ProjectsCatalogProps) {
           >
             {viewMode === "grid" ? "Vue liste" : "Vue grille"}
           </button>
-          <p style={{ margin: "0.7rem 0 0", fontSize: "0.92rem" }}>
+          <p className="filters-counter">
             {filteredProjects.length} projet(s) trouve(s)
           </p>
         </div>
 
         {(search || typeFilter || sortMode !== "default") && (
-          <div className="cta-row" style={{ marginTop: "0.2rem" }}>
+          <div className="cta-row section-gap-xs">
             <span className="filter-active-label">Filtres actifs:</span>
             {search ? <span className="btn">Recherche: {search}</span> : null}
             {typeFilter ? <span className="btn">Type: {typeFilter}</span> : null}
@@ -277,7 +265,7 @@ export default function ProjectsCatalog({ projects }: ProjectsCatalogProps) {
           {filteredProjects.map((project) => (
             <article className="card" key={project.slug}>
               {project.imageUrl || project.thumbnailUrl ? (
-                <div style={{ marginBottom: "0.75rem" }}>
+                <div className="section-gap-xs">
                   <SafeProjectImage
                     src={project.thumbnailUrl || project.imageUrl}
                     alt={`Image ${project.title}`}
@@ -285,10 +273,10 @@ export default function ProjectsCatalog({ projects }: ProjectsCatalogProps) {
                   />
                 </div>
               ) : null}
-              <p>{project.type}</p>
+              <p className="muted">{project.type}</p>
               <h3>{project.title}</h3>
               <p>{project.summary}</p>
-              <p>{project.stack.join(" · ")}</p>
+              <p className="muted">{project.stack.join(" / ")}</p>
               <div className="cta-row">
                 <Link href={`/projects/${project.slug}`} className="btn">
                   Voir le projet

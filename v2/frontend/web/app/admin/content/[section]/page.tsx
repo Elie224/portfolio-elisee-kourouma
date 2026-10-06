@@ -74,7 +74,7 @@ export default async function AdminContentSectionPage({
     <>
       <section className="hero">
         <h1>{sectionLabels[currentSection]}</h1>
-        <p>Edition dediee d'une seule section pour aller plus vite.</p>
+        <p>Edition dediee d&apos;une seule section pour aller plus vite.</p>
       </section>
 
       <section className="section">
